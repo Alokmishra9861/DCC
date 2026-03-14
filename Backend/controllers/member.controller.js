@@ -3,7 +3,7 @@ const { ApiResponse, ApiError } = require("../utils/ApiResponse");
 const { asyncHandler } = require("../middlewares/errorhandler");
 const { generateMemberQR } = require("../services/qr.service");
 const { buildMemberSummary } = require("../utils/savingsCalculator");
-const { getPagination, buildPaginationMeta } = require("../utils/paginate");
+const { getPagination, buildPaginationMeta } = require("../utils/Paginate");
 
 const parseOptionalInt = (value) => {
   if (value === undefined) return undefined;

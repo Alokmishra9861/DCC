@@ -2,7 +2,7 @@ const { prisma } = require("../config/database");
 const { ApiResponse, ApiError } = require("../utils/ApiResponse");
 const { asyncHandler } = require("../middlewares/errorhandler");
 const { uploadToCloudinary } = require("../middlewares/upload.middleware");
-const { getPagination, buildPaginationMeta } = require("../utils/paginate");
+const { getPagination, buildPaginationMeta } = require("../utils/Paginate");
 
 // ── Public: list all approved businesses ──────────────
 exports.listBusinesses = asyncHandler(async (req, res) => {

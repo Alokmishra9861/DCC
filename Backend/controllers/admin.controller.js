@@ -6,7 +6,7 @@ const {
   sendMembershipConfirmationEmail,
 } = require("../services/email.service");
 const { generateMemberQR } = require("../services/qr.service");
-const { getPagination, buildPaginationMeta } = require("../utils/paginate");
+const { getPagination, buildPaginationMeta } = require("../utils/Paginate");
 
 // ── Dashboard stats ───────────────────────────────────────────────────────────
 // Returns FLAT object — Dashboard.jsx reads totalMembers, activeMembers etc directly
