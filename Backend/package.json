@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "postinstall": "prisma generate",
     "predev": "node scripts/kill-port.js",
     "dev": "nodemon server.js",
     "db:generate": "prisma generate",
