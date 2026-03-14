@@ -1,6 +1,5 @@
-
-
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const BASE_URL =
+  import.meta.env.VITE_API_URL || "https://dcc-backend-ej8n.onrender.com/api";
 
 // ─── Token helpers ────────────────────────────────────────────────────────────
 export const getToken = () => localStorage.getItem("dcc_token");

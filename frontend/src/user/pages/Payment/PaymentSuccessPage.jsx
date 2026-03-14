@@ -50,7 +50,10 @@ export default function PaymentSuccessPage() {
         // The backend also sets isActive at the top level, so we re-fetch the full
         // response by calling /membership/my and checking the response directly.
         const membershipResponse = await fetch(
-          `${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/membership/my`,
+          `${
+            import.meta.env.VITE_API_URL ||
+            "https://dcc-backend-ej8n.onrender.com/api"
+          }/membership/my`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("dcc_token")}`,
