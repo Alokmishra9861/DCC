@@ -1,0 +1,14 @@
+{
+  "delay": 2500,
+  "watch": [
+    "*.js",
+    "routes/",
+    "controllers/",
+    "services/",
+    "middlewares/",
+    "config/",
+    "jobs/"
+  ],
+  "ignore": ["node_modules/", "*.test.js"],
+  "ext": "js,json"
+}
