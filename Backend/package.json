@@ -5,10 +5,10 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate --schema=Prisma/schema.prisma",
     "predev": "node scripts/kill-port.js",
     "dev": "nodemon server.js",
-    "db:generate": "prisma generate",
+    "db:generate": "prisma generate --schema=Prisma/schema.prisma",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:seed:admin": "node scripts/seed-admin.js"
