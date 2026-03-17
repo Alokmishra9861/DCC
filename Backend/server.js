@@ -44,7 +44,7 @@ app.use("/api/certificates", require("./routes/certificate.routes"));
 app.use("/api/transactions", require("./routes/transaction.routes"));
 app.use("/api/travel", require("./routes/travel.routes"));
 app.use("/api/contact", require("./routes/contact.routes"));
-app.use("/api/payment", require("./routes/payment.routes"));
+app.use("/api/payments", require("./routes/payment.routes"));
 app.use("/api/employer", require("./routes/employer.routes"));
 app.use("/api/association", require("./routes/association.routes"));
 app.use("/api/advertisements", require("./routes/advertisement.routes"));

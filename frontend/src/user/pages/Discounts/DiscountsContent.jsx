@@ -62,15 +62,19 @@ const DiscountsContent = () => {
 
   const fetchDiscounts = async () => {
     try {
-      const data = await discountAPI.getAll({ limit: 100 });
+      const role = String(user?.role || "").toUpperCase();
+      const fetchFn =
+        role === "BUSINESS" ? discountAPI.getMyOffers : discountAPI.getAll;
+      const data = await fetchFn({ type: "DISCOUNT", limit: 100 });
       const list = Array.isArray(data)
         ? data
         : data?.discounts || data?.items || [];
       const normalized = list.map((offer) => {
         const rawValue = Number(offer.discountValue ?? 0);
-        const isPercent = rawValue > 0 && rawValue <= 1;
-        const discountType = isPercent ? "percentage" : "fixed";
-        const value = isPercent ? Math.round(rawValue * 100) : rawValue;
+        // Use offer.type from backend to determine display format
+        const offerType = offer.type || "DISCOUNT";
+        const discountType = offerType === "DISCOUNT" ? "percentage" : "fixed";
+        const value = rawValue;
         const terms = offer.minSpend
           ? `Minimum spend $${offer.minSpend}`
           : offer.expiryDate
@@ -81,8 +85,10 @@ const DiscountsContent = () => {
           id: offer.id,
           title: offer.title,
           description: offer.description || "",
+          offerType,
           discountType,
           value,
+          discountValue: rawValue,
           business: offer.business || null,
           businessId: offer.business?.id || offer.businessId,
           category: offer.business?.category || "",
@@ -187,10 +193,13 @@ const DiscountsContent = () => {
   const DiscountCard = ({ discount }) => {
     const businessId =
       discount.business?._id || discount.business?.id || discount.businessId;
-    const isMember = String(user?.role || "").toUpperCase() === "MEMBER";
+    const role = String(user?.role || "").toUpperCase();
+    const isMember = role === "MEMBER";
+    const isBusiness = role === "BUSINESS";
     const isMembershipActive =
       isMember && String(membership?.status || "").toUpperCase() === "ACTIVE";
-    const canNavigate = Boolean(businessId) && isMembershipActive;
+    const canNavigate =
+      Boolean(businessId) && (isBusiness || isMembershipActive);
     const Wrapper = canNavigate ? Link : "button";
     const wrapperProps = canNavigate
       ? { to: `/business-profile/${businessId}` }
@@ -229,7 +238,7 @@ const DiscountsContent = () => {
               Featured
             </div>
           )}
-          {!loadingMembership && !isMembershipActive && (
+          {!loadingMembership && isMember && !isMembershipActive && (
             <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px] flex items-center justify-center">
               <div className="px-4 py-2 rounded-full bg-white/90 text-slate-900 text-xs font-semibold">
                 Subscribe to unlock

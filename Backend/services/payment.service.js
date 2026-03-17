@@ -45,8 +45,16 @@ const createStripeCertificateCheckout = async ({
   certificateId,
   memberPrice,
   businessName,
+  successUrl,
+  cancelUrl,
   metadata = {},
 }) => {
+  if (!stripe) {
+    throw new Error(
+      "Stripe not initialized. Check STRIPE_SECRET_KEY in environment variables.",
+    );
+  }
+
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     mode: "payment",
@@ -54,18 +62,35 @@ const createStripeCertificateCheckout = async ({
       {
         price_data: {
           currency: "usd",
-          unit_amount: Math.round(memberPrice * 100),
           product_data: {
-            name: `${businessName} Certificate`,
-            description: "Prepaid Certificate — Discount Club Cayman",
+            name: metadata.title
+              ? `${metadata.title} — ${businessName}`
+              : `Certificate — ${businessName}`,
+            description:
+              metadata.offerType === "PREPAID_CERTIFICATE"
+                ? `Prepaid Gift Certificate: $${metadata.faceValue} face value at ${businessName}`
+                : `Value-Added Certificate: $${metadata.discountValue || metadata.faceValue} off at ${businessName}`,
           },
+          unit_amount: Math.round(Number(memberPrice) * 100), // dollars → cents
         },
         quantity: 1,
       },
     ],
-    metadata: { memberId, certificateId, type: "certificate", ...metadata },
-    success_url: `${process.env.CLIENT_URL}/certificates/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.CLIENT_URL}/certificates`,
+    // All metadata fields must be strings (Stripe requirement)
+    metadata: {
+      type: "certificate", // lets the webhook route correctly
+      memberId: String(memberId),
+      certificateId: String(certificateId),
+      offerType: metadata.offerType || "",
+      faceValue: String(metadata.faceValue || ""),
+      memberPrice: String(memberPrice),
+      businessName: String(businessName),
+      title: String(metadata.title || ""),
+      discountValue: String(metadata.discountValue || ""),
+      minSpend: String(metadata.minSpend || ""),
+    },
+    success_url: successUrl,
+    cancel_url: cancelUrl,
   });
 
   return session;
@@ -95,59 +120,9 @@ const verifyStripeWebhook = (rawBody, signature) => {
   }
 };
 
-// ── PAYPAL ────────────────────────────────────────────
-// Basic PayPal order creation using REST API directly
-const createPayPalOrder = async ({ priceUSD, description, metadata = {} }) => {
-  const auth = Buffer.from(
-    `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`,
-  ).toString("base64");
-
-  const baseUrl =
-    process.env.PAYPAL_MODE === "live"
-      ? "https://api-m.paypal.com"
-      : "https://api-m.sandbox.paypal.com";
-
-  // Get access token
-  const tokenRes = await fetch(`${baseUrl}/v1/oauth2/token`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${auth}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: "grant_type=client_credentials",
-  });
-  const { access_token } = await tokenRes.json();
-
-  // Create order
-  const orderRes = await fetch(`${baseUrl}/v2/checkout/orders`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${access_token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      intent: "CAPTURE",
-      purchase_units: [
-        {
-          description,
-          amount: { currency_code: "USD", value: priceUSD.toFixed(2) },
-          custom_id: JSON.stringify(metadata),
-        },
-      ],
-      application_context: {
-        return_url: `${process.env.CLIENT_URL}/payment/success`,
-        cancel_url: `${process.env.CLIENT_URL}/payment/cancelled`,
-      },
-    }),
-  });
-
-  return await orderRes.json();
-};
-
 module.exports = {
   createStripeCheckoutSession,
   createStripeCertificateCheckout,
   getStripeSession,
   verifyStripeWebhook,
-  createPayPalOrder,
 };

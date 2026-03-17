@@ -41,11 +41,9 @@ exports.register = asyncHandler(async (req, res) => {
   const hashedPassword = await bcrypt.hash(password, 12);
   const emailVerifyToken = crypto.randomBytes(32).toString("hex");
 
-  // Determine allowed roles from public registration
   const allowedRoles = ["MEMBER", "EMPLOYER", "ASSOCIATION", "BUSINESS", "B2B"];
   if (!allowedRoles.includes(role)) throw ApiError.badRequest("Invalid role");
 
-  // Build role-specific nested create
   const roleData = {};
 
   if (role === "MEMBER") {
@@ -82,16 +80,45 @@ exports.register = asyncHandler(async (req, res) => {
       },
     };
   } else if (role === "BUSINESS") {
+    // ✅ FIX: Resolve category by ID first, then fall back to name match
+    const { categoryId, categoryName } = profile;
+
+    let resolvedCategory = null;
+
+    // 1. Try numeric ID (normal path — frontend <select> loaded categories)
+    if (categoryId) {
+      resolvedCategory = await prisma.category.findUnique({
+        where: { id: Number(categoryId) },
+      });
+    }
+
+    // 2. Fallback: match by name (when categories weren't loaded on frontend)
+    if (!resolvedCategory && categoryName) {
+      resolvedCategory = await prisma.category.findFirst({
+        where: {
+          name: { equals: categoryName.trim(), mode: "insensitive" },
+        },
+      });
+    }
+
+    // 3. Neither resolved — reject clearly
+    if (!resolvedCategory) {
+      throw ApiError.badRequest(
+        "Category selection is required for business registration",
+      );
+    }
+
     roleData.business = {
       create: {
-        name: profile.name,
-        category: profile.category,
-        description: profile.description,
-        phone: profile.phone,
+        name: normalizeString(profile.name),
+        categoryId: resolvedCategory.id, // ← always a real DB id
+        description: normalizeString(profile.description),
+        phone: normalizeString(profile.phone),
         email: email,
-        address: profile.address,
-        district: profile.district,
-        website: profile.website,
+        address: normalizeString(profile.address),
+        district: normalizeString(profile.district),
+        website: normalizeString(profile.website),
+        status: "PENDING",
       },
     };
   } else if (role === "B2B") {
@@ -132,7 +159,7 @@ exports.register = asyncHandler(async (req, res) => {
     });
   }
 
-  // Send welcome email (non-fatal — don't fail registration if SMTP is down)
+  // Send welcome email (non-fatal)
   try {
     await sendWelcomeEmail(email, {
       name:
@@ -224,7 +251,6 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
   const user = await prisma.user.findUnique({ where: { email } });
-  // Always respond the same to prevent email enumeration
   if (!user) {
     return ApiResponse.success(
       res,
@@ -234,7 +260,7 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
   }
 
   const resetToken = crypto.randomBytes(32).toString("hex");
-  const resetExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+  const resetExpiry = new Date(Date.now() + 60 * 60 * 1000);
 
   await prisma.user.update({
     where: { id: user.id },

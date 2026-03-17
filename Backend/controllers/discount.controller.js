@@ -12,9 +12,26 @@ const getMemberWithMembership = async (userId) => {
 };
 
 // ── GET /api/discounts ────────────────────────────────────────────────────────
-// All active DISCOUNT-type offers — visible to every authenticated user.
+// All active DISCOUNT-type offers — visible to MEMBER and ADMIN only.
+// BUSINESS users see an empty list on browse (prevents seeing competitors)
 // canRedeem flag tells the frontend whether to show "Redeem" or "Join Now".
 exports.getAllDiscounts = asyncHandler(async (req, res) => {
+  // BUSINESS users see an empty browse list; they manage their own in /my/offers
+  if (req.user?.role === "BUSINESS") {
+    return res.status(200).json({
+      success: true,
+      data: [],
+      canRedeem: false,
+      membershipStatus: null,
+      pagination: {
+        total: 0,
+        page: 1,
+        limit: parseInt(req.query.limit || 20),
+        pages: 0,
+      },
+    });
+  }
+
   const { category, businessId, page = 1, limit = 20 } = req.query;
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -78,6 +95,8 @@ exports.getAllDiscounts = asyncHandler(async (req, res) => {
 });
 
 // ── GET /api/discounts/:id ────────────────────────────────────────────────────
+// View individual discount details
+// BUSINESS users cannot view other businesses' discounts
 exports.getDiscountById = asyncHandler(async (req, res) => {
   const offer = await prisma.offer.findFirst({
     where: { id: req.params.id, type: "DISCOUNT" },
@@ -99,6 +118,17 @@ exports.getDiscountById = asyncHandler(async (req, res) => {
   });
 
   if (!offer) throw ApiError.notFound("Discount not found");
+
+  // BUSINESS users can only view their own discounts, not competitors
+  if (req.user?.role === "BUSINESS") {
+    const userBusiness = await prisma.business.findUnique({
+      where: { userId: req.user.id },
+    });
+    if (!userBusiness || offer.businessId !== userBusiness.id) {
+      throw ApiError.forbidden("You can only view your own discounts");
+    }
+  }
+
   return res.status(200).json({ success: true, data: offer });
 });
 
@@ -125,6 +155,17 @@ exports.getMyOffers = asyncHandler(async (req, res) => {
       take: parseInt(limit),
       include: {
         _count: { select: { certificates: true, transactions: true } },
+        business: {
+          select: {
+            id: true,
+            name: true,
+            category: true,
+            district: true,
+            logoUrl: true,
+            phone: true,
+            email: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -150,7 +191,8 @@ exports.createDiscount = asyncHandler(async (req, res) => {
     where: { userId: req.user.id },
   });
   if (!business) throw ApiError.notFound("Business profile not found");
-  if (!business.isApproved) {
+  const isApproved = business.isApproved || business.status === "APPROVED";
+  if (!isApproved) {
     throw ApiError.forbidden(
       "Your business must be approved before creating offers",
     );

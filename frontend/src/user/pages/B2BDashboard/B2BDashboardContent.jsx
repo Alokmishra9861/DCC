@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Toaster, toast } from 'react-hot-toast';
 import Icon from '../../components/ui/AppIcon';
 import AppImage from '../../components/ui/AppImage';
+import AnalyticsStatsPanel from '../../components/ui/AnalyticsStatsPanel';
 
 const B2BDashboardContent = () => {
   const [user] = useState({ id: 'mock-b2b-id', email: 'b2b@example.com' });
@@ -91,6 +92,9 @@ const B2BDashboardContent = () => {
           <h1 className="font-heading text-3xl md:text-4xl font-bold text-slate-900 mb-2">B2B Business Partner Dashboard</h1>
           <p className="text-lg text-slate-600">Manage your B2B partnerships and communications</p>
         </div>
+
+        {/* Analytics Period Stats */}
+        <AnalyticsStatsPanel title="B2B Partner Analytics" />
 
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm mb-10 overflow-hidden">
           <div className="border-b border-slate-100 px-6">

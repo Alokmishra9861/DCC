@@ -204,7 +204,8 @@ model Business {
   user          User     @relation(fields: [userId], references: [id])
 
   name          String
-  category      String?
+  categoryId    String?  @db.ObjectId
+  category      Category? @relation(fields: [categoryId], references: [id])
   description   String?
   phone         String?
   email         String?
@@ -220,6 +221,7 @@ model Business {
   paypalEmail      String?
 
   isApproved    Boolean  @default(false)
+  status        String   @default("PENDING")  // PENDING | APPROVED | REJECTED
   isB2B         Boolean  @default(false)  // also listed in B2B dir
 
   offers        Offer[]
@@ -352,16 +354,33 @@ model CertificatePurchase {
   memberId        String          @db.ObjectId
   member          Member          @relation(fields: [memberId], references: [id])
 
-  amountPaid      Float
-  savingsAmount   Float           // faceValue - memberPrice
+  // Stripe payment details
+  stripeSessionId String?         @unique
   paymentProvider PaymentProvider
   paymentId       String
   paymentStatus   PaymentStatus   @default(PENDING)
 
+  // Certificate details (snapshot at time of purchase)
+  type            String          // "PREPAID_CERTIFICATE" | "VALUE_ADDED_CERTIFICATE"
+  faceValue       Float
+  amountPaid      Float
+  savingsAmount   Float           // faceValue - amountPaid
+  discountValue   Float?
+  minSpend        Float?
+  businessName    String
+  title           String?
+
+  // Unique redemption code (for prepaid certificates only)
+  uniqueCode      String?         @unique @db.String
+  
+  // Certificate lifecycle
+  status          String          @default("PURCHASED") // "PURCHASED" | "REDEEMED"
+  expiryDate      DateTime?
+  purchasedAt     DateTime?
   redeemedAt      DateTime?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
   @@map("certificate_purchases")
 }
@@ -446,6 +465,26 @@ model Advertisement {
   updatedAt     DateTime @updatedAt
 
   @@map("advertisements")
+}
+
+// ─────────────────────────────────────────
+// CATEGORY
+// ─────────────────────────────────────────
+
+model Category {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String   @unique
+  slug          String   @unique
+  description   String?
+  imageUrl      String?
+  icon          String?  // Icon name like "TruckIcon", "SparklesIcon"
+  
+  businesses    Business[]  // Relation to businesses in this category
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("categories")
 }
 
 // ─────────────────────────────────────────

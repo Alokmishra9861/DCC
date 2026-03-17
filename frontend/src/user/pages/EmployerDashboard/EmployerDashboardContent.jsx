@@ -17,6 +17,7 @@ import {
 } from "recharts";
 import AppImage from "../../components/ui/AppImage";
 import { employerAPI, businessAPI, getUser } from "../../../services/api";
+import AnalyticsStatsPanel from "../../components/ui/AnalyticsStatsPanel";
 
 const COLORS = [
   "#3b82f6",
@@ -170,6 +171,9 @@ const EmployerDashboardContent = () => {
             Manage your company memberships and employee benefits
           </p>
         </div>
+
+        {/* Analytics Period Stats */}
+        <AnalyticsStatsPanel title="Employee Benefits Analytics" />
 
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm mb-10 overflow-hidden">
           <div className="border-b border-slate-100 px-6">

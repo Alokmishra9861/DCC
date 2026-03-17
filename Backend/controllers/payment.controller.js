@@ -78,20 +78,121 @@ exports.createPayPalCheckout = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, { orderId: order.id, links: order.links });
 });
 
-// ── Stripe webhook (membership) ───────────────────────
+// ── Stripe webhook (membership & certificate) ───────────────────────
 exports.stripeWebhook = asyncHandler(async (req, res) => {
   const sig = req.headers["stripe-signature"];
   const event = verifyStripeWebhook(req.body, sig);
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
+    const {
+      type,
+      membershipId,
+      memberId,
+      certificateId,
+      offerType,
+      faceValue,
+      discountValue,
+      minSpend,
+      businessName,
+      title,
+    } = session.metadata;
 
-    // Only handle membership payments here
-    if (session.metadata?.type !== "membership")
-      return res.json({ received: true });
+    if (type === "membership") {
+      await activateMembership(membershipId, session.payment_intent, "STRIPE");
+    }
 
-    const { membershipId } = session.metadata;
-    await activateMembership(membershipId, session.payment_intent, "STRIPE");
+    if (type === "certificate") {
+      // Generate unique code for certificate (DISC-XXXX-XXXX-XXXX)
+      const generateUniqueCode = () => {
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let code = "DISC";
+        for (let i = 0; i < 3; i++) {
+          code += "-";
+          for (let j = 0; j < 4; j++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+          }
+        }
+        return code;
+      };
+
+      const savingsAmount =
+        (parseFloat(faceValue) || 0) - session.amount_total / 100;
+
+      // Create CertificatePurchase record
+      const purchase = await prisma.certificatePurchase.create({
+        data: {
+          stripeSessionId: session.id,
+          memberId: memberId,
+          certificateId: certificateId,
+          uniqueCode: generateUniqueCode(),
+          type: offerType || "PREPAID_CERTIFICATE",
+          status: "PURCHASED",
+          faceValue: parseFloat(faceValue) || 0,
+          discountValue: parseFloat(discountValue) || null,
+          minSpend: parseFloat(minSpend) || null,
+          amountPaid: session.amount_total / 100,
+          savingsAmount: savingsAmount,
+          businessName: businessName || "",
+          title: title || "",
+          paymentProvider: "STRIPE",
+          paymentId: session.payment_intent,
+          paymentStatus: "COMPLETED",
+        },
+      });
+
+      // Fetch certificate & member info to get business & demographics
+      try {
+        const [cert, member, business] = await Promise.all([
+          prisma.certificate.findUnique({
+            where: { id: certificateId },
+            include: { offer: true },
+          }),
+          prisma.member.findUnique({
+            where: { id: memberId },
+            include: { user: true },
+          }),
+          // Get business from certificate offer
+          prisma.certificate.findUnique({
+            where: { id: certificateId },
+            include: { offer: { include: { business: true } } },
+          }),
+        ]);
+
+        if (cert && member && business?.offer?.business) {
+          // Create Transaction record for member dashboard
+          await prisma.transaction.create({
+            data: {
+              memberId: memberId,
+              businessId: business.offer.business.id,
+              offerId: cert.offerId,
+              saleAmount: session.amount_total / 100,
+              discountAmount: 0,
+              savingsAmount: savingsAmount,
+              memberAge: member.age,
+              memberSex: member.sex,
+              memberDistrict: member.district,
+              memberSalaryLevel: member.salaryLevel,
+              businessCategory: business.offer.business.category,
+              businessDistrict: business.offer.business.district,
+              status: "COMPLETED",
+            },
+          });
+
+          // Update member's totalSavings
+          await prisma.member.update({
+            where: { id: memberId },
+            data: {
+              totalSavings: { increment: savingsAmount },
+              totalSpent: { increment: session.amount_total / 100 },
+            },
+          });
+        }
+      } catch (transErr) {
+        // Log but don't throw — purchase was already recorded
+        console.error("Error creating transaction record:", transErr.message);
+      }
+    }
   }
 
   if (event.type === "checkout.session.expired") {

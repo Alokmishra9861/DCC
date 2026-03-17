@@ -36,6 +36,10 @@ const protect = asyncHandler(async (req, res, next) => {
 // ── Role-based access ─────────────────────────────────
 const authorize = (...roles) => {
   return (req, res, next) => {
+    // If no roles specified, allow all authenticated users
+    if (roles.length === 0) {
+      return next();
+    }
     if (!roles.includes(req.user.role)) {
       throw ApiError.forbidden(
         `Role '${req.user.role}' is not authorized to access this route`,

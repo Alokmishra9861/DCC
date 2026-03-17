@@ -267,6 +267,50 @@ exports.exportReport = asyncHandler(async (req, res) => {
 });
 
 // ── Helpers ───────────────────────────────────────────
+
+// New period filter for role-scoped analytics dropdown
+function buildPeriodDateFilter(period) {
+  if (!period || period === "lifetime") return null;
+  const now = new Date();
+  const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+  switch (period) {
+    case "current_week": {
+      const day = now.getDay(); // 0=Sun
+      const diff = day === 0 ? 6 : day - 1; // Monday as start
+      const start = startOfDay(new Date(now));
+      start.setDate(start.getDate() - diff);
+      return { gte: start, lte: now };
+    }
+    case "last_week": {
+      const day = now.getDay();
+      const diff = day === 0 ? 6 : day - 1;
+      const thisMonday = startOfDay(new Date(now));
+      thisMonday.setDate(thisMonday.getDate() - diff);
+      const lastMonday = new Date(thisMonday);
+      lastMonday.setDate(lastMonday.getDate() - 7);
+      const lastSunday = new Date(thisMonday);
+      lastSunday.setMilliseconds(-1); // end of previous Sunday
+      return { gte: lastMonday, lte: lastSunday };
+    }
+    case "month_to_date": {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      return { gte: start, lte: now };
+    }
+    case "year_to_date": {
+      const start = new Date(now.getFullYear(), 0, 1);
+      return { gte: start, lte: now };
+    }
+    case "prior_year": {
+      const start = new Date(now.getFullYear() - 1, 0, 1);
+      const end = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
+      return { gte: start, lte: end };
+    }
+    default:
+      return buildDateFilter(period); // fallback to legacy periods
+  }
+}
+
 function buildDateFilter(period) {
   if (!period || period === "lifetime") return null;
   const now = new Date();
@@ -368,3 +412,226 @@ function groupByMonth(members) {
       return { month: label, count };
     });
 }
+
+// ── Role-Scoped Analytics ─────────────────────────────
+exports.getRoleAnalytics = asyncHandler(async (req, res) => {
+  const { period = "month_to_date" } = req.query;
+  const dateFilter = buildPeriodDateFilter(period);
+  const txnWhere = dateFilter ? { transactionDate: dateFilter } : {};
+  const role = req.user.role;
+
+  // ── ADMIN ──────────────────────────────────────────
+  if (role === "ADMIN") {
+    const [
+      totalMembers,
+      activeMembers,
+      totalBusinesses,
+      totalTransactions,
+      totalSavings,
+      totalRevenue,
+      totalCertPurchases,
+    ] = await Promise.all([
+      prisma.member.count(),
+      prisma.membership.count({ where: { status: "ACTIVE" } }),
+      prisma.business.count({ where: { isApproved: true } }),
+      prisma.transaction.count({ where: txnWhere }),
+      prisma.transaction.aggregate({
+        _sum: { savingsAmount: true },
+        where: txnWhere,
+      }),
+      prisma.transaction.aggregate({
+        _sum: { saleAmount: true },
+        where: txnWhere,
+      }),
+      prisma.certificatePurchase.count({
+        where: dateFilter ? { createdAt: dateFilter } : {},
+      }),
+    ]);
+
+    return ApiResponse.success(res, {
+      period,
+      role,
+      totalMembers,
+      activeMembers,
+      totalBusinesses,
+      totalTransactions,
+      totalSavings: totalSavings._sum.savingsAmount || 0,
+      totalRevenue: totalRevenue._sum.saleAmount || 0,
+      totalCertPurchases,
+    });
+  }
+
+  // ── BUSINESS ───────────────────────────────────────
+  if (role === "BUSINESS") {
+    const business = await prisma.business.findUnique({
+      where: { userId: req.user.id },
+    });
+    if (!business) throw ApiError.notFound("Business profile not found");
+
+    const bizTxnWhere = { businessId: business.id, ...txnWhere };
+    const [
+      totalTransactions,
+      totalSales,
+      totalSavingsGiven,
+      totalRedemptions,
+      certStats,
+    ] = await Promise.all([
+      prisma.transaction.count({ where: bizTxnWhere }),
+      prisma.transaction.aggregate({
+        _sum: { saleAmount: true },
+        where: bizTxnWhere,
+      }),
+      prisma.transaction.aggregate({
+        _sum: { savingsAmount: true },
+        where: bizTxnWhere,
+      }),
+      prisma.transaction.count({
+        where: { ...bizTxnWhere, discountAmount: { gt: 0 } },
+      }),
+      prisma.certificate.count({
+        where: {
+          offer: { businessId: business.id },
+          status: "REDEEMED",
+        },
+      }),
+    ]);
+
+    return ApiResponse.success(res, {
+      period,
+      role,
+      totalTransactions,
+      totalSales: totalSales._sum.saleAmount || 0,
+      totalSavingsGiven: totalSavingsGiven._sum.savingsAmount || 0,
+      totalRedemptions,
+      certificatesRedeemed: certStats,
+    });
+  }
+
+  // ── EMPLOYER ───────────────────────────────────────
+  if (role === "EMPLOYER") {
+    const employer = await prisma.employer.findUnique({
+      where: { userId: req.user.id },
+      include: { members: { select: { id: true } } },
+    });
+    if (!employer) throw ApiError.notFound("Employer profile not found");
+
+    const memberIds = employer.members.map((m) => m.id);
+    const empTxnWhere = {
+      memberId: { in: memberIds },
+      ...txnWhere,
+    };
+    const [activeCount, txnCount, totalSavings] = await Promise.all([
+      prisma.membership.count({
+        where: { memberId: { in: memberIds }, status: "ACTIVE" },
+      }),
+      prisma.transaction.count({ where: empTxnWhere }),
+      prisma.transaction.aggregate({
+        _sum: { savingsAmount: true },
+        where: empTxnWhere,
+      }),
+    ]);
+
+    return ApiResponse.success(res, {
+      period,
+      role,
+      totalEmployees: memberIds.length,
+      activeMembers: activeCount,
+      totalTransactions: txnCount,
+      totalSavings: totalSavings._sum.savingsAmount || 0,
+    });
+  }
+
+  // ── ASSOCIATION ────────────────────────────────────
+  if (role === "ASSOCIATION") {
+    const association = await prisma.association.findUnique({
+      where: { userId: req.user.id },
+      include: { members: { select: { id: true } } },
+    });
+    if (!association) throw ApiError.notFound("Association profile not found");
+
+    const memberIds = association.members.map((m) => m.id);
+    const assocTxnWhere = {
+      memberId: { in: memberIds },
+      ...txnWhere,
+    };
+    const [activeCount, txnCount, totalSavings] = await Promise.all([
+      prisma.membership.count({
+        where: { memberId: { in: memberIds }, status: "ACTIVE" },
+      }),
+      prisma.transaction.count({ where: assocTxnWhere }),
+      prisma.transaction.aggregate({
+        _sum: { savingsAmount: true },
+        where: assocTxnWhere,
+      }),
+    ]);
+
+    return ApiResponse.success(res, {
+      period,
+      role,
+      totalMembers: memberIds.length,
+      activeMembers: activeCount,
+      totalTransactions: txnCount,
+      totalSavings: totalSavings._sum.savingsAmount || 0,
+    });
+  }
+
+  // ── B2B ────────────────────────────────────────────
+  if (role === "B2B") {
+    const [totalBusinesses, totalTransactions, totalSavings] =
+      await Promise.all([
+        prisma.business.count({ where: { isApproved: true, isB2B: true } }),
+        prisma.transaction.count({ where: txnWhere }),
+        prisma.transaction.aggregate({
+          _sum: { savingsAmount: true },
+          where: txnWhere,
+        }),
+      ]);
+
+    return ApiResponse.success(res, {
+      period,
+      role,
+      totalB2BBusinesses: totalBusinesses,
+      totalTransactions,
+      totalSavings: totalSavings._sum.savingsAmount || 0,
+    });
+  }
+
+  // ── MEMBER ─────────────────────────────────────────
+  if (role === "MEMBER") {
+    const member = await prisma.member.findUnique({
+      where: { userId: req.user.id },
+    });
+    if (!member) throw ApiError.notFound("Member profile not found");
+
+    const memberTxnWhere = { memberId: member.id, ...txnWhere };
+    const [txnCount, totalSavings, totalSpent, certCount] = await Promise.all([
+      prisma.transaction.count({ where: memberTxnWhere }),
+      prisma.transaction.aggregate({
+        _sum: { savingsAmount: true },
+        where: memberTxnWhere,
+      }),
+      prisma.transaction.aggregate({
+        _sum: { saleAmount: true },
+        where: memberTxnWhere,
+      }),
+      prisma.certificatePurchase.count({
+        where: {
+          memberId: member.id,
+          ...(dateFilter ? { createdAt: dateFilter } : {}),
+        },
+      }),
+    ]);
+
+    return ApiResponse.success(res, {
+      period,
+      role,
+      totalTransactions: txnCount,
+      totalSavings: totalSavings._sum.savingsAmount || 0,
+      totalSpent: totalSpent._sum.saleAmount || 0,
+      certificatesPurchased: certCount,
+    });
+  }
+
+  // Fallback
+  return ApiResponse.success(res, { period, role, message: "No stats available for this role" });
+});

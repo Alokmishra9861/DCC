@@ -1,5 +1,16 @@
-const BASE_URL =
-  import.meta.env.VITE_API_URL || "https://dcc-backend-ej8n.onrender.com/api";
+const resolveBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl) return envUrl;
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1") {
+      return "http://localhost:5000/api";
+    }
+  }
+  return "https://dcc-backend-ej8n.onrender.com/api";
+};
+
+const BASE_URL = resolveBaseUrl();
 
 // ─── Token helpers ────────────────────────────────────────────────────────────
 export const getToken = () => localStorage.getItem("dcc_token");
@@ -185,6 +196,10 @@ export const discountAPI = {
     const qs = new URLSearchParams(params).toString();
     return request(`/discounts${qs ? `?${qs}` : ""}`);
   },
+  getMyOffers: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/discounts/my/offers${qs ? `?${qs}` : ""}`);
+  },
   getById: (id) => request(`/discounts/${id}`),
   // Called when member clicks Redeem — returns { canRedeem, showUpgradeModal, modalData }
   redeemAttempt: (offerId) =>
@@ -216,18 +231,45 @@ export const certificateAPI = {
   },
   getMy: () => request("/certificates/my"),
   getByBusiness: () => request("/certificates/business"),
-  purchase: (certificateId, paymentProvider = "STRIPE") =>
+
+  purchase: (
+    certificateId,
+    paymentProvider = "STRIPE",
+    successUrl,
+    cancelUrl,
+  ) =>
     request("/certificates/purchase", {
       method: "POST",
-      body: JSON.stringify({ certificateId, paymentProvider }),
+      body: JSON.stringify({
+        certificateId,
+        paymentProvider,
+        ...(successUrl && { successUrl }),
+        ...(cancelUrl && { cancelUrl }),
+      }),
     }),
+
   redeem: (claimCode) =>
     request("/certificates/redeem", {
       method: "POST",
       body: JSON.stringify({ claimCode }),
     }),
+
+  // Business redeems a member's uniqueCode (DISC-XXXX-XXXX-XXXX)
+  redeemByCode: (uniqueCode) =>
+    request("/certificates/redeem-by-code", {
+      method: "POST",
+      body: JSON.stringify({ uniqueCode }),
+    }),
+
+  // Business fetches redemption history for their certs
+  getRedemptions: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/certificates/redemptions${qs ? `?${qs}` : ""}`);
+  },
+
   create: (data) =>
     request("/certificates", { method: "POST", body: JSON.stringify(data) }),
+
   checkRedeemEligibility: () =>
     request("/certificates/redeem-check", { method: "POST" }),
 };
@@ -307,6 +349,8 @@ export const paymentAPI = {
 
 // ─── Analytics (Admin) ────────────────────────────────────────────────────────
 export const analyticsAPI = {
+  getRoleStats: (period = "month_to_date") =>
+    request(`/analytics/role-stats?period=${period}`),
   getOverview: (period = "month") =>
     request(`/analytics/overview?period=${period}`),
   getSavingsByCategory: (period = "month") =>

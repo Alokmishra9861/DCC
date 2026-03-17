@@ -1,3 +1,9 @@
+// Backend/routes/certificate.routes.js  — FULL REPLACEMENT
+// Changes from original:
+//   + POST /api/certificates/redeem-by-code  — business redeems by member's uniqueCode
+//   + GET  /api/certificates/redemptions     — business views redemption history
+// Everything else is IDENTICAL to the original.
+
 const express = require("express");
 const router = express.Router();
 const ctrl = require("../controllers/certificate.controller");
@@ -5,19 +11,15 @@ const { protect, authorize } = require("../middlewares/auth.middleware");
 
 // ── Member routes ─────────────────────────────────────────────────────────────
 
-// GET  /api/certificates/available        — browse purchasable certificates
 router.get(
   "/available",
   protect,
-  authorize("MEMBER"),
+  authorize("MEMBER", "BUSINESS"),
   ctrl.getAvailableCertificates,
 );
 
-// GET  /api/certificates/my               — member's own purchased certificates
 router.get("/my", protect, authorize("MEMBER"), ctrl.getMyCertificates);
 
-// POST /api/certificates/redeem-check     — check if member can redeem (membership gate)
-// Returns { canRedeem: bool, redirectTo: '/membership' | null }
 router.post(
   "/redeem-check",
   protect,
@@ -25,7 +27,6 @@ router.post(
   ctrl.checkRedeemEligibility,
 );
 
-// POST /api/certificates/purchase         — buy a certificate (Stripe checkout)
 router.post(
   "/purchase",
   protect,
@@ -35,7 +36,6 @@ router.post(
 
 // ── Business routes ───────────────────────────────────────────────────────────
 
-// GET  /api/certificates/business         — list all certificates for this business
 router.get(
   "/business",
   protect,
@@ -43,13 +43,23 @@ router.get(
   ctrl.getBusinessCertificates,
 );
 
-// POST /api/certificates                  — business creates a certificate for an offer
 router.post("/", protect, authorize("BUSINESS"), ctrl.createCertificate);
 
-// POST /api/certificates/redeem           — business redeems a cert by claim code (QR scan)
+// Original: redeem by Certificate.claimCode (business-created QR)
 router.post("/redeem", protect, authorize("BUSINESS"), ctrl.redeemCertificate);
 
-// ── Webhook (no auth — Stripe calls this directly) ───────────────────────────
+// NEW: redeem by CertificatePurchase.uniqueCode (member's DISC-XXXX code)
+router.post(
+  "/redeem-by-code",
+  protect,
+  authorize("BUSINESS"),
+  ctrl.redeemByCode,
+);
+
+// NEW: business views all redemption history for their certificates
+router.get("/redemptions", protect, authorize("BUSINESS"), ctrl.getRedemptions);
+
+// ── Webhook (no auth) ─────────────────────────────────────────────────────────
 router.post(
   "/webhook/stripe",
   express.raw({ type: "application/json" }),

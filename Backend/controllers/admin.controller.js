@@ -27,8 +27,8 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
     prisma.user.count(),
     prisma.member.count(),
     prisma.membership.count({ where: { status: "ACTIVE" } }),
-    prisma.business.count({ where: { isApproved: true } }),
-    prisma.business.count({ where: { isApproved: false } }),
+    prisma.business.count({ where: { status: "APPROVED" } }),
+    prisma.business.count({ where: { status: "PENDING" } }),
     prisma.employer.count({ where: { isApproved: false } }),
     prisma.association.count({ where: { isApproved: false } }),
     prisma.transaction.count(),
@@ -469,17 +469,34 @@ exports.approveBusiness = asyncHandler(async (req, res) => {
   const business = await prisma.business.findUnique({ where: { id } });
   if (!business) throw ApiError.notFound("Business not found");
 
-  await prisma.business.update({ where: { id }, data: { isApproved: true } });
+  await prisma.business.update({
+    where: { id },
+    data: { status: "APPROVED", isApproved: true },
+  });
   return ApiResponse.success(res, {}, "Business approved");
+});
+
+// ── Reject business ───────────────────────────────────────────────────────────
+exports.rejectBusiness = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { reason } = req.body;
+  const business = await prisma.business.findUnique({ where: { id } });
+  if (!business) throw ApiError.notFound("Business not found");
+
+  await prisma.business.update({
+    where: { id },
+    data: { status: "REJECTED", isApproved: false },
+  });
+  return ApiResponse.success(res, {}, "Business rejected");
 });
 
 // ── Get all businesses (admin) ────────────────────────────────────────────────
 exports.getAdminBusinesses = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
-  const { isApproved, search } = req.query;
+  const { status, search } = req.query;
 
   const where = {
-    ...(isApproved !== undefined && { isApproved: isApproved === "true" }),
+    ...(status && { status: status }),
     ...(search && { name: { contains: search, mode: "insensitive" } }),
   };
 
@@ -493,9 +510,9 @@ exports.getAdminBusinesses = asyncHandler(async (req, res) => {
         id: true,
         userId: true,
         name: true,
-        category: true,
+        category: { select: { id: true, name: true, slug: true } },
         district: true,
-        isApproved: true,
+        status: true,
         createdAt: true,
         logoUrl: true,
       },
@@ -523,56 +540,72 @@ exports.getAdminBusinesses = asyncHandler(async (req, res) => {
 });
 
 // ── Update business (admin) ───────────────────────────────────────────────────
+const slugifyCategory = (value) => {
+  if (!value) return null;
+  return String(value)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+};
+
 exports.updateBusiness = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const {
     name,
-    category,
+    categoryId,
+    categoryName,
+    categorySlug,
     description,
     phone,
     email,
     address,
     district,
     website,
-    isApproved,
+    status,
   } = req.body;
 
   const business = await prisma.business.findUnique({ where: { id } });
   if (!business) throw ApiError.notFound("Business not found");
 
+  let resolvedCategoryId = categoryId || null;
+  if (!resolvedCategoryId && (categorySlug || categoryName)) {
+    const slug = categorySlug || slugifyCategory(categoryName);
+    if (slug) {
+      const existing = await prisma.category.findUnique({
+        where: { slug },
+      });
+      if (!existing) {
+        const created = await prisma.category.create({
+          data: {
+            slug,
+            name: categoryName || slug.replace(/-/g, " "),
+            description: `Businesses offering ${categoryName || slug}`,
+          },
+        });
+        resolvedCategoryId = created.id;
+      } else {
+        resolvedCategoryId = existing.id;
+      }
+    }
+  }
+
   const updated = await prisma.business.update({
     where: { id },
     data: {
       ...(name !== undefined && { name }),
-      ...(category !== undefined && { category }),
+      ...(resolvedCategoryId && { categoryId: resolvedCategoryId }),
       ...(description !== undefined && { description }),
       ...(phone !== undefined && { phone }),
       ...(email !== undefined && { email }),
       ...(address !== undefined && { address }),
       ...(district !== undefined && { district }),
       ...(website !== undefined && { website }),
-      ...(isApproved !== undefined && { isApproved }),
+      ...(status !== undefined && { status }),
     },
   });
 
   return ApiResponse.success(res, updated, "Business updated");
-});
-
-// ── Reject business (admin) ───────────────────────────────────────────────────
-exports.rejectBusiness = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const business = await prisma.business.findUnique({ where: { id } });
-  if (!business) throw ApiError.notFound("Business not found");
-
-  await prisma.$transaction([
-    prisma.business.update({ where: { id }, data: { isApproved: false } }),
-    prisma.user.update({
-      where: { id: business.userId },
-      data: { isActive: false },
-    }),
-  ]);
-
-  return ApiResponse.success(res, {}, "Business rejected");
 });
 
 // ── Contact inquiries ─────────────────────────────────────────────────────────
@@ -623,6 +656,7 @@ exports.getAuditLog = asyncHandler(async (req, res) => {
       orderBy: { createdAt: "desc" },
     }),
     prisma.auditLog.count(),
+    a,
   ]);
 
   return ApiResponse.paginated(

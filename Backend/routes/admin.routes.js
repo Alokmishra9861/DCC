@@ -26,6 +26,7 @@ router.get("/pending", ctrl.getPendingApprovals);
 router.patch("/employers/:id/approve", ctrl.approveEmployer);
 router.patch("/associations/:id/approve", ctrl.approveAssociation);
 router.patch("/businesses/:id/approve", ctrl.approveBusiness);
+router.patch("/businesses/:id/reject", ctrl.rejectBusiness);
 
 // Membership approvals
 router.get("/memberships/pending", ctrl.getPendingMemberships);

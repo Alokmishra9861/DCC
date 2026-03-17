@@ -15,6 +15,7 @@ import {
   Cell,
 } from "recharts";
 import { adminAPI, analyticsAPI } from "../../../services/api";
+import AnalyticsStatsPanel from "../../components/ui/AnalyticsStatsPanel";
 
 // ── tiny helpers ──────────────────────────────────────────────────────────────
 const fmt = (n) =>
@@ -268,6 +269,9 @@ const Dashboard = () => {
             </Link>
           )}
         </div>
+
+        {/* ── Analytics Period Stats ────────────────────────────────────── */}
+        <AnalyticsStatsPanel title="Platform Analytics" />
 
         {/* ── Stat Cards ──────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -700,7 +704,7 @@ const Dashboard = () => {
                 <p className="text-blue-200 text-sm">Businesses</p>
               </div>
               <div className="w-px bg-white/20" />
-              <div className="text-center">
+              <div className="text-center">a
                 <p className="text-3xl font-bold text-white">{fmt(totalTx)}</p>
                 <p className="text-blue-200 text-sm">Transactions</p>
               </div>

@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { associationAPI } from "../../../services/api";
+import AnalyticsStatsPanel from "../../components/ui/AnalyticsStatsPanel";
 
 const AssociationDashboardContent = () => {
   const [activeTab, setActiveTab] = useState("home");
@@ -398,6 +399,9 @@ const AssociationDashboardContent = () => {
             Manage your association members and revenue
           </p>
         </div>
+
+        {/* Analytics Period Stats */}
+        <AnalyticsStatsPanel title="Association Analytics" />
 
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm mb-10 overflow-hidden">
           <div className="border-b border-slate-100 px-6">

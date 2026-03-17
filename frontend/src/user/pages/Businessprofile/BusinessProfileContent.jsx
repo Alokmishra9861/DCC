@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+// Frontend/src/user/pages/Business Section/Businessprofile.jsx  — FULL REPLACEMENT
+import React, { useEffect, useState, useCallback } from "react";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import Icon from "../../components/ui/AppIcon";
 import AppImage from "../../components/ui/AppImage";
 import {
@@ -8,13 +9,177 @@ import {
   getUser,
   uploadAPI,
 } from "../../../services/api";
+import { redirectToStripeCheckout } from "../../../services/stripeService";
 
+// ─── Purchase confirmation modal (same pattern as CertificateContent.jsx) ────
+const PurchaseModal = ({ cert, onConfirm, onClose, loading, error }) => {
+  if (!cert) return null;
+  const isPrepaid =
+    cert.offer?.type === "PREPAID_CERTIFICATE" || !cert.offer?.type;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={!loading ? onClose : undefined}
+      />
+      <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
+        {/* Header */}
+        <div
+          className={`px-8 pt-8 pb-6 text-white ${
+            isPrepaid
+              ? "bg-gradient-to-r from-[#1C4D8D] to-[#2563eb]"
+              : "bg-gradient-to-r from-emerald-600 to-teal-500"
+          }`}
+        >
+          {!loading && (
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-all"
+            >
+              <Icon name="XMarkIcon" size={18} className="text-white" />
+            </button>
+          )}
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md shrink-0">
+              <Icon
+                name="TicketIcon"
+                size={22}
+                className={isPrepaid ? "text-[#1C4D8D]" : "text-emerald-600"}
+              />
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest opacity-70">
+                {isPrepaid
+                  ? "Prepaid Gift Certificate"
+                  : "Value-Added Certificate"}
+              </p>
+              <p className="font-bold text-lg leading-tight">
+                {cert.offer?.title || "Certificate"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="px-8 py-6">
+          {/* Order summary */}
+          <div className="bg-slate-50 rounded-2xl p-5 mb-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">
+              Order Summary
+            </p>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm text-slate-600">Face Value</span>
+              <span className="font-bold text-slate-900">
+                ${cert.faceValue}
+              </span>
+            </div>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm text-slate-600">Member Price</span>
+              <span className="font-bold text-[#1C4D8D]">
+                ${cert.memberPrice}
+              </span>
+            </div>
+            <div className="border-t border-slate-200 pt-3 mt-1 flex justify-between items-center">
+              <span className="font-semibold text-slate-700">You Save</span>
+              <span className="font-bold text-green-600">
+                ${(cert.faceValue - cert.memberPrice).toFixed(2)}{" "}
+                <span className="text-sm">
+                  (
+                  {Math.round(
+                    ((cert.faceValue - cert.memberPrice) / cert.faceValue) *
+                      100,
+                  )}
+                  % off)
+                </span>
+              </span>
+            </div>
+          </div>
+
+          {/* What happens next */}
+          <div className="mb-6">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">
+              What Happens After Payment
+            </p>
+            <ul className="space-y-2">
+              {(isPrepaid
+                ? [
+                    "You'll receive a unique redemption code instantly",
+                    "Share it via WhatsApp or email",
+                    `Recipient redeems full $${cert.faceValue} at this business`,
+                  ]
+                : [
+                    "Your certificate activates immediately",
+                    "Show it at the business to get your discount",
+                    "One-time use — tracked in your dashboard",
+                  ]
+              ).map((text) => (
+                <li
+                  key={text}
+                  className="flex items-start gap-2 text-sm text-slate-600"
+                >
+                  <Icon
+                    name="CheckCircleIcon"
+                    size={16}
+                    className="text-green-500 mt-0.5 shrink-0"
+                  />
+                  {text}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {error && (
+            <p className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm text-center">
+              {error}
+            </p>
+          )}
+
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className={`w-full py-4 rounded-xl font-bold text-white text-lg flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed ${
+              isPrepaid
+                ? "bg-[#1C4D8D] hover:bg-blue-800"
+                : "bg-emerald-600 hover:bg-emerald-700"
+            }`}
+          >
+            {loading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Redirecting to Stripe…
+              </>
+            ) : (
+              <>
+                <Icon name="CreditCardIcon" size={20} />
+                Pay ${cert.memberPrice} securely
+              </>
+            )}
+          </button>
+          {!loading && (
+            <button
+              onClick={onClose}
+              className="w-full mt-3 py-3 text-slate-400 text-sm hover:text-slate-600 transition-colors"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Main component ───────────────────────────────────────────────────────────
 const BusinessProfileContent = () => {
   const { id: businessId } = useParams();
+  const navigate = useNavigate();
   const [business, setBusiness] = useState(null);
   const [discounts, setDiscounts] = useState([]);
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Offer modal state (unchanged)
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [editingOffer, setEditingOffer] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -27,6 +192,12 @@ const BusinessProfileContent = () => {
     minSpend: "",
     expiryDate: "",
   });
+
+  // ── NEW: purchase modal state ─────────────────────────────────────────────
+  const [selectedCert, setSelectedCert] = useState(null);
+  const [purchasing, setPurchasing] = useState(false);
+  const [purchaseError, setPurchaseError] = useState("");
+
   const user = getUser();
   const ownerId =
     user?.profile?._id ||
@@ -47,7 +218,6 @@ const BusinessProfileContent = () => {
         setLoading(false);
         return;
       }
-
       const data = await businessAPI.getById(businessId);
       const businessData = data?.business || data;
       setBusiness(businessData);
@@ -55,12 +225,13 @@ const BusinessProfileContent = () => {
       const offers = businessData?.offers || [];
       const discountOffers = offers.filter((o) => o.type === "DISCOUNT");
       const certificateOffers = offers.filter(
-        (o) => o.type === "PREPAID_CERTIFICATE",
+        (o) =>
+          o.type === "PREPAID_CERTIFICATE" ||
+          o.type === "VALUE_ADDED_CERTIFICATE",
       );
       const availableCertificates = certificateOffers.flatMap((o) =>
         (o.certificates || []).map((c) => ({ ...c, offer: o })),
       );
-
       setDiscounts(discountOffers);
       setCertificates(availableCertificates);
     } catch (error) {
@@ -70,6 +241,55 @@ const BusinessProfileContent = () => {
     }
   };
 
+  // ── NEW: purchase handlers ────────────────────────────────────────────────
+  const handlePurchaseClick = useCallback(
+    (cert) => {
+      // If user is not logged in, redirect to login
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+      setPurchaseError("");
+      setSelectedCert(cert);
+    },
+    [user, navigate],
+  );
+
+  const handleConfirmPurchase = useCallback(async () => {
+    if (!selectedCert) return;
+    setPurchasing(true);
+    setPurchaseError("");
+    try {
+      await redirectToStripeCheckout({
+        certificateId: selectedCert.id || selectedCert._id,
+        type: selectedCert.offer?.type || "PREPAID_CERTIFICATE",
+      });
+      // Code here only runs if Stripe redirect didn't happen
+    } catch (err) {
+      console.error("Purchase error:", err);
+      // Handle membership gate error from backend
+      if (
+        err.message?.toLowerCase().includes("membership") ||
+        err.message?.toLowerCase().includes("active")
+      ) {
+        setPurchaseError(
+          "An active membership is required. Redirecting to membership page…",
+        );
+        setTimeout(() => navigate("/membership"), 2000);
+      } else {
+        setPurchaseError(err.message || "Payment failed. Please try again.");
+      }
+      setPurchasing(false);
+    }
+  }, [selectedCert, navigate]);
+
+  const handleCloseModal = useCallback(() => {
+    if (purchasing) return;
+    setSelectedCert(null);
+    setPurchaseError("");
+  }, [purchasing]);
+
+  // ── Offer handlers (unchanged) ────────────────────────────────────────────
   const openCreateOffer = () => {
     setEditingOffer(null);
     setOfferForm({
@@ -141,8 +361,7 @@ const BusinessProfileContent = () => {
   };
 
   const handleOfferDelete = async (offerId) => {
-    const ok = window.confirm("Delete this offer? This cannot be undone.");
-    if (!ok) return;
+    if (!window.confirm("Delete this offer? This cannot be undone.")) return;
     try {
       await offerAPI.delete(offerId);
       fetchBusinessData();
@@ -152,6 +371,7 @@ const BusinessProfileContent = () => {
     }
   };
 
+  // ── Render guards ─────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -186,6 +406,7 @@ const BusinessProfileContent = () => {
       </div>
     );
   }
+
   return (
     <div
       className="min-h-screen text-slate-900"
@@ -203,7 +424,18 @@ const BusinessProfileContent = () => {
         .dcc-title { font-family: 'Space Grotesk', 'Outfit', sans-serif; }
       `}</style>
 
-      {/* Hero */}
+      {/* ── Purchase Modal ──────────────────────────────────────────────── */}
+      {selectedCert && (
+        <PurchaseModal
+          cert={selectedCert}
+          onConfirm={handleConfirmPurchase}
+          onClose={handleCloseModal}
+          loading={purchasing}
+          error={purchaseError}
+        />
+      )}
+
+      {/* Hero (unchanged) */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-amber-200/40 blur-3xl" />
@@ -267,13 +499,11 @@ const BusinessProfileContent = () => {
                   </div>
                 </div>
               </div>
-
               {business.description && (
                 <p className="mt-6 text-base md:text-lg text-slate-600 leading-relaxed">
                   {business.description}
                 </p>
               )}
-
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 {business.website && (
                   <a
@@ -307,7 +537,10 @@ const BusinessProfileContent = () => {
                 <div className="bg-white/10 rounded-2xl p-4">
                   <p className="text-xs text-white/60">Category</p>
                   <p className="text-lg font-semibold">
-                    {business.category || "Local Favorite"}
+                    {business.category?.name ||
+                      business.category?.slug ||
+                      business.category ||
+                      "Local Favorite"}
                   </p>
                 </div>
                 <div className="bg-white/10 rounded-2xl p-4">
@@ -328,7 +561,7 @@ const BusinessProfileContent = () => {
         </div>
       </div>
 
-      {/* Discounts & Offers */}
+      {/* Discounts & Offers (unchanged) */}
       {discounts.length > 0 && (
         <div className="py-16">
           <div className="max-w-7xl mx-auto px-6">
@@ -396,11 +629,12 @@ const BusinessProfileContent = () => {
                     </div>
                   </div>
                   <p className="text-[var(--accent)] font-bold text-xl mt-3">
-                    {discount.discountValue
-                      ? discount.discountValue <= 1
-                        ? `${Math.round(discount.discountValue * 100)}% off`
-                        : `$${discount.discountValue} off`
-                      : discount.title}
+                    {discount.type === "DISCOUNT" && discount.discountValue
+                      ? `${discount.discountValue}% off`
+                      : discount.type === "VALUE_ADDED_CERTIFICATE" &&
+                          discount.discountValue
+                        ? `$${discount.discountValue} off`
+                        : discount.title}
                   </p>
                   {discount.description && (
                     <p className="text-slate-600 mt-3">
@@ -420,6 +654,7 @@ const BusinessProfileContent = () => {
         </div>
       )}
 
+      {/* Offer CRUD modal (unchanged) */}
       {showOfferModal && isOwner && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4">
           <div className="bg-white w-full max-w-2xl rounded-3xl p-8 shadow-2xl border border-slate-100">
@@ -477,10 +712,7 @@ const BusinessProfileContent = () => {
                   rows={3}
                   value={offerForm.description}
                   onChange={(e) =>
-                    setOfferForm({
-                      ...offerForm,
-                      description: e.target.value,
-                    })
+                    setOfferForm({ ...offerForm, description: e.target.value })
                   }
                   className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                 />
@@ -550,10 +782,7 @@ const BusinessProfileContent = () => {
                     type="date"
                     value={offerForm.expiryDate}
                     onChange={(e) =>
-                      setOfferForm({
-                        ...offerForm,
-                        expiryDate: e.target.value,
-                      })
+                      setOfferForm({ ...offerForm, expiryDate: e.target.value })
                     }
                     className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                   />
@@ -579,7 +808,7 @@ const BusinessProfileContent = () => {
         </div>
       )}
 
-      {/* Certificates */}
+      {/* ── Certificates section — Purchase button NOW has onClick ─────── */}
       {certificates.length > 0 && (
         <div className="py-16 bg-white/70 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-6">
@@ -608,20 +837,34 @@ const BusinessProfileContent = () => {
                         ${cert.memberPrice}
                       </span>
                     </div>
-                    <div className="flex justify-between border-t border-border pt-2">
+                    <div className="flex justify-between border-t border-slate-100 pt-2">
                       <span className="font-semibold text-slate-900">
                         You Save
                       </span>
                       <span className="font-bold text-emerald-600">
-                        ${(cert.faceValue || 0) - (cert.memberPrice || 0)}
+                        $
+                        {(
+                          (cert.faceValue || 0) - (cert.memberPrice || 0)
+                        ).toFixed(2)}
                       </span>
                     </div>
                   </div>
+                  {cert.expiryDate && (
+                    <p className="text-xs text-slate-400 mb-3">
+                      Expires: {new Date(cert.expiryDate).toLocaleDateString()}
+                    </p>
+                  )}
                   <p className="text-sm text-slate-500 mb-4">
                     Status: {cert.status || "AVAILABLE"}
                   </p>
-                  <button className="w-full px-6 py-3 bg-slate-900 text-white rounded-full font-semibold hover:bg-[var(--accent)] transition-all">
-                    Purchase
+                  {/* ── FIXED: was <button> with no onClick ── */}
+                  <button
+                    type="button"
+                    onClick={() => handlePurchaseClick(cert)}
+                    disabled={cert.status !== "AVAILABLE"}
+                    className="w-full px-6 py-3 bg-slate-900 text-white rounded-full font-semibold hover:bg-[var(--accent)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {cert.status === "AVAILABLE" ? "Purchase" : cert.status}
                   </button>
                 </div>
               ))}
@@ -630,7 +873,7 @@ const BusinessProfileContent = () => {
         </div>
       )}
 
-      {/* Advertise CTA */}
+      {/* Advertise CTA (unchanged) */}
       <div className="py-20">
         <div className="max-w-4xl mx-auto px-6">
           <div className="bg-gradient-to-r from-[#0f172a] to-[#1c4d8d] text-white rounded-3xl p-12 text-center shadow-2xl">
