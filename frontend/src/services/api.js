@@ -1,13 +1,18 @@
 const resolveBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL;
   if (envUrl) return envUrl;
+
   if (typeof window !== "undefined") {
     const host = window.location.hostname;
     if (host === "localhost" || host === "127.0.0.1") {
-      return "http://localhost:5000/api";
+      return import.meta.env.VITE_LOCALHOST_URL || "http://localhost:5000/api";
     }
   }
-  return "https://dcc-backend-ej8n.onrender.com/api";
+
+  return (
+    import.meta.env.VITE_FALLBACK_URL ||
+    "https://dcc-backend-ej8n.onrender.com/api"
+  );
 };
 
 const BASE_URL = resolveBaseUrl();
