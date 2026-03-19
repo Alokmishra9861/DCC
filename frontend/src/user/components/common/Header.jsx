@@ -63,21 +63,20 @@ const Header = () => {
   ];
   const businessNavLinks = [
     { href: "/business-dashboard", label: "Dashboard" },
-    { href: "/browse-discounts", label: "Discounts" },
+    { href: "/discounts", label: "Discounts" },
+    { href: "/certification", label: "Certificates" },
     { href: "/categories", label: "Categories" },
     { href: "/about", label: "About Us" },
     { href: "/contact", label: "Contact Us" },
   ];
   const employerNavLinks = [
-    { href: "/employer-dashboard", label: "Dashboard" },
-    { href: "/browse-discounts", label: "Discounts" },
+    { href: "/employer-dashboard", label: "Employer Dashboard" },
     { href: "/categories", label: "Categories" },
     { href: "/about", label: "About Us" },
     { href: "/contact", label: "Contact Us" },
   ];
   const associationNavLinks = [
     { href: "/association-dashboard", label: "Dashboard" },
-    { href: "/browse-discounts", label: "Discounts" },
     { href: "/categories", label: "Categories" },
     { href: "/about", label: "About Us" },
     { href: "/contact", label: "Contact Us" },

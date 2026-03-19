@@ -218,8 +218,8 @@ const MyCertificatesSection = () => {
                     isRedeemed
                       ? "bg-slate-400"
                       : isPrepaid
-                        ? "bg-gradient-to-r from-[#1C4D8D] to-[#2563eb]"
-                        : "bg-gradient-to-r from-emerald-600 to-teal-500"
+                        ? "bg-linear-to-r from-[#1C4D8D] to-[#2563eb]"
+                        : "bg-linear-to-r from-emerald-600 to-teal-500"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">

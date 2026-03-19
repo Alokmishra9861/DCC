@@ -40,13 +40,17 @@ import CategoriesDetailsPage from "./user/pages/Categories/CategoriesDetailsPage
 import ForBusinessContent from "./user/pages/ForBusinesses/ForBusinessContent";
 import PaymentSuccessPage from "./user/pages/Payment/PaymentSuccessPage";
 
+// ── NEW: Employer sub-pages ───────────────────────────────────────────────────
+import BulkPurchase from "./user/pages/EmployerDashboard/BulkPurchase";
+import EmployeeUpload from "./user/pages/EmployerDashboard/EmployeeUpload";
+import EmployeeList from "./user/pages/EmployerDashboard/EmployeeList";
+import AcceptInvite from "./user/pages/AcceptInvite";
+
 const ScrollToTop = () => {
   const { pathname } = useLocation();
-
   React.useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
-
   return null;
 };
 
@@ -56,13 +60,38 @@ const UserLayout = () => {
       <Header />
       <main className="flex-1 pt-20">
         <Routes>
-          {/* Public pages */}
+          {/* ── Public pages ─────────────────────────────────────────────── */}
           <Route path="/" element={<HomePage />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/about" element={<AboutContent />} />
           <Route path="/pricing" element={<PricingContent />} />
           <Route path="/login" element={<LoginContent />} />
           <Route path="/sign-up" element={<SignupContent />} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/for-individuals" element={<ForIndividualsContent />} />
+          <Route path="/for-businesses" element={<ForBusinessContent />} />
+          <Route path="/for-employers" element={<ForEmployersContent />} />
+          <Route
+            path="/for-associations"
+            element={<ForAssociationsContent />}
+          />
+          <Route path="/advertise" element={<AdvertiseContent />} />
+          <Route path="/categories" element={<CategoriesPage />} />
+          <Route
+            path="/categoriespage/:category"
+            element={<CategoriesDetailsPage />}
+          />
+          {/* Browse discounts — accessible to all authenticated users (MEMBER, BUSINESS, EMPLOYER) and public */}
+          <Route
+            path="/browse-discounts"
+            element={<BrowseDiscountsContent />}
+          />
+
+          {/* ── PUBLIC: Employee accepts invite from email ────────────────
+              Must be public — employee has no account yet when they click  */}
+          <Route path="/accept-invite/:token" element={<AcceptInvite />} />
+
+          {/* ── Member-only pages ─────────────────────────────────────────── */}
           <Route
             path="/membership"
             element={
@@ -71,25 +100,6 @@ const UserLayout = () => {
               </ProtectedRoute>
             }
           />
-          <Route path="/for-individuals" element={<ForIndividualsContent />} />
-          <Route path="/for-businesses" element={<ForBusinessContent />} />
-          <Route path="/for-employers" element={<ForEmployersContent />} />
-          <Route
-            path="/for-associations"
-            element={<ForAssociationsContent />}
-          />
-          <Route
-            path="/browse-discounts"
-            element={<BrowseDiscountsContent />}
-          />
-          <Route path="/advertise" element={<AdvertiseContent />} />
-          <Route path="/categories" element={<CategoriesPage />} />
-          <Route
-            path="/categoriespage/:category"
-            element={<CategoriesDetailsPage />}
-          />
-
-          {/* Member-only pages */}
           <Route
             path="/travel"
             element={
@@ -98,15 +108,6 @@ const UserLayout = () => {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/certification"
-            element={
-              <ProtectedRoute roles={["MEMBER"]} requireMembership>
-                <CertificationContent />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/discounts" element={<DiscountsContent />} />
           <Route
             path="/business-profile/:id"
             element={
@@ -123,11 +124,59 @@ const UserLayout = () => {
               </ProtectedRoute>
             }
           />
+
+          {/* ── Business dashboard ────────────────────────────────────────── */}
           <Route
             path="/business-dashboard"
             element={
               <ProtectedRoute roles={["BUSINESS"]}>
                 <BusinessDashboardContent />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ── Discounts & Certificates (Member + Business) ─────────────── */}
+          <Route
+            path="/discounts"
+            element={
+              <ProtectedRoute roles={["MEMBER", "BUSINESS"]}>
+                <DiscountsContent />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/certification"
+            element={
+              <ProtectedRoute roles={["MEMBER", "BUSINESS"]} requireMembership>
+                <CertificationContent />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ── Employer dashboard + sub-pages ───────────────────────────────
+              All under ProtectedRoute roles={["EMPLOYER"]}
+              Order matters: specific paths before the base path            */}
+          <Route
+            path="/employer-dashboard/bulk-purchase"
+            element={
+              <ProtectedRoute roles={["EMPLOYER"]}>
+                <BulkPurchase />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/employer-dashboard/employees/upload"
+            element={
+              <ProtectedRoute roles={["EMPLOYER"]}>
+                <EmployeeUpload />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/employer-dashboard/employees"
+            element={
+              <ProtectedRoute roles={["EMPLOYER"]}>
+                <EmployeeList />
               </ProtectedRoute>
             }
           />
@@ -139,6 +188,8 @@ const UserLayout = () => {
               </ProtectedRoute>
             }
           />
+
+          {/* ── Other role dashboards ─────────────────────────────────────── */}
           <Route
             path="/association-dashboard"
             element={
@@ -156,7 +207,7 @@ const UserLayout = () => {
             }
           />
 
-          {/* Payment callbacks */}
+          {/* ── Payment callbacks ─────────────────────────────────────────── */}
           <Route
             path="/payment/success"
             element={
@@ -170,7 +221,7 @@ const UserLayout = () => {
             element={<Navigate to="/pricing" replace />}
           />
 
-          {/* 404 */}
+          {/* ── 404 ──────────────────────────────────────────────────────── */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>

@@ -1,79 +1,122 @@
+// Backend/controllers/admin.controller.js
+
 const { prisma } = require("../config/database");
 const { ApiResponse, ApiError } = require("../utils/ApiResponse");
 const { asyncHandler } = require("../middlewares/errorhandler");
 const {
-  sendEmployerApprovedEmail,
   sendMembershipConfirmationEmail,
 } = require("../services/email.service");
+const {
+  sendEmployerApprovalEmail,
+  sendEmployerRejectionEmail,
+} = require("../services/employer.email.service");
 const { generateMemberQR } = require("../services/qr.service");
 const { getPagination, buildPaginationMeta } = require("../utils/Paginate");
 
 // ── Dashboard stats ───────────────────────────────────────────────────────────
-// Returns FLAT object — Dashboard.jsx reads totalMembers, activeMembers etc directly
-exports.getDashboardStats = asyncHandler(async (req, res) => {
-  const [
-    totalUsers,
-    totalMembers,
-    activeMembers,
-    totalBusinesses,
-    pendingBusinesses,
-    pendingEmployers,
-    pendingAssociations,
-    totalTransactions,
-    totalSavingsAgg,
-    recentMembers,
-    recentBusinesses,
-  ] = await Promise.all([
-    prisma.user.count(),
-    prisma.member.count(),
-    prisma.membership.count({ where: { status: "ACTIVE" } }),
-    prisma.business.count({ where: { status: "APPROVED" } }),
-    prisma.business.count({ where: { status: "PENDING" } }),
-    prisma.employer.count({ where: { isApproved: false } }),
-    prisma.association.count({ where: { isApproved: false } }),
-    prisma.transaction.count(),
-    prisma.transaction.aggregate({ _sum: { savingsAmount: true } }),
-    // Recent members for the dashboard table
-    prisma.member.findMany({
-      take: 5,
-      orderBy: { createdAt: "desc" },
-      include: {
-        user: { select: { id: true, email: true, isActive: true } },
-        membership: { select: { status: true, type: true, expiryDate: true } },
-      },
-    }),
-    // Recent businesses for the dashboard table
-    prisma.business.findMany({
-      take: 5,
-      orderBy: { createdAt: "desc" },
-      include: {
-        user: { select: { id: true, email: true } },
-      },
-    }),
-  ]);
+exports.getDashboardStats = async (req, res) => {
+  try {
+    console.log("📊 Fetching dashboard stats...");
 
-  // Flat structure — no nested { stats: {} } wrapper
-  // Dashboard.jsx reads these directly after the ApiResponse unwrap
-  return ApiResponse.success(res, {
-    // Core counts
-    totalUsers,
-    totalMembers,
-    activeMembers,
-    totalBusinesses,
-    totalTransactions,
-    totalSavings: totalSavingsAgg._sum.savingsAmount ?? 0,
+    // Get all counts
+    const totalUsers = await prisma.user.count();
+    const totalMembers = await prisma.member.count();
+    const activeMembers = await prisma.membership.count({
+      where: { status: "ACTIVE" },
+    });
+    const totalBusinesses = await prisma.business.count({
+      where: { status: "APPROVED" },
+    });
+    const pendingBusinesses = await prisma.business.count({
+      where: { status: "PENDING" },
+    });
+    const pendingEmployers = await prisma.employer.count({
+      where: { status: "PENDING" },
+    });
+    const pendingAssociations = await prisma.association.count({
+      where: { isApproved: false },
+    });
+    const totalTransactions = await prisma.transaction.count();
 
-    // Pending counts (used for the approval badge)
-    pendingBusinesses,
-    pendingEmployers,
-    pendingAssociations,
-    totalPending: pendingBusinesses + pendingEmployers + pendingAssociations,
+    let totalSavings = 0;
+    try {
+      const result = await prisma.transaction.aggregate({
+        _sum: { savingsAmount: true },
+      });
+      totalSavings = result?._sum?.savingsAmount || 0;
+    } catch (e) {
+      console.error("Error aggregating savings:", e.message);
+    }
 
-    // Recent activity for dashboard tables
-    recentMembers,
-    recentBusinesses,
-  });
-});
+    const recentMembers = await prisma.member
+      .findMany({
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
+          age: true,
+          district: true,
+          totalSavings: true,
+          createdAt: true,
+        },
+      })
+      .catch(() => []);
+
+    const recentBusinesses = await prisma.business
+      .findMany({
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          email: true,
+          createdAt: true,
+        },
+      })
+      .catch(() => []);
+
+    const responseData = {
+      totalUsers,
+      totalMembers,
+      activeMembers,
+      totalBusinesses,
+      totalTransactions,
+      totalSavings,
+      pendingBusinesses,
+      pendingEmployers,
+      pendingAssociations,
+      totalPending: pendingBusinesses + pendingEmployers + pendingAssociations,
+      recentMembers,
+      recentBusinesses,
+    };
+
+    console.log("✓ All metrics fetched successfully");
+    return ApiResponse.success(res, responseData);
+  } catch (error) {
+    console.error("❌ getDashboardStats error:", error.message);
+    console.error(error.stack);
+
+    // Return fallback data
+    return ApiResponse.success(res, {
+      totalUsers: 0,
+      totalMembers: 0,
+      activeMembers: 0,
+      totalBusinesses: 0,
+      totalTransactions: 0,
+      totalSavings: 0,
+      pendingBusinesses: 0,
+      pendingEmployers: 0,
+      pendingAssociations: 0,
+      totalPending: 0,
+      recentMembers: [],
+      recentBusinesses: [],
+    });
+  }
+};
 
 // ── Get all users ─────────────────────────────────────────────────────────────
 exports.getAllUsers = asyncHandler(async (req, res) => {
@@ -218,7 +261,6 @@ exports.getAdminMembers = asyncHandler(async (req, res) => {
     user: memberUserById.get(m.userId) || null,
   }));
 
-  // Filter by membership status if requested (done in memory to avoid complex join)
   const filtered =
     membershipStatus && membershipStatus !== "all"
       ? members.filter(
@@ -243,9 +285,8 @@ exports.updateMember = asyncHandler(async (req, res) => {
 
   if (email) {
     const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing && existing.id !== member.userId) {
+    if (existing && existing.id !== member.userId)
       throw ApiError.conflict("Email already in use");
-    }
   }
 
   const updated = await prisma.$transaction(async (tx) => {
@@ -258,9 +299,8 @@ exports.updateMember = asyncHandler(async (req, res) => {
         ...(district !== undefined && { district }),
       },
     });
-    if (email) {
+    if (email)
       await tx.user.update({ where: { id: member.userId }, data: { email } });
-    }
     return updatedMember;
   });
 
@@ -277,9 +317,8 @@ exports.deleteMember = asyncHandler(async (req, res) => {
     await tx.certificatePurchase.deleteMany({ where: { memberId: id } });
     await tx.transaction.deleteMany({ where: { memberId: id } });
     await tx.member.deleteMany({ where: { id } });
-    if (member?.userId) {
+    if (member?.userId)
       await tx.user.deleteMany({ where: { id: member.userId } });
-    }
   });
 
   return ApiResponse.success(res, {}, "Member deleted");
@@ -290,30 +329,15 @@ exports.getPendingApprovals = asyncHandler(async (req, res) => {
   const [employersRaw, associationsRaw, businessesRaw] = await Promise.all([
     prisma.employer.findMany({
       where: { isApproved: false },
-      select: {
-        id: true,
-        userId: true,
-        companyName: true,
-        createdAt: true,
-      },
+      select: { id: true, userId: true, companyName: true, createdAt: true },
     }),
     prisma.association.findMany({
       where: { isApproved: false },
-      select: {
-        id: true,
-        userId: true,
-        name: true,
-        createdAt: true,
-      },
+      select: { id: true, userId: true, name: true, createdAt: true },
     }),
     prisma.business.findMany({
       where: { isApproved: false },
-      select: {
-        id: true,
-        userId: true,
-        name: true,
-        createdAt: true,
-      },
+      select: { id: true, userId: true, name: true, createdAt: true },
     }),
   ]);
 
@@ -329,20 +353,20 @@ exports.getPendingApprovals = asyncHandler(async (req, res) => {
   });
   const userById = new Map(users.map((u) => [u.id, u]));
 
-  const employers = employersRaw.map((e) => ({
-    ...e,
-    user: userById.get(e.userId) || null,
-  }));
-  const associations = associationsRaw.map((a) => ({
-    ...a,
-    user: userById.get(a.userId) || null,
-  }));
-  const businesses = businessesRaw.map((b) => ({
-    ...b,
-    user: userById.get(b.userId) || null,
-  }));
-
-  return ApiResponse.success(res, { employers, associations, businesses });
+  return ApiResponse.success(res, {
+    employers: employersRaw.map((e) => ({
+      ...e,
+      user: userById.get(e.userId) || null,
+    })),
+    associations: associationsRaw.map((a) => ({
+      ...a,
+      user: userById.get(a.userId) || null,
+    })),
+    businesses: businessesRaw.map((b) => ({
+      ...b,
+      user: userById.get(b.userId) || null,
+    })),
+  });
 });
 
 // ── Pending memberships ───────────────────────────────────────────────────────
@@ -422,32 +446,85 @@ exports.approveMembership = asyncHandler(async (req, res) => {
     data: { qrCode },
   });
 
-  await sendMembershipConfirmationEmail(updated.member.user.email, {
-    name: `${updated.member.firstName} ${updated.member.lastName}`,
-    expiryDate: updated.expiryDate,
-    membershipCost: updated.priceUSD,
-  });
+  if (updated.member?.user?.email) {
+    await sendMembershipConfirmationEmail(updated.member.user.email, {
+      name: `${updated.member.firstName} ${updated.member.lastName}`,
+      expiryDate: updated.expiryDate,
+      membershipCost: updated.priceUSD,
+    }).catch((err) =>
+      console.error("Membership confirmation email failed:", err.message),
+    );
+  }
 
   return ApiResponse.success(res, updated, "Membership approved");
 });
 
 // ── Approve employer ──────────────────────────────────────────────────────────
 exports.approveEmployer = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+  // ✅ FIX: Don't use include — fetch user separately to avoid null relation crash
   const employer = await prisma.employer.findUnique({
-    where: { id },
-    include: { user: true },
+    where: { id: req.params.id },
   });
   if (!employer) throw ApiError.notFound("Employer not found");
 
-  await prisma.employer.update({ where: { id }, data: { isApproved: true } });
-
-  await sendEmployerApprovedEmail(employer.user.email, {
-    companyName: employer.companyName,
-    loginUrl: `${process.env.CLIENT_URL}/login`,
+  // Fetch user separately — avoids Prisma "field required but got null" error
+  // when the relation exists in schema but the record was created without a user link
+  const user = await prisma.user.findUnique({
+    where: { id: employer.userId },
+    select: { email: true },
   });
 
+  await prisma.employer.update({
+    where: { id: employer.id },
+    data: { isApproved: true, status: "APPROVED" },
+  });
+
+  if (user?.email) {
+    await sendEmployerApprovalEmail({
+      employerEmail: user.email,
+      companyName: employer.companyName,
+    }).catch((err) =>
+      console.error("Employer approval email failed:", err.message),
+    );
+  }
+
   return ApiResponse.success(res, {}, "Employer approved");
+});
+
+// ── Reject employer ───────────────────────────────────────────────────────────
+exports.rejectEmployer = asyncHandler(async (req, res) => {
+  const { reason } = req.body;
+
+  const employer = await prisma.employer.findUnique({
+    where: { id: req.params.id },
+  });
+  if (!employer) throw ApiError.notFound("Employer not found");
+
+  const user = await prisma.user.findUnique({
+    where: { id: employer.userId },
+    select: { email: true },
+  });
+
+  await prisma.employer.update({
+    where: { id: employer.id },
+    data: {
+      isApproved: false,
+      status: "REJECTED",
+      rejectionReason: reason || null,
+    },
+  });
+
+  if (user?.email) {
+    await sendEmployerRejectionEmail({
+      employerEmail: user.email,
+      companyName: employer.companyName,
+      reason,
+    }).catch((err) =>
+      console.error("Employer rejection email failed:", err.message),
+    );
+  }
+
+  return ApiResponse.success(res, {}, "Employer rejected");
 });
 
 // ── Approve association ───────────────────────────────────────────────────────
@@ -479,7 +556,6 @@ exports.approveBusiness = asyncHandler(async (req, res) => {
 // ── Reject business ───────────────────────────────────────────────────────────
 exports.rejectBusiness = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { reason } = req.body;
   const business = await prisma.business.findUnique({ where: { id } });
   if (!business) throw ApiError.notFound("Business not found");
 
@@ -491,12 +567,21 @@ exports.rejectBusiness = asyncHandler(async (req, res) => {
 });
 
 // ── Get all businesses (admin) ────────────────────────────────────────────────
+const slugifyCategory = (value) => {
+  if (!value) return null;
+  return String(value)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+};
+
 exports.getAdminBusinesses = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
   const { status, search } = req.query;
 
   const where = {
-    ...(status && { status: status }),
+    ...(status && { status }),
     ...(search && { name: { contains: search, mode: "insensitive" } }),
   };
 
@@ -540,15 +625,6 @@ exports.getAdminBusinesses = asyncHandler(async (req, res) => {
 });
 
 // ── Update business (admin) ───────────────────────────────────────────────────
-const slugifyCategory = (value) => {
-  if (!value) return null;
-  return String(value)
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-};
-
 exports.updateBusiness = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const {
@@ -572,9 +648,7 @@ exports.updateBusiness = asyncHandler(async (req, res) => {
   if (!resolvedCategoryId && (categorySlug || categoryName)) {
     const slug = categorySlug || slugifyCategory(categoryName);
     if (slug) {
-      const existing = await prisma.category.findUnique({
-        where: { slug },
-      });
+      const existing = await prisma.category.findUnique({ where: { slug } });
       if (!existing) {
         const created = await prisma.category.create({
           data: {
@@ -649,6 +723,7 @@ exports.updateInquiryStatus = asyncHandler(async (req, res) => {
 exports.getAuditLog = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
 
+  // ✅ FIX: removed stray `, a` that was causing a syntax/runtime error
   const [logs, total] = await Promise.all([
     prisma.auditLog.findMany({
       skip,
@@ -656,7 +731,6 @@ exports.getAuditLog = asyncHandler(async (req, res) => {
       orderBy: { createdAt: "desc" },
     }),
     prisma.auditLog.count(),
-    a,
   ]);
 
   return ApiResponse.paginated(

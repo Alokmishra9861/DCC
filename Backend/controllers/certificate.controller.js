@@ -401,7 +401,7 @@ exports.redeemCertificate = asyncHandler(async (req, res) => {
           offerId: certificate.offerId,
           saleAmount: purchase.amountPaid, // Amount member paid for certificate
           discountAmount: 0,
-          savingsAmount: purchase.faceValue, // Full face value now being used
+          savingsAmount: 0, // FIX: Don't double-count! Savings already captured at purchase time (faceValue - memberPrice)
           memberAge: purchase.member?.age,
           memberSex: purchase.member?.sex,
           memberDistrict: purchase.member?.district,

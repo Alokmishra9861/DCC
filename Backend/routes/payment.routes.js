@@ -34,10 +34,22 @@ router.post(
 router.use(protect);
 
 // ── Membership payments (unchanged) ──────────────────────────────────────────
-router.post("/stripe/checkout", authorize("MEMBER"), createStripeCheckout);
-router.post("/paypal/checkout", authorize("MEMBER"), createPayPalCheckout);
-router.post("/paypal/capture", authorize("MEMBER"), capturePayPal);
-router.get("/verify-session", authorize("MEMBER"), verifyStripeSession);
+router.post(
+  "/stripe/checkout",
+  authorize("MEMBER", "EMPLOYER"),
+  createStripeCheckout,
+);
+router.post(
+  "/paypal/checkout",
+  authorize("MEMBER", "EMPLOYER"),
+  createPayPalCheckout,
+);
+router.post("/paypal/capture", authorize("MEMBER", "EMPLOYER"), capturePayPal);
+router.get(
+  "/verify-session",
+  authorize("MEMBER", "EMPLOYER"),
+  verifyStripeSession,
+);
 router.get("/verify-certificate-session", protect, verifyCertificateSession);
 
 // ── Certificate payments ──────────────────────────────────────────────────────

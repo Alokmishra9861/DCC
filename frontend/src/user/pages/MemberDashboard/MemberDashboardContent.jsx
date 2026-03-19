@@ -1,9 +1,5 @@
 // Frontend/src/user/pages/Dashboard/MemberDashboardContent.jsx
-// CHANGES FROM PREVIOUS VERSION:
-//  + Imports MyCertificatesSection as separate component (re-fetches on every mount)
-//  + Reads location.state.openCertificates to auto-open My Certificates after payment
-//  + My Certificates quick link now shows active cert count badge
-//  Everything else is identical to the previous version.
+// CHANGES: Replaced AnalyticsStatsPanel + 3 savings cards with unified MemberStatsBlock
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -18,7 +14,7 @@ import {
   travelAPI,
   certificateAPI,
 } from "../../../services/api";
-import AnalyticsStatsPanel from "../../components/ui/AnalyticsStatsPanel";
+import MemberStatsBlock from "../../components/ui/MemberStatsBlock";
 import MyCertificatesSection from "../../components/ui/MyCertificatesSection";
 
 const toArray = (val, fallbackKeys = []) => {
@@ -28,49 +24,39 @@ const toArray = (val, fallbackKeys = []) => {
   }
   return [];
 };
-
-const getCategoryLabel = (category) => {
-  if (!category) return "";
-  if (typeof category === "string") return category;
-  return category.name || category.slug || "";
+const getCategoryLabel = (c) => {
+  if (!c) return "";
+  if (typeof c === "string") return c;
+  return c.name || c.slug || "";
 };
 
 const MemberDashboardContent = () => {
   const userRef = useRef(getUser());
   const user = userRef.current;
   const location = useLocation();
-
-  // If navigated from PaymentSuccessPage with openCertificates:true, auto-open
   const [activeView, setActiveView] = useState(
     location.state?.openCertificates ? "certificates" : "dashboard",
   );
-
   const [memberProfile, setMemberProfile] = useState(null);
   const [qrCodeData, setQrCodeData] = useState("");
   const [showQRModal, setShowQRModal] = useState(false);
   const [newDiscounts, setNewDiscounts] = useState([]);
   const [providerDirectory, setProviderDirectory] = useState([]);
   const [travelDeals, setTravelDeals] = useState([]);
-  const [unbeatableDeals, setUnbeatableDeals] = useState([]);
-  const [newCertificates, setNewCertificates] = useState([]);
-  const [hotCertificates, setHotCertificates] = useState([]);
   const [recentTransactions, setRecentTransactions] = useState([]);
-  const [savingsSummary, setSavingsSummary] = useState(null);
   const [activeCertCount, setActiveCertCount] = useState(0);
   const [initialLoading, setInitialLoading] = useState(true);
   const hasFetched = useRef(false);
 
   useEffect(() => {
     if (!user) return;
-    const userId = user?.id || user?._id || "UNKNOWN";
-    setQrCodeData(`DCC-MEMBER-${userId}-${Date.now()}`);
-    const qrInterval = setInterval(
-      () => {
-        setQrCodeData(`DCC-MEMBER-${userId}-${Date.now()}`);
-      },
+    const uid = user?.id || user?._id || "UNKNOWN";
+    setQrCodeData(`DCC-MEMBER-${uid}-${Date.now()}`);
+    const t = setInterval(
+      () => setQrCodeData(`DCC-MEMBER-${uid}-${Date.now()}`),
       10 * 60 * 1000,
     );
-    return () => clearInterval(qrInterval);
+    return () => clearInterval(t);
   }, []);
 
   const fetchDashboardData = useCallback(async () => {
@@ -79,47 +65,37 @@ const MemberDashboardContent = () => {
     try {
       const [
         profileRes,
-        savingsRes,
         txnRes,
         discountsRes,
         businessesRes,
         travelRes,
-        certsRes,
         myPurchasesRes,
       ] = await Promise.allSettled([
         memberAPI.getProfile(),
-        memberAPI.getSavings("lifetime"),
         memberAPI.getTransactions({ limit: 5, page: 1 }),
         discountAPI.getAll({ limit: 6 }),
         businessAPI.getAll({ limit: 10 }),
         travelAPI.getAll({ limit: 3 }),
-        certificateAPI.getAvailable({ limit: 4 }),
-        certificateAPI.getMy(), // ← get active cert count for badge
+        certificateAPI.getMy(),
       ]);
-
       if (profileRes.status === "fulfilled" && profileRes.value) {
-        const profile = profileRes.value;
-        setMemberProfile(profile);
-        const userId = profile?.userId || user?.id || user?._id || "UNKNOWN";
-        setQrCodeData(profile?.qrCode || `DCC-MEMBER-${userId}-${Date.now()}`);
-      }
-      if (savingsRes.status === "fulfilled")
-        setSavingsSummary(
-          savingsRes.value?.summary ?? savingsRes.value ?? null,
+        const p = profileRes.value;
+        setMemberProfile(p);
+        setQrCodeData(
+          p?.qrCode || `DCC-MEMBER-${p?.userId || user?.id}-${Date.now()}`,
         );
+      }
       if (txnRes.status === "fulfilled")
         setRecentTransactions(
           toArray(txnRes.value, ["transactions", "items"]).slice(0, 5),
         );
-      if (discountsRes.status === "fulfilled") {
-        const list = toArray(discountsRes.value, [
-          "discounts",
-          "data",
-          "items",
-        ]);
-        setNewDiscounts(list.slice(0, 6));
-        setUnbeatableDeals(list.slice(0, 5));
-      }
+      if (discountsRes.status === "fulfilled")
+        setNewDiscounts(
+          toArray(discountsRes.value, ["discounts", "data", "items"]).slice(
+            0,
+            6,
+          ),
+        );
       if (businessesRes.status === "fulfilled")
         setProviderDirectory(
           toArray(businessesRes.value, ["businesses", "data", "items"]).slice(
@@ -134,11 +110,6 @@ const MemberDashboardContent = () => {
             3,
           ),
         );
-      if (certsRes.status === "fulfilled") {
-        const list = toArray(certsRes.value, ["certificates", "items", "data"]);
-        setNewCertificates(list.slice(0, 3));
-        setHotCertificates(list.slice(0, 4));
-      }
       if (myPurchasesRes.status === "fulfilled") {
         const list = toArray(myPurchasesRes.value, [
           "data",
@@ -147,8 +118,8 @@ const MemberDashboardContent = () => {
         ]);
         setActiveCertCount(list.filter((p) => p.status === "PURCHASED").length);
       }
-    } catch (error) {
-      console.error("Dashboard fetch error:", error);
+    } catch (e) {
+      console.error("Dashboard fetch error:", e);
     } finally {
       setInitialLoading(false);
     }
@@ -159,23 +130,18 @@ const MemberDashboardContent = () => {
   }, [fetchDashboardData]);
 
   const buildDisplayName = () => {
-    const firstName = (memberProfile?.firstName || "").trim();
-    const lastName = (memberProfile?.lastName || "").trim();
-    if (firstName || lastName) {
-      if (
-        firstName &&
-        lastName &&
-        firstName.toLowerCase() === lastName.toLowerCase()
-      )
-        return firstName;
-      return [firstName, lastName].filter(Boolean).join(" ").trim();
+    const fn = (memberProfile?.firstName || "").trim(),
+      ln = (memberProfile?.lastName || "").trim();
+    if (fn || ln) {
+      if (fn && ln && fn.toLowerCase() === ln.toLowerCase()) return fn;
+      return [fn, ln].filter(Boolean).join(" ");
     }
-    const fallback =
+    const fb =
       (user?.name || "").trim() || user?.email?.split("@")?.[0] || "Member";
-    const parts = fallback.split(/\s+/).filter(Boolean);
+    const parts = fb.split(/\s+/).filter(Boolean);
     if (parts.length === 2 && parts[0].toLowerCase() === parts[1].toLowerCase())
       return parts[0];
-    return fallback;
+    return fb;
   };
 
   const displayName = buildDisplayName();
@@ -184,19 +150,18 @@ const MemberDashboardContent = () => {
   const membershipStatus = membershipStatusRaw.toUpperCase();
 
   const getQrValue = () => {
-    const userId = user?.id || user?._id || "UNKNOWN";
-    let value = qrCodeData || `DCC-MEMBER-${userId}-${Date.now()}`;
-    if (typeof value !== "string") {
+    let v = qrCodeData || `DCC-MEMBER-${user?.id || "UNKNOWN"}-${Date.now()}`;
+    if (typeof v !== "string") {
       try {
-        value = JSON.stringify(value);
+        v = JSON.stringify(v);
       } catch {
-        value = `DCC-MEMBER-${userId}`;
+        v = `DCC-MEMBER-${user?.id}`;
       }
     }
-    return value.length > 300 ? value.slice(0, 300) : value;
+    return v.length > 300 ? v.slice(0, 300) : v;
   };
 
-  if (initialLoading) {
+  if (initialLoading)
     return (
       <div className="min-h-screen bg-slate-50/50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -207,17 +172,14 @@ const MemberDashboardContent = () => {
         </div>
       </div>
     );
-  }
 
   return (
     <div className="min-h-screen bg-slate-50/50">
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-125 h-125 bg-blue-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-125 h-125 bg-green-100/40 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-green-100/40 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
       </div>
-
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Inactive membership banner */}
         {!isMembershipActive && (
           <div className="mb-8 bg-amber-50 border border-amber-200 rounded-2xl p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
@@ -238,8 +200,8 @@ const MemberDashboardContent = () => {
         )}
 
         {/* Membership card */}
-        <div className="mb-10">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1C4D8D] to-[#4988C4] p-8 md:p-10 shadow-2xl">
+        <div className="mb-8">
+          <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-[#1C4D8D] to-[#4988C4] p-8 md:p-10 shadow-2xl">
             <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
@@ -262,7 +224,7 @@ const MemberDashboardContent = () => {
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-5 py-4 border border-white/20 min-w-[110px]">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-5 py-4 border border-white/20 min-w-27.5">
                   <p className="text-white/60 text-xs uppercase tracking-widest mb-1">
                     Member Since
                   </p>
@@ -277,7 +239,7 @@ const MemberDashboardContent = () => {
                       : "–"}
                   </p>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-5 py-4 border border-white/20 min-w-[110px]">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-5 py-4 border border-white/20 min-w-27.5">
                   <p className="text-white/60 text-xs uppercase tracking-widest mb-1">
                     Expires
                   </p>
@@ -308,62 +270,10 @@ const MemberDashboardContent = () => {
           </div>
         </div>
 
-        <AnalyticsStatsPanel title="My Savings Analytics" />
+        {/* ── UNIFIED STATS BLOCK ── */}
+        <MemberStatsBlock />
 
-        {/* Savings summary */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
-          {[
-            {
-              icon: "BanknotesIcon",
-              iconColor: "text-[#1C4D8D]",
-              bgColor: "bg-blue-50",
-              label: "Total Saved",
-              value: `$${(savingsSummary?.totalSavings || 0).toFixed(2)}`,
-              valueColor: "text-[#1C4D8D]",
-              sub: "Lifetime savings to date",
-            },
-            {
-              icon: "CreditCardIcon",
-              iconColor: "text-slate-500",
-              bgColor: "bg-slate-50",
-              label: "Membership Cost",
-              value: `$${(savingsSummary?.membershipCost || 89.99).toFixed(2)}`,
-              valueColor: "text-slate-700",
-              sub: "Annual membership fee",
-            },
-            {
-              icon: "ArrowTrendingUpIcon",
-              iconColor: "text-emerald-600",
-              bgColor: "bg-emerald-50",
-              label: "ROI Multiplier",
-              value: `${(savingsSummary?.roi || 0).toFixed(1)}×`,
-              valueColor: "text-emerald-600",
-              sub: "Return on investment",
-            },
-          ].map(
-            ({ icon, iconColor, bgColor, label, value, valueColor, sub }) => (
-              <div
-                key={label}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div
-                    className={`w-10 h-10 rounded-xl ${bgColor} flex items-center justify-center`}
-                  >
-                    <Icon name={icon} size={22} className={iconColor} />
-                  </div>
-                  <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
-                    {label}
-                  </p>
-                </div>
-                <p className={`text-3xl font-bold ${valueColor}`}>{value}</p>
-                <p className="text-xs text-slate-400 mt-1">{sub}</p>
-              </div>
-            ),
-          )}
-        </div>
-
-        {/* Recent activity */}
+        {/* Recent Activity */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-heading font-bold text-slate-900">
@@ -390,10 +300,10 @@ const MemberDashboardContent = () => {
               <ul className="divide-y divide-slate-100">
                 {recentTransactions.map((tx, i) => (
                   <li
-                    key={tx.id || tx._id || i}
+                    key={tx.id || i}
                     className="px-6 py-4 flex items-center gap-4 hover:bg-slate-50 transition-colors"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
                       {tx.business?.logoUrl ? (
                         <AppImage
                           src={tx.business.logoUrl}
@@ -423,7 +333,7 @@ const MemberDashboardContent = () => {
                         })}
                       </p>
                     </div>
-                    <div className="text-right flex-shrink-0">
+                    <div className="text-right shrink-0">
                       <p className="text-sm font-bold text-emerald-600">
                         −${(tx.savingsAmount || 0).toFixed(2)}
                       </p>
@@ -438,20 +348,15 @@ const MemberDashboardContent = () => {
           </div>
         </div>
 
-        {/* ── Quick Links ───────────────────────────────────────────────── */}
+        {/* Quick Links */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-          {/* My Certificates — prominent, with badge */}
           <button
             onClick={() =>
               setActiveView(
                 activeView === "certificates" ? "dashboard" : "certificates",
               )
             }
-            className={`group relative overflow-hidden rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 w-full text-left ${
-              activeView === "certificates"
-                ? "bg-gradient-to-br from-[#0F2854] to-[#1C4D8D] ring-4 ring-[#1C4D8D]/30"
-                : "bg-gradient-to-br from-[#1C4D8D] to-[#4988C4]"
-            }`}
+            className={`group relative overflow-hidden rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 w-full text-left ${activeView === "certificates" ? "bg-linear-to-br from-[#0F2854] to-[#1C4D8D] ring-4 ring-[#1C4D8D]/30" : "bg-linear-to-br from-[#1C4D8D] to-[#4988C4]"}`}
           >
             <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2" />
             <div className="relative z-10">
@@ -473,7 +378,6 @@ const MemberDashboardContent = () => {
               </p>
             </div>
           </button>
-
           {[
             {
               to: "/travel",
@@ -488,7 +392,7 @@ const MemberDashboardContent = () => {
               sub: "Local savings",
             },
             {
-              to: "/certifications",
+              to: "/certification",
               icon: "ShoppingCartIcon",
               title: "Buy Certificates",
               sub: "High-value certs",
@@ -497,7 +401,7 @@ const MemberDashboardContent = () => {
             <Link
               key={to}
               to={to}
-              className="group relative overflow-hidden bg-gradient-to-br from-[#1C4D8D] to-[#4988C4] text-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+              className="group relative overflow-hidden bg-linear-to-br from-[#1C4D8D] to-[#4988C4] text-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
             >
               <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2" />
               <div className="relative z-10">
@@ -513,18 +417,14 @@ const MemberDashboardContent = () => {
           ))}
         </div>
 
-        {/* ── My Certificates section ──────────────────────────────────── */}
         {activeView === "certificates" && (
           <div className="mb-16">
-            {/* MyCertificatesSection mounts fresh each time → re-fetches automatically */}
             <MyCertificatesSection key={Date.now()} />
           </div>
         )}
 
-        {/* Rest of dashboard */}
         {activeView === "dashboard" && (
           <>
-            {/* Travel deals */}
             <div className="mb-16">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-2xl md:text-3xl font-heading font-bold text-slate-900">
@@ -567,7 +467,7 @@ const MemberDashboardContent = () => {
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                           />
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />
+                        <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
                         <div className="absolute bottom-4 left-4 right-4">
                           <h3 className="text-xl font-bold text-white mb-1 line-clamp-1">
                             {deal.title || deal.name}
@@ -600,7 +500,6 @@ const MemberDashboardContent = () => {
               )}
             </div>
 
-            {/* New local discounts */}
             <div className="mb-16">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-2xl md:text-3xl font-heading font-bold text-slate-900">
@@ -638,7 +537,7 @@ const MemberDashboardContent = () => {
                       className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group"
                     >
                       <div className="flex items-start gap-4 mb-6">
-                        <div className="w-16 h-16 rounded-2xl overflow-hidden border border-slate-100 flex-shrink-0 bg-white p-1">
+                        <div className="w-16 h-16 rounded-2xl overflow-hidden border border-slate-100 shrink-0 bg-white p-1">
                           {discount.business?.logoUrl ? (
                             <AppImage
                               src={discount.business.logoUrl}
@@ -685,7 +584,6 @@ const MemberDashboardContent = () => {
               )}
             </div>
 
-            {/* Provider directory */}
             {providerDirectory.length > 0 && (
               <div className="mb-12">
                 <h2 className="text-2xl md:text-3xl font-heading font-bold text-slate-900 mb-8">
@@ -731,7 +629,6 @@ const MemberDashboardContent = () => {
         )}
       </div>
 
-      {/* QR Modal */}
       {showQRModal && (
         <div
           className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"

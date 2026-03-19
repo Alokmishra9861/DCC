@@ -1,3 +1,4 @@
+// Frontend/src/user/pages/AdminDashboard/AdminDashboardContent.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -15,9 +16,8 @@ import {
   Cell,
 } from "recharts";
 import { adminAPI, analyticsAPI } from "../../../services/api";
-import AnalyticsStatsPanel from "../../components/ui/AnalyticsStatsPanel";
 
-// ── tiny helpers ──────────────────────────────────────────────────────────────
+// ── helpers ───────────────────────────────────────────────────────────────────
 const fmt = (n) =>
   n >= 1_000_000
     ? `${(n / 1_000_000).toFixed(1)}M`
@@ -26,7 +26,7 @@ const fmt = (n) =>
       : String(n ?? 0);
 
 const pct = (val) => {
-  if (val === null || val === undefined) return null;
+  if (val == null) return null;
   return val >= 0 ? `+${val.toFixed(1)}%` : `${val.toFixed(1)}%`;
 };
 
@@ -39,69 +39,68 @@ const PIE_COLORS = [
   "#f43f5e",
 ];
 
-// ── quick-link card data ──────────────────────────────────────────────────────
 const QUICK_LINKS = [
   {
     label: "Members",
-    sub: "View & manage all members",
+    sub: "View & manage",
     icon: "👥",
     to: "/admin/members",
     color: "#1C4D8D",
-    light: "#EBF2FF",
+    bg: "#EBF2FF",
   },
   {
     label: "Businesses",
-    sub: "Approve & manage businesses",
+    sub: "Approve & manage",
     icon: "🏪",
     to: "/admin/businesses",
     color: "#059669",
-    light: "#ECFDF5",
+    bg: "#ECFDF5",
   },
   {
     label: "Approvals",
-    sub: "Pending items needing action",
+    sub: "Pending actions",
     icon: "✅",
     to: "/admin/approvals",
     color: "#d97706",
-    light: "#FFFBEB",
+    bg: "#FFFBEB",
   },
   {
     label: "Analytics",
-    sub: "Revenue & membership data",
+    sub: "Revenue & insights",
     icon: "📊",
     to: "/admin/analytics",
     color: "#7c3aed",
-    light: "#F5F3FF",
+    bg: "#F5F3FF",
   },
   {
-    label: "Banner Ads",
-    sub: "Manage advertisements",
+    label: "Ads",
+    sub: "Manage banners",
     icon: "📢",
     to: "/admin/settings",
     color: "#0891b2",
-    light: "#ECFEFF",
+    bg: "#ECFEFF",
   },
   {
     label: "Reports",
-    sub: "Export CSV reports",
+    sub: "Export CSV",
     icon: "📁",
     to: "/admin/finance",
     color: "#be123c",
-    light: "#FFF1F2",
+    bg: "#FFF1F2",
   },
 ];
 
-// ── stat card ─────────────────────────────────────────────────────────────────
-const StatCard = ({ label, value, sub, icon, color, light, change }) => (
-  <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col gap-3">
+// ── Stat card ─────────────────────────────────────────────────────────────────
+const StatCard = ({ label, value, sub, icon, bg, change }) => (
+  <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col gap-3">
     <div className="flex items-start justify-between">
       <div
         className="w-11 h-11 rounded-xl flex items-center justify-center text-xl"
-        style={{ background: light }}
+        style={{ background: bg }}
       >
         {icon}
       </div>
-      {change !== undefined && change !== null && (
+      {change != null && (
         <span
           className={`text-xs font-bold px-2 py-1 rounded-full ${
             parseFloat(change) >= 0
@@ -114,7 +113,7 @@ const StatCard = ({ label, value, sub, icon, color, light, change }) => (
       )}
     </div>
     <div>
-      <p className="text-3xl font-bold text-slate-900 leading-none mb-1">
+      <p className="text-2xl font-black text-slate-900 leading-none mb-1">
         {value}
       </p>
       <p className="text-sm font-semibold text-slate-700">{label}</p>
@@ -123,14 +122,14 @@ const StatCard = ({ label, value, sub, icon, color, light, change }) => (
   </div>
 );
 
-// ── custom tooltip for charts ─────────────────────────────────────────────────
+// ── Tooltip ───────────────────────────────────────────────────────────────────
 const ChartTip = ({ active, payload, label, prefix = "" }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border border-slate-100 shadow-lg rounded-xl px-4 py-3">
-      <p className="text-xs text-slate-500 mb-1">{label}</p>
+    <div className="bg-white border border-slate-100 shadow-xl rounded-xl px-4 py-3 text-sm">
+      <p className="text-xs text-slate-400 mb-1">{label}</p>
       {payload.map((p, i) => (
-        <p key={i} className="text-sm font-bold" style={{ color: p.color }}>
+        <p key={i} className="font-bold" style={{ color: p.color }}>
           {prefix}
           {typeof p.value === "number" ? p.value.toLocaleString() : p.value}
         </p>
@@ -139,10 +138,13 @@ const ChartTip = ({ active, payload, label, prefix = "" }) => {
   );
 };
 
+// ── Loading skeleton ──────────────────────────────────────────────────────────
+const Skeleton = ({ className }) => (
+  <div className={`animate-pulse bg-slate-100 rounded-2xl ${className}`} />
+);
+
 // ─────────────────────────────────────────────────────────────────────────────
-// MAIN COMPONENT
-// ─────────────────────────────────────────────────────────────────────────────
-const Dashboard = () => {
+const AdminDashboardContent = () => {
   const [stats, setStats] = useState(null);
   const [timeSeries, setTimeSeries] = useState(null);
   const [memberDemo, setMemberDemo] = useState(null);
@@ -161,7 +163,7 @@ const Dashboard = () => {
   const loadAll = async () => {
     try {
       const [statsRes, tsRes, demoRes] = await Promise.allSettled([
-        adminAPI.getStats(), // returns flat: totalMembers, recentMembers, etc.
+        adminAPI.getStats(),
         analyticsAPI.getTimeSeries("month"),
         analyticsAPI.getMembershipAnalytics({}),
       ]);
@@ -169,11 +171,9 @@ const Dashboard = () => {
       if (statsRes.status === "fulfilled") {
         const s = statsRes.value;
         setStats(s);
-        // recentMembers and recentBusinesses come from getDashboardStats now
         if (Array.isArray(s?.recentMembers)) setRecentMembers(s.recentMembers);
         if (Array.isArray(s?.recentBusinesses))
           setRecentBusinesses(s.recentBusinesses);
-        // pending count is also in stats
         if (s?.totalPending !== undefined) setPendingCount(s.totalPending);
       }
       if (tsRes.status === "fulfilled") setTimeSeries(tsRes.value);
@@ -185,18 +185,15 @@ const Dashboard = () => {
     }
   };
 
-  // ── derived values ──────────────────────────────────────────────────────
   const totalMembers = stats?.totalMembers ?? 0;
   const activeMembers = stats?.activeMembers ?? 0;
   const totalBusinesses = stats?.totalBusinesses ?? 0;
   const totalRevenue = timeSeries?.current?.saleAmount ?? 0;
   const totalSavings = stats?.totalSavings ?? 0;
   const totalTx = stats?.totalTransactions ?? 0;
-
   const revenueChange = pct(timeSeries?.changes?.saleAmount);
   const txChange = pct(timeSeries?.changes?.transactions);
 
-  // Build trend chart data from timeSeries
   const trendData = timeSeries
     ? [
         {
@@ -212,43 +209,25 @@ const Dashboard = () => {
       ]
     : [];
 
-  // Membership by type for pie
   const pieData = (memberDemo?.byType ?? []).filter((d) => d.value > 0);
-
-  // Members by district for bar
   const districtData = (memberDemo?.byDistrict ?? [])
     .filter((d) => d.value > 0)
     .slice(0, 7);
-
-  // Members by month for area chart
   const monthlyData = memberDemo?.byMonth ?? [];
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-[#1C4D8D] border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-slate-500 font-medium">
-            Loading dashboard…
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-slate-50/60 pb-16">
-      <div className="max-w-7xl mx-auto px-6 pt-8 space-y-8">
-        {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-5 pt-8 space-y-7">
+        {/* ── Header ────────────────────────────────────────────────────── */}
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-[#1C4D8D] mb-1">
               Admin Console
             </p>
-            <h1 className="text-3xl font-bold text-slate-900 leading-tight">
+            <h1 className="text-3xl font-black text-slate-900 leading-tight">
               Platform Overview
             </h1>
-            <p className="text-slate-500 text-sm mt-1">
+            <p className="text-slate-400 text-sm mt-1">
               {new Date().toLocaleDateString("en-US", {
                 weekday: "long",
                 year: "numeric",
@@ -259,10 +238,10 @@ const Dashboard = () => {
           </div>
           {pendingCount > 0 && (
             <Link
-              to="?tab=approvals"
-              className="inline-flex items-center gap-2 px-5 py-3 bg-amber-500 text-white font-semibold rounded-xl hover:bg-amber-600 transition-colors shadow-md shadow-amber-200 text-sm"
+              to="/admin/approvals"
+              className="inline-flex items-center gap-2.5 px-5 py-3 bg-amber-500 text-white font-bold rounded-2xl hover:bg-amber-600 transition-colors shadow-lg shadow-amber-200 text-sm"
             >
-              <span className="w-5 h-5 bg-white text-amber-600 rounded-full text-xs font-bold flex items-center justify-center">
+              <span className="w-6 h-6 bg-white text-amber-600 rounded-full text-xs font-black flex items-center justify-center">
                 {pendingCount}
               </span>
               Pending Approvals
@@ -270,67 +249,101 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* ── Analytics Period Stats ────────────────────────────────────── */}
-        <AnalyticsStatsPanel title="Platform Analytics" />
+        {/* ── Stat Cards ──────────────────────────────────────────────── */}
+        {loading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-36" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              label="Total Members"
+              value={fmt(totalMembers)}
+              sub={`${activeMembers} active`}
+              icon="👥"
+              bg="#EBF2FF"
+            />
+            <StatCard
+              label="Active Businesses"
+              value={fmt(totalBusinesses)}
+              sub="Approved listings"
+              icon="🏪"
+              bg="#ECFDF5"
+            />
+            <StatCard
+              label="Total Revenue"
+              value={`$${fmt(totalRevenue)}`}
+              sub="This month"
+              icon="💰"
+              bg="#FFFBEB"
+              change={revenueChange}
+            />
+            <StatCard
+              label="Transactions"
+              value={fmt(totalTx)}
+              sub="This month"
+              icon="🔄"
+              bg="#F5F3FF"
+              change={txChange}
+            />
+          </div>
+        )}
 
-        {/* ── Stat Cards ──────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            label="Total Members"
-            value={fmt(totalMembers)}
-            sub={`${activeMembers} active`}
-            icon="👥"
-            color="#1C4D8D"
-            light="#EBF2FF"
-          />
-          <StatCard
-            label="Active Businesses"
-            value={fmt(totalBusinesses)}
-            sub="Approved listings"
-            icon="🏪"
-            color="#059669"
-            light="#ECFDF5"
-          />
-          <StatCard
-            label="Total Revenue"
-            value={`$${fmt(totalRevenue)}`}
-            sub="This month"
-            icon="💰"
-            color="#d97706"
-            light="#FFFBEB"
-            change={revenueChange}
-          />
-          <StatCard
-            label="Transactions"
-            value={fmt(totalTx)}
-            sub="This month"
-            icon="🔄"
-            color="#7c3aed"
-            light="#F5F3FF"
-            change={txChange}
-          />
+        {/* ── Savings highlight banner ─────────────────────────────────── */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-[#1C4D8D] to-[#4988C4] rounded-2xl p-7 shadow-xl">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+            <div>
+              <p className="text-blue-200 text-xs font-bold uppercase tracking-widest mb-2">
+                Platform Impact
+              </p>
+              <h2 className="text-4xl font-black text-white mb-1">
+                ${fmt(totalSavings)}
+              </h2>
+              <p className="text-blue-200 text-sm">
+                Total savings delivered to members
+              </p>
+            </div>
+            <div className="flex gap-8">
+              {[
+                { label: "Members", value: fmt(totalMembers) },
+                { label: "Businesses", value: fmt(totalBusinesses) },
+                { label: "Transactions", value: fmt(totalTx) },
+              ].map(({ label, value }, i) => (
+                <React.Fragment key={label}>
+                  {i > 0 && <div className="w-px bg-white/20" />}
+                  <div className="text-center">
+                    <p className="text-3xl font-black text-white">{value}</p>
+                    <p className="text-blue-200 text-xs mt-1">{label}</p>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* ── Quick Links ──────────────────────────────────────────────────── */}
+        {/* ── Quick links ──────────────────────────────────────────────── */}
         <div>
-          <h2 className="text-lg font-bold text-slate-900 mb-4">
+          <h2 className="text-base font-bold text-slate-700 mb-3">
             Quick Access
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {QUICK_LINKS.map(({ label, sub, icon, to, color, light }) => (
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+            {QUICK_LINKS.map(({ label, sub, icon, to, bg }) => (
               <Link
                 key={label}
                 to={to}
-                className="group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col items-center text-center gap-2"
+                className="group bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col items-center text-center gap-2"
               >
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-200"
-                  style={{ background: light }}
+                  className="w-11 h-11 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-200"
+                  style={{ background: bg }}
                 >
                   {icon}
                 </div>
-                <p className="text-sm font-bold text-slate-900">{label}</p>
-                <p className="text-[11px] text-slate-400 leading-tight">
+                <p className="text-xs font-bold text-slate-900">{label}</p>
+                <p className="text-[10px] text-slate-400 leading-tight hidden sm:block">
                   {sub}
                 </p>
               </Link>
@@ -338,11 +351,11 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* ── Charts Row 1: Revenue trend + Membership by type ───────────── */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        {/* ── Charts row 1 ─────────────────────────────────────────────── */}
+        <div className="grid lg:grid-cols-3 gap-5">
           {/* Revenue comparison */}
           <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-5">
               <div>
                 <h3 className="font-bold text-slate-900">Revenue Comparison</h3>
                 <p className="text-xs text-slate-400 mt-0.5">
@@ -351,14 +364,20 @@ const Dashboard = () => {
               </div>
               {revenueChange && (
                 <span
-                  className={`text-sm font-bold px-3 py-1 rounded-full ${parseFloat(revenueChange) >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}
+                  className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                    parseFloat(revenueChange) >= 0
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-red-50 text-red-700"
+                  }`}
                 >
                   {revenueChange}
                 </span>
               )}
             </div>
-            {trendData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={220}>
+            {loading ? (
+              <Skeleton className="h-52" />
+            ) : trendData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={210}>
                 <BarChart data={trendData} barGap={8}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis
@@ -379,35 +398,35 @@ const Dashboard = () => {
                     fill="#1C4D8D"
                     radius={[8, 8, 0, 0]}
                     name="Revenue"
-                    maxBarSize={60}
+                    maxBarSize={64}
                   />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-[220px] flex items-center justify-center text-slate-300 text-sm">
+              <div className="h-[210px] flex items-center justify-center text-slate-300 text-sm">
                 No revenue data yet
               </div>
             )}
           </div>
 
-          {/* Membership by type */}
+          {/* Members by type */}
           <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-            <div className="mb-6">
-              <h3 className="font-bold text-slate-900">Members by Type</h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Membership distribution
-              </p>
-            </div>
-            {pieData.length > 0 ? (
+            <h3 className="font-bold text-slate-900 mb-1">Members by Type</h3>
+            <p className="text-xs text-slate-400 mb-5">
+              Membership distribution
+            </p>
+            {loading ? (
+              <Skeleton className="h-52" />
+            ) : pieData.length > 0 ? (
               <>
-                <ResponsiveContainer width="100%" height={160}>
+                <ResponsiveContainer width="100%" height={150}>
                   <PieChart>
                     <Pie
                       data={pieData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={45}
-                      outerRadius={75}
+                      innerRadius={42}
+                      outerRadius={68}
                       paddingAngle={3}
                       dataKey="value"
                     >
@@ -421,7 +440,7 @@ const Dashboard = () => {
                     <Tooltip formatter={(v, n) => [v, n]} />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="space-y-2 mt-2">
+                <div className="space-y-2 mt-3">
                   {pieData.map((d, i) => (
                     <div
                       key={d.name}
@@ -445,23 +464,21 @@ const Dashboard = () => {
               </>
             ) : (
               <div className="h-[200px] flex items-center justify-center text-slate-300 text-sm">
-                No membership data yet
+                No data yet
               </div>
             )}
           </div>
         </div>
 
-        {/* ── Charts Row 2: Monthly growth + District breakdown ───────────── */}
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Monthly member growth */}
+        {/* ── Charts row 2 ─────────────────────────────────────────────── */}
+        <div className="grid lg:grid-cols-2 gap-5">
+          {/* Member growth */}
           <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-            <div className="mb-6">
-              <h3 className="font-bold text-slate-900">Member Growth</h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                New members per month
-              </p>
-            </div>
-            {monthlyData.length > 0 ? (
+            <h3 className="font-bold text-slate-900 mb-1">Member Growth</h3>
+            <p className="text-xs text-slate-400 mb-5">New members per month</p>
+            {loading ? (
+              <Skeleton className="h-52" />
+            ) : monthlyData.length > 0 ? (
               <ResponsiveContainer width="100%" height={200}>
                 <AreaChart data={monthlyData}>
                   <defs>
@@ -469,7 +486,7 @@ const Dashboard = () => {
                       <stop
                         offset="5%"
                         stopColor="#1C4D8D"
-                        stopOpacity={0.15}
+                        stopOpacity={0.12}
                       />
                       <stop offset="95%" stopColor="#1C4D8D" stopOpacity={0} />
                     </linearGradient>
@@ -507,13 +524,15 @@ const Dashboard = () => {
 
           {/* Members by district */}
           <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-            <div className="mb-6">
-              <h3 className="font-bold text-slate-900">Members by District</h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Geographic distribution
-              </p>
-            </div>
-            {districtData.length > 0 ? (
+            <h3 className="font-bold text-slate-900 mb-1">
+              Members by District
+            </h3>
+            <p className="text-xs text-slate-400 mb-5">
+              Geographic distribution
+            </p>
+            {loading ? (
+              <Skeleton className="h-52" />
+            ) : districtData.length > 0 ? (
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart
                   data={districtData}
@@ -557,23 +576,29 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* ── Recent Activity ──────────────────────────────────────────────── */}
-        <div className="grid lg:grid-cols-2 gap-6">
+        {/* ── Recent activity ───────────────────────────────────────────── */}
+        <div className="grid lg:grid-cols-2 gap-5">
           {/* Recent members */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-50">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-50">
               <div>
                 <h3 className="font-bold text-slate-900">Recent Members</h3>
                 <p className="text-xs text-slate-400">Latest registrations</p>
               </div>
               <Link
-                to="?tab=members"
+                to="/admin/members"
                 className="text-xs font-semibold text-[#1C4D8D] hover:underline"
               >
                 View all →
               </Link>
             </div>
-            {recentMembers.length === 0 ? (
+            {loading ? (
+              <div className="p-4 space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-12" />
+                ))}
+              </div>
+            ) : recentMembers.length === 0 ? (
               <div className="px-6 py-10 text-center text-slate-300 text-sm">
                 No members yet
               </div>
@@ -582,21 +607,17 @@ const Dashboard = () => {
                 {recentMembers.slice(0, 5).map((m, i) => (
                   <li
                     key={m.id || i}
-                    className="flex items-center gap-4 px-6 py-3.5 hover:bg-slate-50 transition-colors"
+                    className="flex items-center gap-3 px-6 py-3 hover:bg-slate-50 transition-colors"
                   >
                     <div className="w-9 h-9 rounded-xl bg-[#EBF2FF] flex items-center justify-center text-[#1C4D8D] font-bold text-sm flex-shrink-0">
-                      {(m.firstName ||
-                        m.first_name ||
-                        m.user?.email ||
-                        "?")[0].toUpperCase()}
+                      {(m.firstName || m.user?.email || "?")[0].toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-slate-900 truncate">
-                        {m.firstName || m.first_name || "—"}{" "}
-                        {m.lastName || m.last_name || ""}
+                        {m.firstName || "—"} {m.lastName || ""}
                       </p>
                       <p className="text-xs text-slate-400 truncate">
-                        {m.user?.email || m.email || "—"}
+                        {m.user?.email || "—"}
                       </p>
                     </div>
                     <span
@@ -616,19 +637,25 @@ const Dashboard = () => {
 
           {/* Recent businesses */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-50">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-50">
               <div>
                 <h3 className="font-bold text-slate-900">Recent Businesses</h3>
                 <p className="text-xs text-slate-400">Latest listings</p>
               </div>
               <Link
-                to="?tab=businesses"
+                to="/admin/businesses"
                 className="text-xs font-semibold text-[#1C4D8D] hover:underline"
               >
                 View all →
               </Link>
             </div>
-            {recentBusinesses.length === 0 ? (
+            {loading ? (
+              <div className="p-4 space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-12" />
+                ))}
+              </div>
+            ) : recentBusinesses.length === 0 ? (
               <div className="px-6 py-10 text-center text-slate-300 text-sm">
                 No businesses yet
               </div>
@@ -637,7 +664,7 @@ const Dashboard = () => {
                 {recentBusinesses.slice(0, 5).map((b, i) => (
                   <li
                     key={b.id || i}
-                    className="flex items-center gap-4 px-6 py-3.5 hover:bg-slate-50 transition-colors"
+                    className="flex items-center gap-3 px-6 py-3 hover:bg-slate-50 transition-colors"
                   >
                     <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-700 font-bold text-sm flex-shrink-0 overflow-hidden">
                       {b.logoUrl ? (
@@ -655,17 +682,18 @@ const Dashboard = () => {
                         {b.name || "—"}
                       </p>
                       <p className="text-xs text-slate-400 truncate">
-                        {b.category || "—"} · {b.district || "Cayman Islands"}
+                        {b.category?.name || "—"} ·{" "}
+                        {b.district || "Cayman Islands"}
                       </p>
                     </div>
                     <span
                       className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${
-                        b.isApproved
+                        b.status === "APPROVED"
                           ? "bg-emerald-50 text-emerald-700"
                           : "bg-orange-50 text-orange-700"
                       }`}
                     >
-                      {b.isApproved ? "APPROVED" : "PENDING"}
+                      {b.status ?? "PENDING"}
                     </span>
                   </li>
                 ))}
@@ -673,47 +701,9 @@ const Dashboard = () => {
             )}
           </div>
         </div>
-
-        {/* ── Savings highlight ────────────────────────────────────────────── */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-[#1C4D8D] to-[#4988C4] rounded-2xl p-8 shadow-xl">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div>
-              <p className="text-blue-200 text-sm font-semibold uppercase tracking-widest mb-2">
-                Platform Impact
-              </p>
-              <h2 className="text-4xl font-bold text-white mb-1">
-                ${fmt(totalSavings)}
-              </h2>
-              <p className="text-blue-200">
-                Total savings delivered to members
-              </p>
-            </div>
-            <div className="flex gap-8">
-              <div className="text-center">
-                <p className="text-3xl font-bold text-white">
-                  {fmt(totalMembers)}
-                </p>
-                <p className="text-blue-200 text-sm">Members</p>
-              </div>
-              <div className="w-px bg-white/20" />
-              <div className="text-center">
-                <p className="text-3xl font-bold text-white">
-                  {fmt(totalBusinesses)}
-                </p>
-                <p className="text-blue-200 text-sm">Businesses</p>
-              </div>
-              <div className="w-px bg-white/20" />
-              <div className="text-center">a
-                <p className="text-3xl font-bold text-white">{fmt(totalTx)}</p>
-                <p className="text-blue-200 text-sm">Transactions</p>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
 };
 
-export default Dashboard;
+export default AdminDashboardContent;

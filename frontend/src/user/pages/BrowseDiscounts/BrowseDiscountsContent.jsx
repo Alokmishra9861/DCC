@@ -160,6 +160,26 @@ const BrowseDiscountsContent = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Employer Read-Only Notice */}
+      {user && String(user.role || "").toUpperCase() === "EMPLOYER" && (
+        <div className="bg-blue-50 border-b border-blue-200 py-3">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex items-center gap-3 text-blue-900">
+              <Icon
+                name="InformationCircleIcon"
+                size={18}
+                className="text-blue-600"
+              />
+              <p className="text-sm font-medium">
+                📊 <strong>Analytics View:</strong> Viewing available discounts
+                and categories for employee insights. This is read-only for
+                informational purposes.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-20 border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6">
@@ -175,14 +195,22 @@ const BrowseDiscountsContent = () => {
           )}
 
           <h1 className="font-heading text-4xl md:text-5xl font-bold text-slate-900 mb-6 tracking-tight">
-            {activeCategoryLabel
-              ? `${activeCategoryLabel}`
-              : "Browse Exclusive Discounts"}
+            {user && String(user.role || "").toUpperCase() === "EMPLOYER"
+              ? activeCategoryLabel
+                ? `${activeCategoryLabel} (Analytics View)`
+                : "Browse Categories for Insights"
+              : activeCategoryLabel
+                ? `${activeCategoryLabel}`
+                : "Browse Exclusive Discounts"}
           </h1>
           <p className="text-xl text-slate-600 max-w-2xl leading-relaxed">
-            {activeCategoryLabel
-              ? `Showing member discounts in ${activeCategoryLabel} across the Cayman Islands.`
-              : "Explore 150+ discounts from trusted local businesses across Cayman Islands."}
+            {user && String(user.role || "").toUpperCase() === "EMPLOYER"
+              ? activeCategoryLabel
+                ? `Showing discounts available in ${activeCategoryLabel} for employee reference.`
+                : "View category breakdowns to understand where your employees accrue savings."
+              : activeCategoryLabel
+                ? `Showing member discounts in ${activeCategoryLabel} across the Cayman Islands.`
+                : "Explore 150+ discounts from trusted local businesses across Cayman Islands."}
           </p>
 
           {/* Active filter pill with clear button */}

@@ -133,15 +133,54 @@ export const memberAPI = {
 
 // ─── Employer ─────────────────────────────────────────────────────────────────
 export const employerAPI = {
-  getDashboard: () => request("/employers/dashboard"),
-  getEmployees: (params = {}) => {
-    const qs = new URLSearchParams(params).toString();
-    return request(`/employers/employees${qs ? `?${qs}` : ""}`);
-  },
-  uploadEmployees: (data) =>
-    request("/employers/employees", {
+  // Profile
+  getProfile: () => request("/employer/profile"),
+
+  // Bulk membership purchase
+  // { planType: "BASIC"|"STANDARD"|"ENTERPRISE", seatCount, paymentProvider, paymentId }
+  bulkPurchase: (data) =>
+    request("/employer/bulk-purchase", {
       method: "POST",
       body: JSON.stringify(data),
+    }),
+
+  // Dashboard stats + ROI
+  getDashboard: () => request("/employer/dashboard"),
+
+  // Employees list — params: { page, limit, status }
+  getEmployees: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/employer/employees${qs ? `?${qs}` : ""}`);
+  },
+
+  // Add one employee manually — { name, email }
+  addEmployee: (data) =>
+    request("/employer/employees", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  // Bulk add employees — { employees: [{ name, email }] }
+  bulkAddEmployees: (data) =>
+    request("/employer/employees/bulk", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  // Resend invite email to an INVITED employee
+  resendInvite: (id) =>
+    request(`/employer/employees/${id}/resend-invite`, { method: "POST" }),
+
+  // Remove employee (cancels membership, frees seat)
+  removeEmployee: (id) =>
+    request(`/employer/employees/${id}`, { method: "DELETE" }),
+
+  // Employee accepts invite (PUBLIC — no auth token needed)
+  // Called on the /accept-invite/:token page
+  acceptInvite: (token, password) =>
+    request(`/employer/employees/accept-invite/${token}`, {
+      method: "POST",
+      body: JSON.stringify({ password }),
     }),
 };
 
@@ -325,17 +364,24 @@ export const uploadAPI = {
 
 // ─── Payment ──────────────────────────────────────────────────────────────────
 export const paymentAPI = {
-  createStripeCheckout: () =>
-    request("/payment/stripe/checkout", { method: "POST" }),
+  // Pass { planType, seatCount, metadata } for employer bulk purchase
+  createStripeCheckout: (data = {}) =>
+    request("/payment/stripe/checkout", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 
-  // Returns { isActive, membershipStatus, canRedeem } — use isActive directly
   verifyStripeSession: (sessionId) =>
     request(
       `/payment/stripe/verify?session_id=${encodeURIComponent(sessionId)}`,
     ),
 
-  createPayPalCheckout: () =>
-    request("/payment/paypal/checkout", { method: "POST" }),
+  // Pass { planType, seatCount } for employer bulk purchase
+  createPayPalCheckout: (data = {}) =>
+    request("/payment/paypal/checkout", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 
   capturePayPal: (orderId, membershipId) =>
     request("/payment/paypal/capture", {
@@ -343,8 +389,8 @@ export const paymentAPI = {
       body: JSON.stringify({ orderId, membershipId }),
     }),
 
-  // Legacy aliases
   createOrder: () => request("/payment/paypal/checkout", { method: "POST" }),
+
   captureOrder: (orderId) =>
     request("/payment/paypal/capture", {
       method: "POST",
@@ -370,9 +416,45 @@ export const analyticsAPI = {
   },
   getTimeSeries: (compareBy = "month") =>
     request(`/analytics/time-series?compareBy=${compareBy}`),
-  exportReport: (params = {}) => {
-    const qs = new URLSearchParams(params).toString();
-    return request(`/analytics/export${qs ? `?${qs}` : ""}`);
+  exportReport: async (params = {}) => {
+    try {
+      const token = getToken();
+      const qs = new URLSearchParams(params).toString();
+      const url = `${BASE_URL}/analytics/export${qs ? `?${qs}` : ""}`;
+
+      const headers = { Authorization: `Bearer ${token}` };
+      const response = await fetch(url, { headers });
+
+      if (!response.ok) {
+        const error = await response
+          .json()
+          .catch(() => ({ message: "Export failed" }));
+        throw new Error(
+          error.message || `Export failed with status ${response.status}`,
+        );
+      }
+
+      const blob = await response.blob();
+      const contentDisposition =
+        response.headers.get("content-disposition") || "";
+      const filename =
+        contentDisposition.match(/filename="?(.+?)"?$/)?.[1] ||
+        `dcc-report-${Date.now()}.xlsx`;
+
+      // Create download link
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+
+      return { success: true, filename };
+    } catch (error) {
+      throw new Error(error.message || "Export failed");
+    }
   },
 };
 
@@ -394,21 +476,36 @@ export const adminAPI = {
   getStats: () => request("/admin/stats"),
   getPendingApprovals: () => request("/admin/pending"),
   getPendingMemberships: () => request("/admin/memberships/pending"),
+
+  // Membership
   approveMembership: (id) =>
     request(`/admin/memberships/${id}/approve`, { method: "PATCH" }),
+
+  // Employer
   approveEmployer: (id) =>
     request(`/admin/employers/${id}/approve`, { method: "PATCH" }),
+  rejectEmployer: (id, reason) =>
+    request(`/admin/employers/${id}/reject`, {
+      method: "PATCH",
+      body: JSON.stringify({ reason }),
+    }),
+
+  // Association
   approveAssociation: (id) =>
     request(`/admin/associations/${id}/approve`, { method: "PATCH" }),
+
+  // Business
   approveBusiness: (id) =>
     request(`/admin/businesses/${id}/approve`, { method: "PATCH" }),
+  rejectBusiness: (id) =>
+    request(`/admin/businesses/${id}/reject`, { method: "PATCH" }),
   updateBusiness: (id, data) =>
     request(`/admin/businesses/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     }),
-  rejectBusiness: (id) =>
-    request(`/admin/businesses/${id}/reject`, { method: "PATCH" }),
+
+  // Users
   getUsers: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request(`/admin/users${qs ? `?${qs}` : ""}`);
@@ -423,6 +520,9 @@ export const adminAPI = {
       method: "PUT",
       body: JSON.stringify({ isActive }),
     }),
+  deleteUser: (id) => request(`/admin/users/${id}`, { method: "DELETE" }),
+
+  // Members
   getMembers: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request(`/admin/members${qs ? `?${qs}` : ""}`);
@@ -433,11 +533,14 @@ export const adminAPI = {
       body: JSON.stringify(data),
     }),
   deleteMember: (id) => request(`/admin/members/${id}`, { method: "DELETE" }),
-  deleteUser: (id) => request(`/admin/users/${id}`, { method: "DELETE" }),
+
+  // Businesses list
   getBusinesses: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request(`/admin/businesses${qs ? `?${qs}` : ""}`);
   },
+
+  // Inquiries
   getInquiries: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request(`/admin/inquiries${qs ? `?${qs}` : ""}`);
@@ -447,6 +550,8 @@ export const adminAPI = {
       method: "PUT",
       body: JSON.stringify({ status, response }),
     }),
+
+  // Audit log
   getAuditLog: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request(`/admin/audit${qs ? `?${qs}` : ""}`);

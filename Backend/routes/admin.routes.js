@@ -23,8 +23,12 @@ router.delete("/members/:id", ctrl.deleteMember);
 
 // Approvals
 router.get("/pending", ctrl.getPendingApprovals);
+// Employer approvals
 router.patch("/employers/:id/approve", ctrl.approveEmployer);
+router.patch("/employers/:id/reject", ctrl.rejectEmployer);
+// Association approvals
 router.patch("/associations/:id/approve", ctrl.approveAssociation);
+// Business approvals
 router.patch("/businesses/:id/approve", ctrl.approveBusiness);
 router.patch("/businesses/:id/reject", ctrl.rejectBusiness);
 

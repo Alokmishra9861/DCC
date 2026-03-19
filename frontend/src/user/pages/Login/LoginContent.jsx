@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Icon from "../../components/ui/AppIcon";
 import { authAPI, saveAuthData, ROLE_ROUTES } from "../../../services/api";
@@ -19,6 +19,42 @@ const LoginContent = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // ── Load saved credentials on mount ──
+  useEffect(() => {
+    const savedLogins =
+      JSON.parse(localStorage.getItem("dcc_saved_logins")) || [];
+    setSuggestions(savedLogins);
+  }, []);
+
+  // ── Handle email input and show suggestions ──
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    setEmail(value);
+
+    const savedLogins =
+      JSON.parse(localStorage.getItem("dcc_saved_logins")) || [];
+    if (value.trim()) {
+      const filtered = savedLogins.filter((login) =>
+        login.email.toLowerCase().includes(value.toLowerCase()),
+      );
+      setSuggestions(filtered);
+      setShowSuggestions(filtered.length > 0);
+    } else {
+      setSuggestions(savedLogins);
+      setShowSuggestions(false);
+    }
+  };
+
+  // ── Click on suggestion to fill email & password ──
+  const selectSuggestion = (login) => {
+    setEmail(login.email);
+    setPassword(login.password);
+    setRememberMe(true);
+    setShowSuggestions(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,8 +67,19 @@ const LoginContent = () => {
       // saveAuthData handles both { token } and { accessToken } from the backend
       saveAuthData(data);
 
+      // Save credentials if "Remember me" is checked
       if (rememberMe) {
-        localStorage.setItem("dcc_remember", "true");
+        const savedLogins =
+          JSON.parse(localStorage.getItem("dcc_saved_logins")) || [];
+        // Remove duplicate if exists
+        const filtered = savedLogins.filter((login) => login.email !== email);
+        // Add new login at the beginning
+        filtered.unshift({ email, password });
+        // Keep only last 5 saved logins
+        localStorage.setItem(
+          "dcc_saved_logins",
+          JSON.stringify(filtered.slice(0, 5)),
+        );
       }
 
       // Always go to role dashboard — no membership gate at login
@@ -45,8 +92,23 @@ const LoginContent = () => {
     }
   };
 
+  // ── Handle "Remember me" checkbox ──
+  const handleRememberMeChange = (e) => {
+    const isChecked = e.target.checked;
+    setRememberMe(isChecked);
+
+    if (!isChecked && email && password) {
+      // Remove this specific login from saved list when unchecking
+      const savedLogins =
+        JSON.parse(localStorage.getItem("dcc_saved_logins")) || [];
+      const filtered = savedLogins.filter((login) => login.email !== email);
+      localStorage.setItem("dcc_saved_logins", JSON.stringify(filtered));
+      setSuggestions(filtered);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center py-12 px-6">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center py-12 px-6">
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyaWJhKDMwLCA1OCwgMTM5LCAwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc=')] opacity-100" />
       </div>
@@ -99,7 +161,7 @@ const LoginContent = () => {
                 <Icon
                   name="ExclamationCircleIcon"
                   size={20}
-                  className="text-red-600 mt-0.5 flex-shrink-0"
+                  className="text-red-600 mt-0.5 shrink-0"
                 />
                 <p className="text-sm text-red-600 font-medium">{error}</p>
               </div>
@@ -109,14 +171,58 @@ const LoginContent = () => {
               <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">
                 Email Address
               </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1C4D8D]/20 focus:border-[#1C4D8D] transition-all"
-                placeholder="your@email.com"
-              />
+              <div className="relative">
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={handleEmailChange}
+                  onFocus={() => {
+                    const savedLogins =
+                      JSON.parse(localStorage.getItem("dcc_saved_logins")) ||
+                      [];
+                    setSuggestions(savedLogins);
+                    setShowSuggestions(savedLogins.length > 0);
+                  }}
+                  onBlur={() =>
+                    setTimeout(() => setShowSuggestions(false), 200)
+                  }
+                  className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1C4D8D]/20 focus:border-[#1C4D8D] transition-all"
+                  placeholder="your@email.com"
+                  autoComplete="off"
+                />
+
+                {/* ── Email suggestions dropdown ── */}
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 overflow-hidden">
+                    {suggestions.map((login, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          selectSuggestion(login);
+                        }}
+                        className="w-full px-5 py-3 text-left hover:bg-blue-50 border-b border-slate-100 last:border-b-0 transition-colors flex items-center justify-between group"
+                      >
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">
+                            {login.email}
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            Click to auto-fill
+                          </p>
+                        </div>
+                        <Icon
+                          name="ChevronRightIcon"
+                          size={16}
+                          className="text-slate-300 group-hover:text-[#1C4D8D] transition-colors"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div>
@@ -138,7 +244,7 @@ const LoginContent = () => {
                 <input
                   type="checkbox"
                   checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
+                  onChange={handleRememberMeChange}
                   className="w-4 h-4 text-[#1C4D8D] border-slate-300 rounded focus:ring-[#1C4D8D]"
                 />
                 <span className="text-sm text-slate-600 group-hover:text-slate-800 transition-colors">
