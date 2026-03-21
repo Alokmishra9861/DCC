@@ -1,3 +1,4 @@
+// Backend/controllers/auth.controller.js
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
@@ -9,13 +10,14 @@ const {
   sendPasswordResetEmail,
 } = require("../services/email.service");
 const { generateMemberQR } = require("../services/qr.service");
+const { buildAuthResponse } = require("../utils/auth.redirect");
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
 const generateToken = (id, secret, expiresIn) =>
   jwt.sign({ id }, secret, { expiresIn });
 
 const parseOptionalInt = (value) => {
-  if (value === null) return null;
-  if (value === undefined || value === "") return null;
+  if (value === null || value === undefined || value === "") return null;
   const parsed = parseInt(value, 10);
   return Number.isNaN(parsed) ? null : parsed;
 };
@@ -27,11 +29,22 @@ const normalizeString = (value) => {
 };
 
 const normalizeChoice = (value) => {
-  const normalized = normalizeString(value);
-  return normalized ? normalized.toLowerCase() : null;
+  const n = normalizeString(value);
+  return n ? n.toLowerCase() : null;
 };
 
-// ── Register ──────────────────────────────────────────
+// Shared include for login — loads all role profiles + membership in one query
+const LOGIN_INCLUDE = {
+  member: { include: { membership: true } }, // ← membership for membershipStatus
+  employer: true,
+  association: true, // ← associationType lives here
+  business: true,
+  b2bPartner: true,
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/auth/register
+// ─────────────────────────────────────────────────────────────────────────────
 exports.register = asyncHandler(async (req, res) => {
   const { email, password, role, profile } = req.body;
 
@@ -71,37 +84,34 @@ exports.register = asyncHandler(async (req, res) => {
       },
     };
   } else if (role === "ASSOCIATION") {
+    const validAssocTypes = ["MEMBER", "BUSINESS"];
+    const assocType = validAssocTypes.includes(profile.associationType)
+      ? profile.associationType
+      : "MEMBER"; // default if not sent from signup form
+
     roleData.association = {
       create: {
         name: profile.name,
-        type: profile.type,
-        district: profile.district,
-        phone: profile.phone,
+        associationType: assocType,
+        orgType: profile.type || null,
+        district: profile.district || null,
+        phone: profile.phone || null,
       },
     };
   } else if (role === "BUSINESS") {
-    // ✅ FIX: Resolve category by ID first, then fall back to name match
     const { categoryId, categoryName } = profile;
-
     let resolvedCategory = null;
 
-    // 1. Try numeric ID (normal path — frontend <select> loaded categories)
     if (categoryId) {
       resolvedCategory = await prisma.category.findUnique({
         where: { id: Number(categoryId) },
       });
     }
-
-    // 2. Fallback: match by name (when categories weren't loaded on frontend)
     if (!resolvedCategory && categoryName) {
       resolvedCategory = await prisma.category.findFirst({
-        where: {
-          name: { equals: categoryName.trim(), mode: "insensitive" },
-        },
+        where: { name: { equals: categoryName.trim(), mode: "insensitive" } },
       });
     }
-
-    // 3. Neither resolved — reject clearly
     if (!resolvedCategory) {
       throw ApiError.badRequest(
         "Category selection is required for business registration",
@@ -111,7 +121,7 @@ exports.register = asyncHandler(async (req, res) => {
     roleData.business = {
       create: {
         name: normalizeString(profile.name),
-        categoryId: resolvedCategory.id, // ← always a real DB id
+        categoryId: resolvedCategory.id,
         description: normalizeString(profile.description),
         phone: normalizeString(profile.phone),
         email: email,
@@ -141,16 +151,10 @@ exports.register = asyncHandler(async (req, res) => {
       emailVerifyToken,
       ...roleData,
     },
-    include: {
-      member: true,
-      employer: true,
-      association: true,
-      business: true,
-      b2bPartner: true,
-    },
+    include: LOGIN_INCLUDE,
   });
 
-  // Generate QR for members
+  // Generate QR code for new members
   if (role === "MEMBER" && user.member) {
     const qrCode = await generateMemberQR(user.member);
     await prisma.member.update({
@@ -159,38 +163,50 @@ exports.register = asyncHandler(async (req, res) => {
     });
   }
 
-  // Send welcome email (non-fatal)
-  try {
-    await sendWelcomeEmail(email, {
-      name:
-        profile.firstName || profile.companyName || profile.name || "Member",
-    });
-  } catch (emailErr) {
-    console.error("Welcome email failed:", emailErr.message);
-  }
+  // Welcome email — non-fatal
+  sendWelcomeEmail(email, {
+    name: profile.firstName || profile.companyName || profile.name || "Member",
+  }).catch((err) => console.error("Welcome email failed:", err.message));
 
-  return ApiResponse.created(res, {
-    message: "Registration successful. Welcome to DCC!",
-  });
+  // Return a full auth response so the frontend can navigate immediately after signup
+  // without needing a separate login call
+  const accessToken = generateToken(
+    user.id,
+    process.env.JWT_SECRET,
+    process.env.JWT_EXPIRES_IN || "7d",
+  );
+  const refreshToken = generateToken(
+    user.id,
+    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+    process.env.JWT_REFRESH_EXPIRES_IN || "30d",
+  );
+
+  return ApiResponse.created(
+    res,
+    buildAuthResponse(
+      { accessToken, refreshToken },
+      user,
+      user.association, // associationType for ASSOCIATION
+      user.member?.membership, // null at signup — that's fine
+    ),
+    "Registration successful. Welcome to DCC!",
+  );
 });
 
-// ── Login ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/auth/login
+// ─────────────────────────────────────────────────────────────────────────────
 exports.login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const user = await prisma.user.findUnique({
     where: { email },
-    include: {
-      member: true,
-      employer: true,
-      association: true,
-      business: true,
-      b2bPartner: true,
-    },
+    include: LOGIN_INCLUDE,
   });
 
   if (!user) throw ApiError.unauthorized("Invalid email or password");
   if (!user.isActive) throw ApiError.unauthorized("Account is deactivated");
+
   const passwordMatch = await bcrypt.compare(password, user.password);
   if (!passwordMatch) throw ApiError.unauthorized("Invalid email or password");
 
@@ -205,31 +221,21 @@ exports.login = asyncHandler(async (req, res) => {
     process.env.JWT_REFRESH_EXPIRES_IN || "30d",
   );
 
-  const profile =
-    user.member ||
-    user.employer ||
-    user.association ||
-    user.business ||
-    user.b2bPartner;
-
   return ApiResponse.success(
     res,
-    {
-      accessToken,
-      refreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        isEmailVerified: user.isEmailVerified,
-        profile,
-      },
-    },
+    buildAuthResponse(
+      { accessToken, refreshToken },
+      user,
+      user.association, // association.associationType for ASSOCIATION role
+      user.member?.membership, // membership.status for MEMBER role
+    ),
     "Login successful",
   );
 });
 
-// ── Verify Email ──────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/auth/verify-email/:token
+// ─────────────────────────────────────────────────────────────────────────────
 exports.verifyEmail = asyncHandler(async (req, res) => {
   const { token } = req.params;
 
@@ -246,11 +252,14 @@ exports.verifyEmail = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, {}, "Email verified successfully");
 });
 
-// ── Forgot Password ───────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/auth/forgot-password
+// ─────────────────────────────────────────────────────────────────────────────
 exports.forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
   const user = await prisma.user.findUnique({ where: { email } });
+  // Always return the same message to avoid email enumeration
   if (!user) {
     return ApiResponse.success(
       res,
@@ -260,13 +269,14 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
   }
 
   const resetToken = crypto.randomBytes(32).toString("hex");
-  const resetExpiry = new Date(Date.now() + 60 * 60 * 1000);
+  const resetExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
   await prisma.user.update({
     where: { id: user.id },
     data: { resetToken, resetTokenExpiry: resetExpiry },
   });
 
+  // Resolve the user's display name without three separate queries
   const profile =
     (await prisma.member.findUnique({ where: { userId: user.id } })) ||
     (await prisma.employer.findUnique({ where: { userId: user.id } })) ||
@@ -283,21 +293,18 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
   );
 });
 
-// ── Reset Password ────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/auth/reset-password
+// ─────────────────────────────────────────────────────────────────────────────
 exports.resetPassword = asyncHandler(async (req, res) => {
   const { token, newPassword } = req.body;
 
   const user = await prisma.user.findFirst({
-    where: {
-      resetToken: token,
-      resetTokenExpiry: { gt: new Date() },
-    },
+    where: { resetToken: token, resetTokenExpiry: { gt: new Date() } },
   });
-
   if (!user) throw ApiError.badRequest("Invalid or expired reset token");
 
   const hashedPassword = await bcrypt.hash(newPassword, 12);
-
   await prisma.user.update({
     where: { id: user.id },
     data: {
@@ -310,12 +317,17 @@ exports.resetPassword = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, {}, "Password reset successful");
 });
 
-// ── Refresh Token ─────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/auth/refresh-token
+// ─────────────────────────────────────────────────────────────────────────────
 exports.refreshToken = asyncHandler(async (req, res) => {
   const { refreshToken } = req.body;
   if (!refreshToken) throw ApiError.unauthorized("No refresh token provided");
 
-  const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+  const decoded = jwt.verify(
+    refreshToken,
+    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+  );
   const user = await prisma.user.findUnique({ where: { id: decoded.id } });
   if (!user || !user.isActive)
     throw ApiError.unauthorized("Invalid refresh token");
@@ -325,7 +337,6 @@ exports.refreshToken = asyncHandler(async (req, res) => {
     process.env.JWT_SECRET,
     process.env.JWT_EXPIRES_IN || "7d",
   );
-
   return ApiResponse.success(
     res,
     { accessToken: newAccessToken },
@@ -333,7 +344,9 @@ exports.refreshToken = asyncHandler(async (req, res) => {
   );
 });
 
-// ── Get Current User ──────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/auth/me
+// ─────────────────────────────────────────────────────────────────────────────
 exports.getMe = asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user.id },
@@ -346,6 +359,13 @@ exports.getMe = asyncHandler(async (req, res) => {
     },
   });
 
-  const { password, resetToken, emailVerifyToken, ...safeUser } = user;
+  // Strip sensitive fields before sending
+  const {
+    password,
+    resetToken,
+    emailVerifyToken,
+    resetTokenExpiry,
+    ...safeUser
+  } = user;
   return ApiResponse.success(res, safeUser);
 });

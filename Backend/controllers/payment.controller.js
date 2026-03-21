@@ -284,5 +284,9 @@ exports.verifyStripeSession = asyncHandler(async (req, res) => {
     await activateMembership(membershipId, session.payment_intent, "STRIPE");
   }
 
-  return ApiResponse.success(res, {}, "Membership verified");
+  return ApiResponse.success(
+    res,
+    { type: "membership", activated: true },
+    "Membership verified",
+  );
 });

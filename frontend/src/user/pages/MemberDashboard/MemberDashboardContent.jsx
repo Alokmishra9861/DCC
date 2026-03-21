@@ -2,7 +2,7 @@
 // CHANGES: Replaced AnalyticsStatsPanel + 3 savings cards with unified MemberStatsBlock
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import Icon from "../../components/ui/AppIcon";
 import { QRCodeSVG } from "qrcode.react";
 import AppImage from "../../components/ui/AppImage";
@@ -13,9 +13,11 @@ import {
   businessAPI,
   travelAPI,
   certificateAPI,
+  associationAPI,
 } from "../../../services/api";
 import MemberStatsBlock from "../../components/ui/MemberStatsBlock";
 import MyCertificatesSection from "../../components/ui/MyCertificatesSection";
+import JoinAssociationModal from "../../components/ui/JoinAssociationModal";
 
 const toArray = (val, fallbackKeys = []) => {
   if (Array.isArray(val)) return val;
@@ -30,21 +32,169 @@ const getCategoryLabel = (c) => {
   return c.name || c.slug || "";
 };
 
+// ── Join Association Widget ────────────────────────────────────────────────────
+// Compact collapsible panel. Member pastes a join code → auto-linked instantly.
+const JoinAssociationWidget = () => {
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null); // { success, message }
+
+  const handleJoin = async () => {
+    if (!code.trim()) return;
+    setLoading(true);
+    setResult(null);
+    try {
+      const res = await associationAPI.joinByCode(code.trim().toUpperCase());
+      setResult({
+        success: true,
+        message:
+          res?.message ||
+          `Joined ${res?.associationName || "association"} successfully!`,
+      });
+      setCode("");
+    } catch (err) {
+      setResult({
+        success: false,
+        message: err.message || "Invalid or expired join code",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mb-8 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <button
+        onClick={() => setOpen((p) => !p)}
+        className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-orange-100 rounded-xl flex items-center justify-center text-lg">
+            🔗
+          </div>
+          <div className="text-left">
+            <p className="font-bold text-slate-900 text-sm">
+              Join an Association
+            </p>
+            <p className="text-xs text-slate-400">
+              Have a join code? Enter it here to link your account.
+            </p>
+          </div>
+        </div>
+        <span
+          className={`text-slate-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        >
+          ▾
+        </span>
+      </button>
+
+      {open && (
+        <div className="px-6 pb-5 border-t border-slate-50">
+          <div className="pt-4">
+            {result ? (
+              <div
+                className={`rounded-xl px-4 py-3 flex items-center gap-3 mb-4 ${
+                  result.success
+                    ? "bg-emerald-50 border border-emerald-100"
+                    : "bg-red-50 border border-red-100"
+                }`}
+              >
+                <span className="text-lg">{result.success ? "✓" : "⚠"}</span>
+                <div>
+                  <p
+                    className={`text-sm font-semibold ${result.success ? "text-emerald-700" : "text-red-600"}`}
+                  >
+                    {result.success ? "Success!" : "Failed"}
+                  </p>
+                  <p
+                    className={`text-xs mt-0.5 ${result.success ? "text-emerald-600" : "text-red-500"}`}
+                  >
+                    {result.message}
+                  </p>
+                </div>
+                {result.success && (
+                  <button
+                    onClick={() => {
+                      setResult(null);
+                      setOpen(false);
+                    }}
+                    className="ml-auto text-xs text-emerald-600 font-semibold hover:underline"
+                  >
+                    Done
+                  </button>
+                )}
+                {!result.success && (
+                  <button
+                    onClick={() => setResult(null)}
+                    className="ml-auto text-xs text-red-400 hover:underline"
+                  >
+                    Try again
+                  </button>
+                )}
+              </div>
+            ) : (
+              <>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                  Association Join Code
+                </label>
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => e.key === "Enter" && handleJoin()}
+                    placeholder="e.g. NURSES-CI-A3F2"
+                    maxLength={24}
+                    className="flex-1 px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-mono tracking-wider uppercase focus:outline-none focus:border-[#1C4D8D] focus:bg-white transition-all placeholder-slate-300"
+                  />
+                  <button
+                    onClick={handleJoin}
+                    disabled={loading || !code.trim()}
+                    className="px-5 py-3 bg-[#1C4D8D] text-white rounded-xl text-sm font-bold hover:bg-[#163d71] disabled:opacity-50 transition-colors flex items-center gap-2"
+                  >
+                    {loading ? (
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      "Join"
+                    )}
+                  </button>
+                </div>
+                <p className="text-xs text-slate-400 mt-2">
+                  Ask your association admin for the join code. It links your
+                  existing DCC account to the association.
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const MemberDashboardContent = () => {
   const userRef = useRef(getUser());
   const user = userRef.current;
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const membershipActivated = searchParams.get("membership") === "activated";
+
   const [activeView, setActiveView] = useState(
     location.state?.openCertificates ? "certificates" : "dashboard",
   );
   const [memberProfile, setMemberProfile] = useState(null);
   const [qrCodeData, setQrCodeData] = useState("");
   const [showQRModal, setShowQRModal] = useState(false);
+  const [showMembershipSuccess, setShowMembershipSuccess] =
+    useState(membershipActivated);
   const [newDiscounts, setNewDiscounts] = useState([]);
   const [providerDirectory, setProviderDirectory] = useState([]);
   const [travelDeals, setTravelDeals] = useState([]);
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [activeCertCount, setActiveCertCount] = useState(0);
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [associationName, setAssociationName] = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const hasFetched = useRef(false);
 
@@ -58,6 +208,15 @@ const MemberDashboardContent = () => {
     );
     return () => clearInterval(t);
   }, []);
+
+  // Auto-hide membership success banner and force refresh on activation
+  useEffect(() => {
+    if (membershipActivated) {
+      hasFetched.current = false; // Force data refresh
+      const timer = setTimeout(() => setShowMembershipSuccess(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [membershipActivated]);
 
   const fetchDashboardData = useCallback(async () => {
     if (hasFetched.current) return;
@@ -81,6 +240,7 @@ const MemberDashboardContent = () => {
       if (profileRes.status === "fulfilled" && profileRes.value) {
         const p = profileRes.value;
         setMemberProfile(p);
+        if (p?.association?.name) setAssociationName(p.association.name);
         setQrCodeData(
           p?.qrCode || `DCC-MEMBER-${p?.userId || user?.id}-${Date.now()}`,
         );
@@ -180,6 +340,33 @@ const MemberDashboardContent = () => {
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-green-100/40 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
       </div>
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {showMembershipSuccess && (
+          <div className="mb-8 bg-green-50 border border-green-200 rounded-2xl p-6 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 shadow-sm">
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <Icon
+                name="CheckCircleIcon"
+                size={24}
+                className="text-green-600"
+              />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-green-800">
+                Membership Activated! 🎉
+              </p>
+              <p className="text-sm text-green-700 mt-1">
+                Welcome to Discount Club Cayman! You now have access to
+                exclusive discounts and offers.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowMembershipSuccess(false)}
+              className="text-green-400 hover:text-green-600 transition-colors flex-shrink-0"
+            >
+              <Icon name="XMarkIcon" size={20} />
+            </button>
+          </div>
+        )}
+
         {!isMembershipActive && (
           <div className="mb-8 bg-amber-50 border border-amber-200 rounded-2xl p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
@@ -201,7 +388,7 @@ const MemberDashboardContent = () => {
 
         {/* Membership card */}
         <div className="mb-8">
-          <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-[#1C4D8D] to-[#4988C4] p-8 md:p-10 shadow-2xl">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1C4D8D] to-[#4988C4] p-8 md:p-10 shadow-2xl">
             <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
@@ -224,7 +411,7 @@ const MemberDashboardContent = () => {
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-5 py-4 border border-white/20 min-w-27.5">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-5 py-4 border border-white/20 min-w-[110px]">
                   <p className="text-white/60 text-xs uppercase tracking-widest mb-1">
                     Member Since
                   </p>
@@ -239,7 +426,7 @@ const MemberDashboardContent = () => {
                       : "–"}
                   </p>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-5 py-4 border border-white/20 min-w-27.5">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-5 py-4 border border-white/20 min-w-[110px]">
                   <p className="text-white/60 text-xs uppercase tracking-widest mb-1">
                     Expires
                   </p>
@@ -303,7 +490,7 @@ const MemberDashboardContent = () => {
                     key={tx.id || i}
                     className="px-6 py-4 flex items-center gap-4 hover:bg-slate-50 transition-colors"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
                       {tx.business?.logoUrl ? (
                         <AppImage
                           src={tx.business.logoUrl}
@@ -333,7 +520,7 @@ const MemberDashboardContent = () => {
                         })}
                       </p>
                     </div>
-                    <div className="text-right shrink-0">
+                    <div className="text-right flex-shrink-0">
                       <p className="text-sm font-bold text-emerald-600">
                         −${(tx.savingsAmount || 0).toFixed(2)}
                       </p>
@@ -348,6 +535,12 @@ const MemberDashboardContent = () => {
           </div>
         </div>
 
+        {/* ── Join Association ─────────────────────────────────────────────
+             Members can paste a join code given to them by their association.
+             The code links them to the association automatically.
+        ──────────────────────────────────────────────────────────────────── */}
+        <JoinAssociationWidget />
+
         {/* Quick Links */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
           <button
@@ -356,7 +549,7 @@ const MemberDashboardContent = () => {
                 activeView === "certificates" ? "dashboard" : "certificates",
               )
             }
-            className={`group relative overflow-hidden rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 w-full text-left ${activeView === "certificates" ? "bg-linear-to-br from-[#0F2854] to-[#1C4D8D] ring-4 ring-[#1C4D8D]/30" : "bg-linear-to-br from-[#1C4D8D] to-[#4988C4]"}`}
+            className={`group relative overflow-hidden rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 w-full text-left ${activeView === "certificates" ? "bg-gradient-to-br from-[#0F2854] to-[#1C4D8D] ring-4 ring-[#1C4D8D]/30" : "bg-gradient-to-br from-[#1C4D8D] to-[#4988C4]"}`}
           >
             <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2" />
             <div className="relative z-10">
@@ -401,7 +594,7 @@ const MemberDashboardContent = () => {
             <Link
               key={to}
               to={to}
-              className="group relative overflow-hidden bg-linear-to-br from-[#1C4D8D] to-[#4988C4] text-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+              className="group relative overflow-hidden bg-gradient-to-br from-[#1C4D8D] to-[#4988C4] text-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
             >
               <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2" />
               <div className="relative z-10">
@@ -416,6 +609,48 @@ const MemberDashboardContent = () => {
             </Link>
           ))}
         </div>
+
+        {/* ── Join Association banner (shown when member has no association) ── */}
+        {!associationName && (
+          <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-[#1C4D8D]/10 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
+                🤝
+              </div>
+              <div>
+                <p className="font-bold text-slate-900 text-sm">
+                  Have an association join code?
+                </p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Link your account to an association to access group benefits.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowJoinModal(true)}
+              className="flex-shrink-0 px-5 py-2.5 bg-[#1C4D8D] text-white rounded-xl text-sm font-bold hover:bg-[#163d71] transition-colors whitespace-nowrap"
+            >
+              Enter Join Code
+            </button>
+          </div>
+        )}
+
+        {/* ── Association linked badge (shown when member belongs to one) ── */}
+        {associationName && (
+          <div className="mb-8 bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center gap-3">
+            <div className="w-8 h-8 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-700 font-black text-xs flex-shrink-0">
+              ✓
+            </div>
+            <div>
+              <p className="text-sm font-bold text-emerald-800">
+                Linked to {associationName}
+              </p>
+              <p className="text-xs text-emerald-600">
+                You're getting group benefits from your association.
+              </p>
+            </div>
+          </div>
+        )}
 
         {activeView === "certificates" && (
           <div className="mb-16">
@@ -467,7 +702,7 @@ const MemberDashboardContent = () => {
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                           />
                         )}
-                        <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                         <div className="absolute bottom-4 left-4 right-4">
                           <h3 className="text-xl font-bold text-white mb-1 line-clamp-1">
                             {deal.title || deal.name}
@@ -537,7 +772,7 @@ const MemberDashboardContent = () => {
                       className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group"
                     >
                       <div className="flex items-start gap-4 mb-6">
-                        <div className="w-16 h-16 rounded-2xl overflow-hidden border border-slate-100 shrink-0 bg-white p-1">
+                        <div className="w-16 h-16 rounded-2xl overflow-hidden border border-slate-100 flex-shrink-0 bg-white p-1">
                           {discount.business?.logoUrl ? (
                             <AppImage
                               src={discount.business.logoUrl}
@@ -628,6 +863,17 @@ const MemberDashboardContent = () => {
           </>
         )}
       </div>
+
+      {/* Join Association Modal */}
+      {showJoinModal && (
+        <JoinAssociationModal
+          onClose={() => setShowJoinModal(false)}
+          onJoined={() => {
+            setAssociationName("your association");
+            setShowJoinModal(false);
+          }}
+        />
+      )}
 
       {showQRModal && (
         <div

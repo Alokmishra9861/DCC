@@ -1,78 +1,46 @@
+// Backend/routes/association.routes.js
 const express = require("express");
 const router = express.Router();
+const ctrl = require("../controllers/association.controller");
 const { protect, authorize } = require("../middlewares/auth.middleware");
-const { prisma } = require("../config/database");
-const { ApiResponse, ApiError } = require("../utils/ApiResponse");
-const { asyncHandler } = require("../middlewares/errorhandler");
-const { bulkCreateMemberships } = require("../services/membership.service");
-const { buildEmployerSummary } = require("../utils/savingsCalculator");
 
+// ── Public routes (no auth) ───────────────────────────────────────────────────
+// Member invite accept (email link)
+router.post("/members/accept-invite/:token", ctrl.acceptMemberInvite);
+// Business invite accept (email link)
+router.post("/businesses/accept-invite/:token", ctrl.acceptBusinessInvite);
+
+// ── Member self-join via code (requires MEMBER auth) ─────────────────────────
+router.post("/join", protect, authorize("MEMBER"), ctrl.joinByCode);
+
+// ── All routes below require ASSOCIATION role ─────────────────────────────────
 router.use(protect);
 router.use(authorize("ASSOCIATION"));
 
-router.get(
-  "/dashboard",
-  asyncHandler(async (req, res) => {
-    const association = await prisma.association.findUnique({
-      where: { userId: req.user.id },
-    });
-    if (!association) throw ApiError.notFound("Association not found");
-    if (!association.isApproved)
-      throw ApiError.forbidden("Association not yet approved");
+// Profile
+router.get("/profile", ctrl.getProfile);
 
-    const totalMembers = await prisma.member.count({
-      where: { associationId: association.id },
-    });
-    const summary = buildEmployerSummary(association);
+// Dashboard
+router.get("/dashboard", ctrl.getDashboard);
 
-    const savingsByCategory = await prisma.transaction.groupBy({
-      by: ["businessCategory"],
-      where: { member: { associationId: association.id } },
-      _sum: { savingsAmount: true },
-      orderBy: { _sum: { savingsAmount: "desc" } },
-    });
+// Join code (MEMBER-type only)
+router.post("/join-code/generate", ctrl.generateJoinCode);
+router.patch("/join-code/toggle", ctrl.toggleJoinCode);
 
-    return ApiResponse.success(res, {
-      association,
-      summary,
-      totalMembers,
-      savingsByCategory,
-    });
-  }),
-);
+// ── MEMBER-type association routes ────────────────────────────────────────────
+// Members
+router.get("/members", ctrl.getMembers);
+router.post("/members", ctrl.addMember);
+router.post("/members/bulk", ctrl.bulkAddMembers);
+router.post("/members/:id/resend-invite", ctrl.resendMemberInvite);
+router.delete("/members/:id", ctrl.removeMember);
 
-router.get(
-  "/members",
-  asyncHandler(async (req, res) => {
-    const association = await prisma.association.findUnique({
-      where: { userId: req.user.id },
-    });
-    const members = await prisma.member.findMany({
-      where: { associationId: association.id },
-      include: { membership: true, user: { select: { email: true } } },
-    });
-    return ApiResponse.success(res, members);
-  }),
-);
-
-router.post(
-  "/members",
-  asyncHandler(async (req, res) => {
-    const { members, pricePerMember = 69.99 } = req.body;
-    const association = await prisma.association.findUnique({
-      where: { userId: req.user.id },
-    });
-    if (!association?.isApproved)
-      throw ApiError.forbidden("Association not approved");
-
-    const results = await bulkCreateMemberships(
-      members,
-      null,
-      association.id,
-      parseFloat(pricePerMember),
-    );
-    return ApiResponse.success(res, results);
-  }),
-);
+// ── BUSINESS-type association routes ──────────────────────────────────────────
+// Businesses
+router.get("/businesses", ctrl.getLinkedBusinesses);
+router.get("/businesses/:id/detail", ctrl.getLinkedBusinessDetail);
+router.post("/businesses/link", ctrl.linkBusiness);
+router.post("/businesses/invite", ctrl.inviteBusiness);
+router.delete("/businesses/:id", ctrl.removeBusiness);
 
 module.exports = router;

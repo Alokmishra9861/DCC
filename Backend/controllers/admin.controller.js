@@ -13,6 +13,11 @@ const {
 const { generateMemberQR } = require("../services/qr.service");
 const { getPagination, buildPaginationMeta } = require("../utils/Paginate");
 
+const {
+  sendAssociationApprovalEmail,
+  sendAssociationRejectionEmail,
+} = require("../services/association.email.service");
+
 // ── Dashboard stats ───────────────────────────────────────────────────────────
 exports.getDashboardStats = async (req, res) => {
   try {
@@ -530,14 +535,92 @@ exports.rejectEmployer = asyncHandler(async (req, res) => {
 // ── Approve association ───────────────────────────────────────────────────────
 exports.approveAssociation = asyncHandler(async (req, res) => {
   const { id } = req.params;
+
+  const association = await prisma.association.findUnique({ where: { id } });
+  if (!association) throw ApiError.notFound("Association not found");
+  if (association.status === "APPROVED")
+    throw ApiError.badRequest("Association already approved");
+
+  await prisma.association.update({
+    where: { id },
+    data: { status: "APPROVED", isApproved: true },
+  });
+
+  // Fetch the user separately to get their email
+  const user = await prisma.user.findUnique({
+    where: { id: association.userId },
+    select: { email: true },
+  });
+
+  if (user?.email) {
+    await sendAssociationApprovalEmail({
+      associationEmail: user.email,
+      associationName: association.name,
+      associationType: association.associationType || "MEMBER",
+    }).catch((err) =>
+      console.error("Association approval email failed:", err.message),
+    );
+  }
+
+  await prisma.auditLog
+    .create({
+      data: {
+        action: "APPROVE",
+        entity: "Association",
+        entityId: id,
+        adminId: req.user.id,
+        details: `Approved association: ${association.name}`,
+      },
+    })
+    .catch(() => {}); // audit log is non-critical
+
+  return ApiResponse.success(res, {}, "Association approved successfully");
+});
+
+exports.rejectAssociation = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { reason } = req.body;
+
   const association = await prisma.association.findUnique({ where: { id } });
   if (!association) throw ApiError.notFound("Association not found");
 
   await prisma.association.update({
     where: { id },
-    data: { isApproved: true },
+    data: {
+      status: "REJECTED",
+      isApproved: false,
+      rejectionReason: reason || null,
+    },
   });
-  return ApiResponse.success(res, {}, "Association approved");
+
+  const user = await prisma.user.findUnique({
+    where: { id: association.userId },
+    select: { email: true },
+  });
+
+  if (user?.email) {
+    await sendAssociationRejectionEmail({
+      associationEmail: user.email,
+      associationName: association.name,
+      reason,
+    }).catch((err) =>
+      console.error("Association rejection email failed:", err.message),
+    );
+  }
+
+  await prisma.auditLog
+    .create({
+      data: {
+        action: "REJECT",
+        entity: "Association",
+        entityId: id,
+        adminId: req.user.id,
+        details: reason ? `Rejected: ${reason}` : "Rejected without reason",
+      },
+    })
+    .catch(() => {});
+
+  return ApiResponse.success(res, {}, "Association rejected");
 });
 
 // ── Approve business ──────────────────────────────────────────────────────────

@@ -20,12 +20,31 @@ app.use(
 
 // ── Security & utility middleware ─────────────────────────────────────────────
 app.use(helmet());
-app.use(
-  cors({
-    origin: "*",
-    credentials: true,
-  }),
-);
+
+// ── CORS Configuration ────────────────────────────────────────────────────────
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      "http://localhost:5173", // Vite dev server
+      "http://localhost:3000", // Alternative dev port
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:3000",
+      "https://dcc-frontend-production.vercel.app", // Add your production frontend URL
+    ];
+
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS not allowed"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

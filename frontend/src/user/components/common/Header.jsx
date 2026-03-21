@@ -6,7 +6,7 @@ import {
   getUser,
   removeToken,
   removeUser,
-  ROLE_ROUTES,
+  getAssociationType,
 } from "../../../services/api";
 
 const Header = () => {
@@ -16,15 +16,12 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Re-read user from storage on every route change (handles login/logout)
   useEffect(() => {
     setCurrentUser(getUser());
   }, [location.pathname]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -39,7 +36,7 @@ const Header = () => {
 
   const isActive = (path) => location.pathname === path;
 
-  // Public menu (not logged in)
+  // ── Nav link definitions per role ────────────────────────────────────────────
   const publicNavLinks = [
     { href: "/", label: "Home" },
     { href: "/for-individuals", label: "For Individuals" },
@@ -51,7 +48,6 @@ const Header = () => {
     { href: "/contact", label: "Contact Us" },
   ];
 
-  // Role-specific nav links when logged in
   const memberNavLinks = [
     { href: "/member-dashboard", label: "Dashboard" },
     { href: "/travel", label: "Travel" },
@@ -61,6 +57,7 @@ const Header = () => {
     { href: "/about", label: "About Us" },
     { href: "/contact", label: "Contact Us" },
   ];
+
   const businessNavLinks = [
     { href: "/business-dashboard", label: "Dashboard" },
     { href: "/discounts", label: "Discounts" },
@@ -69,15 +66,29 @@ const Header = () => {
     { href: "/about", label: "About Us" },
     { href: "/contact", label: "Contact Us" },
   ];
+
   const employerNavLinks = [
-    { href: "/employer-dashboard", label: "Employer Dashboard" },
+    { href: "/employer-dashboard", label: "Dashboard" },
     { href: "/categories", label: "Categories" },
     { href: "/about", label: "About Us" },
     { href: "/contact", label: "Contact Us" },
   ];
+
+  // ── ASSOCIATION nav ──────────────────────────────────────────────────────────
+  // Dashboard href reads associationType from localStorage (set by saveAuthData).
+  // Falls back to /association-member-dashboard if type not yet cached.
+  const assocDashboardHref = React.useMemo(() => {
+    const type = getAssociationType();
+    return type === "BUSINESS"
+      ? "/association-business-dashboard"
+      : "/association-member-dashboard";
+    // Re-compute when route changes so it picks up a freshly-cached type
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
   const associationNavLinks = [
-    { href: "/association-dashboard", label: "Dashboard" },
-    { href: "/categories", label: "Categories" },
+    { href: assocDashboardHref, label: "Dashboard" },
+    { href: "/b2b-discounts", label: "B2B Discounts" },
     { href: "/about", label: "About Us" },
     { href: "/contact", label: "Contact Us" },
   ];
@@ -94,14 +105,13 @@ const Header = () => {
       case "ADMIN":
         return [{ href: "/admin", label: "Admin Panel" }];
       default:
-        return memberNavLinks; // member / b2b
+        return memberNavLinks; // MEMBER / B2B
     }
   };
 
   const navLinks = getNavLinks();
-
-  // First name only for display
   const displayName = currentUser?.name?.split(" ")[0] || "Account";
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -212,6 +222,7 @@ const Header = () => {
                   {link.label}
                 </Link>
               ))}
+
               <div className="flex flex-col gap-4 pt-4 mt-2 border-t border-slate-200">
                 {currentUser ? (
                   <div className="px-2 flex flex-col gap-3">
@@ -226,7 +237,7 @@ const Header = () => {
                           {currentUser.name}
                         </p>
                         <p className="text-xs text-slate-500 capitalize">
-                          {currentUser.role}
+                          {currentUser.role?.toLowerCase()}
                         </p>
                       </div>
                     </div>

@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Icon from "../../components/ui/AppIcon";
-import { authAPI, saveAuthData, ROLE_ROUTES } from "../../../services/api";
+import {
+  authAPI,
+  saveAuthData,
+  ROLE_ROUTES,
+  getAssociationRoute,
+} from "../../../services/api";
 
 const ROLE_TABS = [
   { key: "member", label: "Individual" },
@@ -22,18 +27,15 @@ const LoginContent = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // ── Load saved credentials on mount ──
   useEffect(() => {
     const savedLogins =
       JSON.parse(localStorage.getItem("dcc_saved_logins")) || [];
     setSuggestions(savedLogins);
   }, []);
 
-  // ── Handle email input and show suggestions ──
   const handleEmailChange = (e) => {
     const value = e.target.value;
     setEmail(value);
-
     const savedLogins =
       JSON.parse(localStorage.getItem("dcc_saved_logins")) || [];
     if (value.trim()) {
@@ -48,7 +50,6 @@ const LoginContent = () => {
     }
   };
 
-  // ── Click on suggestion to fill email & password ──
   const selectSuggestion = (login) => {
     setEmail(login.email);
     setPassword(login.password);
@@ -60,30 +61,29 @@ const LoginContent = () => {
     e.preventDefault();
     setError("");
     setLoading(true);
-
     try {
       const data = await authAPI.login(email, password);
-
-      // saveAuthData handles both { token } and { accessToken } from the backend
       saveAuthData(data);
 
-      // Save credentials if "Remember me" is checked
       if (rememberMe) {
         const savedLogins =
           JSON.parse(localStorage.getItem("dcc_saved_logins")) || [];
-        // Remove duplicate if exists
         const filtered = savedLogins.filter((login) => login.email !== email);
-        // Add new login at the beginning
         filtered.unshift({ email, password });
-        // Keep only last 5 saved logins
         localStorage.setItem(
           "dcc_saved_logins",
           JSON.stringify(filtered.slice(0, 5)),
         );
       }
 
-      // Always go to role dashboard — no membership gate at login
-      const destination = ROLE_ROUTES[data.user?.role] || "/member-dashboard";
+      // Use backend-computed redirectTo (includes associationType-aware path).
+      // Falls back to client-side resolution if backend didn't return it.
+      const destination =
+        data.redirectTo ||
+        (data.user?.role === "ASSOCIATION"
+          ? getAssociationRoute(data.user)
+          : ROLE_ROUTES[data.user?.role] || "/member-dashboard");
+
       navigate(destination, { replace: true });
     } catch (err) {
       setError(err.message || "Login failed. Please try again.");
@@ -92,13 +92,10 @@ const LoginContent = () => {
     }
   };
 
-  // ── Handle "Remember me" checkbox ──
   const handleRememberMeChange = (e) => {
     const isChecked = e.target.checked;
     setRememberMe(isChecked);
-
     if (!isChecked && email && password) {
-      // Remove this specific login from saved list when unchecking
       const savedLogins =
         JSON.parse(localStorage.getItem("dcc_saved_logins")) || [];
       const filtered = savedLogins.filter((login) => login.email !== email);
@@ -108,14 +105,14 @@ const LoginContent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center py-12 px-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center py-12 px-6">
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyaWJhKDMwLCA1OCwgMTM5LCAwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc=')] opacity-100" />
       </div>
 
       <div className="max-w-md w-full relative z-10">
         <div className="text-center mb-8 animate-fade-up">
-          <div className="w-16 h-16 bg-[#1C4D8D] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-900/20 transform  hover:rotate-0 transition-transform duration-300">
+          <div className="w-16 h-16 bg-[#1C4D8D] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-900/20 transform hover:rotate-0 transition-transform duration-300">
             <span className="text-white font-bold text-3xl">
               <img src="/public/logo2.png" alt="Logo" className="scale-120" />
             </span>
@@ -161,7 +158,7 @@ const LoginContent = () => {
                 <Icon
                   name="ExclamationCircleIcon"
                   size={20}
-                  className="text-red-600 mt-0.5 shrink-0"
+                  className="text-red-600 mt-0.5 flex-shrink-0"
                 />
                 <p className="text-sm text-red-600 font-medium">{error}</p>
               </div>
@@ -191,8 +188,6 @@ const LoginContent = () => {
                   placeholder="your@email.com"
                   autoComplete="off"
                 />
-
-                {/* ── Email suggestions dropdown ── */}
                 {showSuggestions && suggestions.length > 0 && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 overflow-hidden">
                     {suggestions.map((login, idx) => (
@@ -268,7 +263,6 @@ const LoginContent = () => {
                 <>
                   <svg
                     className="animate-spin w-5 h-5"
-                    xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
                   >

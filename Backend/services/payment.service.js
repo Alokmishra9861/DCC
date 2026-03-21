@@ -29,8 +29,8 @@ const createStripeCheckoutSession = async ({
         quantity: 1,
       },
     ],
-    metadata: { memberId, ...metadata },
-    success_url: `${process.env.CLIENT_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+    metadata: { memberId, type: "membership", ...metadata },
+    success_url: `${process.env.CLIENT_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}&type=membership`,
     cancel_url: `${process.env.CLIENT_URL}/payment/cancelled`,
   });
 

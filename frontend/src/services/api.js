@@ -1,21 +1,20 @@
 const resolveBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_API_URL;
-  if (envUrl) return envUrl;
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  if (import.meta.env.VITE_LOCALHOST_URL)
+    return import.meta.env.VITE_LOCALHOST_URL;
 
   if (typeof window !== "undefined") {
-    const host = window.location.hostname;
-    if (host === "localhost" || host === "127.0.0.1") {
-      return import.meta.env.VITE_LOCALHOST_URL || "http://localhost:5000/api";
+    const { hostname, port } = window.location;
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      const backendPort = port === "5173" ? "5000" : port;
+      return `http://${hostname}:${backendPort}/api`;
     }
   }
-
-  return (
-    import.meta.env.VITE_FALLBACK_URL ||
-    "https://dcc-backend-ej8n.onrender.com/api"
-  );
+  return "https://dcc-backend-ej8n.onrender.com/api";
 };
 
 const BASE_URL = resolveBaseUrl();
+console.log("[API Config] BASE_URL:", BASE_URL);
 
 // ─── Token helpers ────────────────────────────────────────────────────────────
 export const getToken = () => localStorage.getItem("dcc_token");
@@ -23,16 +22,18 @@ export const setToken = (token) => localStorage.setItem("dcc_token", token);
 export const removeToken = () => localStorage.removeItem("dcc_token");
 
 export const getUser = () => {
-  const raw = localStorage.getItem("dcc_user");
   try {
-    return raw ? JSON.parse(raw) : null;
+    return JSON.parse(localStorage.getItem("dcc_user"));
   } catch {
     return null;
   }
 };
 export const setUser = (user) =>
   localStorage.setItem("dcc_user", JSON.stringify(user));
-export const removeUser = () => localStorage.removeItem("dcc_user");
+export const removeUser = () => {
+  localStorage.removeItem("dcc_user");
+  localStorage.removeItem("dcc_association_type");
+};
 
 // ─── Core fetch wrapper ───────────────────────────────────────────────────────
 const request = async (endpoint, options = {}) => {
@@ -40,17 +41,29 @@ const request = async (endpoint, options = {}) => {
   const headers = { "Content-Type": "application/json", ...options.headers };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
-  const json = await response.json();
+  try {
+    const fullUrl = `${BASE_URL}${endpoint}`;
+    console.log(`[API Request] ${options.method || "GET"} ${fullUrl}`);
 
-  if (!response.ok) {
-    throw new Error(json.message || "Something went wrong");
+    const response = await fetch(fullUrl, { ...options, headers });
+
+    const contentType = response.headers.get("content-type");
+    const json =
+      contentType && contentType.includes("application/json")
+        ? await response.json()
+        : { message: `HTTP ${response.status}` };
+
+    if (!response.ok) {
+      throw new Error(
+        json.message || `HTTP ${response.status}: ${response.statusText}`,
+      );
+    }
+
+    return json.data !== undefined ? json.data : json;
+  } catch (error) {
+    console.error(`[API Error] ${endpoint}:`, error.message);
+    throw error;
   }
-  // Unwrap ApiResponse wrapper: { success, message, data } → return data
-  return json.data !== undefined ? json.data : json;
 };
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
@@ -68,46 +81,82 @@ export const authAPI = {
     }),
 
   me: () => request("/auth/me"),
-
   forgotPassword: (email) =>
     request("/auth/forgot-password", {
       method: "POST",
       body: JSON.stringify({ email }),
     }),
-
   resetPassword: (token, password) =>
     request("/auth/reset-password", {
       method: "POST",
       body: JSON.stringify({ token, password }),
     }),
-
   verifyEmail: (token) => request(`/auth/verify/${token}`),
 };
 
 // ─── Role → dashboard route mapping ──────────────────────────────────────────
+// ASSOCIATION is intentionally absent — routing is handled by getAssociationRoute()
+// which reads associationType and returns the correct typed dashboard path.
 export const ROLE_ROUTES = {
   MEMBER: "/member-dashboard",
   BUSINESS: "/business-dashboard",
   EMPLOYER: "/employer-dashboard",
-  ASSOCIATION: "/association-dashboard",
   B2B: "/b2b-dashboard",
   ADMIN: "/admin",
   // lowercase aliases
   member: "/member-dashboard",
   business: "/business-dashboard",
   employer: "/employer-dashboard",
-  association: "/association-dashboard",
   b2b: "/b2b-dashboard",
   admin: "/admin",
 };
 
-// ─── Helper: save auth response ───────────────────────────────────────────────
-// Handles both { token, ... } and { accessToken, ... } from the backend
+// ─── Association type helpers ─────────────────────────────────────────────────
+
+/**
+ * Returns "MEMBER" | "BUSINESS"
+ * Priority: user object → localStorage → default "MEMBER"
+ */
+export const getAssociationType = (user) => {
+  if (user?.associationType) return user.associationType;
+  const stored = localStorage.getItem("dcc_association_type");
+  if (stored) return stored;
+  return "MEMBER";
+};
+
+/**
+ * Returns the correct dashboard path for an ASSOCIATION user.
+ *   MEMBER  → /association-member-dashboard
+ *   BUSINESS → /association-business-dashboard
+ *
+ * Pass the user object right after login for the freshest value.
+ * Without a user object it reads from localStorage (works on page refresh).
+ */
+export const getAssociationRoute = (user) => {
+  const type = getAssociationType(user);
+  return type === "BUSINESS"
+    ? "/association-business-dashboard"
+    : "/association-member-dashboard";
+};
+
+// ─── Auth data persistence ────────────────────────────────────────────────────
+/**
+ * Saves tokens + user from the login/register response.
+ * Also persists associationType separately for quick guard checks
+ * without having to parse the full user object.
+ */
 export const saveAuthData = (data) => {
-  const token = data.token || data.accessToken;
-  if (token) setToken(token);
-  if (data.user) setUser(data.user);
-  return token;
+  const token = data.accessToken || data.token;
+  const user = data.user || data;
+
+  localStorage.setItem("dcc_token", token);
+  localStorage.setItem("dcc_user", JSON.stringify(user));
+
+  if (user.role === "ASSOCIATION" && user.associationType) {
+    localStorage.setItem("dcc_association_type", user.associationType);
+  } else {
+    localStorage.removeItem("dcc_association_type");
+  }
 };
 
 // ─── Users ───────────────────────────────────────────────────────────────────
@@ -122,61 +171,50 @@ export const memberAPI = {
   getProfile: () => request("/member/profile"),
   updateProfile: (data) =>
     request("/member/profile", { method: "PUT", body: JSON.stringify(data) }),
-  getQR: () => request("/member/qr"),
-  getSavings: (period = "lifetime") =>
-    request(`/member/savings?period=${period}`),
+  getMyQR: () => request("/member/qr"),
+  getSavings: (period) => request(`/member/savings?period=${period}`),
   getTransactions: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request(`/member/transactions${qs ? `?${qs}` : ""}`);
   },
+
+  // NEW: Member enters association join code to self-link
+  // Backend route: POST /api/association/join  (requires MEMBER auth)
+  // Returns: { associationName: string }
+  joinAssociation: (joinCode) =>
+    request("/association/join", {
+      method: "POST",
+      body: JSON.stringify({ joinCode }),
+    }),
 };
 
 // ─── Employer ─────────────────────────────────────────────────────────────────
 export const employerAPI = {
-  // Profile
   getProfile: () => request("/employer/profile"),
-
-  // Bulk membership purchase
-  // { planType: "BASIC"|"STANDARD"|"ENTERPRISE", seatCount, paymentProvider, paymentId }
   bulkPurchase: (data) =>
     request("/employer/bulk-purchase", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-
-  // Dashboard stats + ROI
   getDashboard: () => request("/employer/dashboard"),
-
-  // Employees list — params: { page, limit, status }
   getEmployees: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request(`/employer/employees${qs ? `?${qs}` : ""}`);
   },
-
-  // Add one employee manually — { name, email }
   addEmployee: (data) =>
     request("/employer/employees", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-
-  // Bulk add employees — { employees: [{ name, email }] }
   bulkAddEmployees: (data) =>
     request("/employer/employees/bulk", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-
-  // Resend invite email to an INVITED employee
   resendInvite: (id) =>
     request(`/employer/employees/${id}/resend-invite`, { method: "POST" }),
-
-  // Remove employee (cancels membership, frees seat)
   removeEmployee: (id) =>
     request(`/employer/employees/${id}`, { method: "DELETE" }),
-
-  // Employee accepts invite (PUBLIC — no auth token needed)
-  // Called on the /accept-invite/:token page
   acceptInvite: (token, password) =>
     request(`/employer/employees/accept-invite/${token}`, {
       method: "POST",
@@ -186,13 +224,60 @@ export const employerAPI = {
 
 // ─── Association ──────────────────────────────────────────────────────────────
 export const associationAPI = {
+  // Profile & dashboard
+  getProfile: () => request("/association/profile"),
   getDashboard: () => request("/association/dashboard"),
-  getMembers: () => request("/association/members"),
-  addMembers: (data) =>
+
+  // Join code (MEMBER-type)
+  generateJoinCode: () =>
+    request("/association/join-code/generate", { method: "POST" }),
+  toggleJoinCode: (enabled) =>
+    request("/association/join-code/toggle", {
+      method: "PATCH",
+      body: JSON.stringify({ enabled }),
+    }),
+
+  // Members (MEMBER-type)
+  getMembers: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/association/members${qs ? `?${qs}` : ""}`);
+  },
+  addMember: (name, email) =>
     request("/association/members", {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify({ name, email }),
     }),
+  bulkAddMembers: (members) =>
+    request("/association/members/bulk", {
+      method: "POST",
+      body: JSON.stringify({ members }),
+    }),
+  resendMemberInvite: (id) =>
+    request(`/association/members/${id}/resend-invite`, { method: "POST" }),
+  removeMember: (id) =>
+    request(`/association/members/${id}`, { method: "DELETE" }),
+
+  // Businesses (BUSINESS-type)
+  getLinkedBusinesses: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/association/businesses${qs ? `?${qs}` : ""}`);
+  },
+  linkBusiness: (businessId) =>
+    request("/association/businesses/link", {
+      method: "POST",
+      body: JSON.stringify({ businessId }),
+    }),
+  inviteBusiness: (businessName, email) =>
+    request("/association/businesses/invite", {
+      method: "POST",
+      body: JSON.stringify({ businessName, email }),
+    }),
+  removeBusiness: (id) =>
+    request(`/association/businesses/${id}`, { method: "DELETE" }),
+
+  // Read-only detail of a linked business — offers + certificates (view only, no purchase)
+  getLinkedBusinessDetail: (linkId) =>
+    request(`/association/businesses/${linkId}/detail`),
 };
 
 // ─── Businesses ───────────────────────────────────────────────────────────────
@@ -245,7 +330,6 @@ export const discountAPI = {
     return request(`/discounts/my/offers${qs ? `?${qs}` : ""}`);
   },
   getById: (id) => request(`/discounts/${id}`),
-  // Called when member clicks Redeem — returns { canRedeem, showUpgradeModal, modalData }
   redeemAttempt: (offerId) =>
     request(`/discounts/${offerId}/redeem-attempt`, { method: "POST" }),
 };
@@ -253,17 +337,12 @@ export const discountAPI = {
 // ─── Membership ───────────────────────────────────────────────────────────────
 export const membershipAPI = {
   getPlans: () => request("/membership/plans"),
-
-  // Returns { data: membership, isActive, canRedeem, membershipStatus }
-  // Use isActive directly — no need to dig into data.status
   getMy: () => request("/membership/my"),
-
   subscribe: (planType, paymentProvider, paymentId) =>
     request("/membership/subscribe", {
       method: "POST",
       body: JSON.stringify({ planType, paymentProvider, paymentId }),
     }),
-
   cancel: (id) => request(`/membership/${id}/cancel`, { method: "PUT" }),
 };
 
@@ -275,7 +354,6 @@ export const certificateAPI = {
   },
   getMy: () => request("/certificates/my"),
   getByBusiness: () => request("/certificates/business"),
-
   purchase: (
     certificateId,
     paymentProvider = "STRIPE",
@@ -291,48 +369,37 @@ export const certificateAPI = {
         ...(cancelUrl && { cancelUrl }),
       }),
     }),
-
   redeem: (claimCode) =>
     request("/certificates/redeem", {
       method: "POST",
       body: JSON.stringify({ claimCode }),
     }),
-
-  // Business redeems a member's uniqueCode (DISC-XXXX-XXXX-XXXX)
   redeemByCode: (uniqueCode) =>
     request("/certificates/redeem-by-code", {
       method: "POST",
       body: JSON.stringify({ uniqueCode }),
     }),
-
-  // Business fetches redemption history for their certs
   getRedemptions: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request(`/certificates/redemptions${qs ? `?${qs}` : ""}`);
   },
-
   create: (data) =>
     request("/certificates", { method: "POST", body: JSON.stringify(data) }),
-
   checkRedeemEligibility: () =>
     request("/certificates/redeem-check", { method: "POST" }),
 };
 
 // ─── Travel ───────────────────────────────────────────────────────────────────
 export const travelAPI = {
-  // GET /api/travel — main list, supports ?category=hotel&featured=true etc.
   getAll: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request(`/travel${qs ? `?${qs}` : ""}`);
   },
-
-  // search() now maps to getAll() — /api/travel/search does NOT exist
-  // passing { category } becomes ?category=hotel on /api/travel
+  // search maps to getAll — /api/travel/search does not exist
   search: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request(`/travel${qs ? `?${qs}` : ""}`);
   },
-
   getById: (id) => request(`/travel/${id}`),
   getMyBookings: () => request("/travel/my/bookings"),
   recordBooking: (data) =>
@@ -364,33 +431,26 @@ export const uploadAPI = {
 
 // ─── Payment ──────────────────────────────────────────────────────────────────
 export const paymentAPI = {
-  // Pass { planType, seatCount, metadata } for employer bulk purchase
   createStripeCheckout: (data = {}) =>
-    request("/payment/stripe/checkout", {
+    request("/payments/stripe/checkout", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-
   verifyStripeSession: (sessionId) =>
     request(
-      `/payment/stripe/verify?session_id=${encodeURIComponent(sessionId)}`,
+      `/payments/stripe/verify?session_id=${encodeURIComponent(sessionId)}`,
     ),
-
-  // Pass { planType, seatCount } for employer bulk purchase
   createPayPalCheckout: (data = {}) =>
-    request("/payment/paypal/checkout", {
+    request("/payments/paypal/checkout", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-
   capturePayPal: (orderId, membershipId) =>
-    request("/payment/paypal/capture", {
+    request("/payments/paypal/capture", {
       method: "POST",
       body: JSON.stringify({ orderId, membershipId }),
     }),
-
   createOrder: () => request("/payment/paypal/checkout", { method: "POST" }),
-
   captureOrder: (orderId) =>
     request("/payment/paypal/capture", {
       method: "POST",
@@ -421,9 +481,9 @@ export const analyticsAPI = {
       const token = getToken();
       const qs = new URLSearchParams(params).toString();
       const url = `${BASE_URL}/analytics/export${qs ? `?${qs}` : ""}`;
-
-      const headers = { Authorization: `Bearer ${token}` };
-      const response = await fetch(url, { headers });
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (!response.ok) {
         const error = await response
@@ -441,7 +501,6 @@ export const analyticsAPI = {
         contentDisposition.match(/filename="?(.+?)"?$/)?.[1] ||
         `dcc-report-${Date.now()}.xlsx`;
 
-      // Create download link
       const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = blobUrl;
@@ -493,6 +552,11 @@ export const adminAPI = {
   // Association
   approveAssociation: (id) =>
     request(`/admin/associations/${id}/approve`, { method: "PATCH" }),
+  rejectAssociation: (id, reason) =>
+    request(`/admin/associations/${id}/reject`, {
+      method: "PATCH",
+      body: JSON.stringify({ reason }),
+    }),
 
   // Business
   approveBusiness: (id) =>

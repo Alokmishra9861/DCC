@@ -1,19 +1,14 @@
 // Frontend/src/user/pages/B2BDiscounts/B2BDiscountsContent.jsx
-// Accessible by: ASSOCIATION (MEMBER type + BUSINESS type), B2B role
-// Shows B2B offers from businesses linked to the user's association network
+// Accessible by: ASSOCIATION (both types), B2B, MEMBER
+// Shows B2B offers with real business images
 
 import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { getUser, discountAPI } from "../../../services/api";
+import AppImage from "../../components/ui/AppImage";
 
 const Skeleton = ({ className }) => (
   <div className={`animate-pulse bg-slate-100 rounded-2xl ${className}`} />
-);
-
-const CategoryBadge = ({ name }) => (
-  <span className="text-[11px] bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full font-medium">
-    {name}
-  </span>
 );
 
 const OfferCard = ({ offer }) => {
@@ -23,49 +18,81 @@ const OfferCard = ({ offer }) => {
       ? `${offer.discountValue}% off`
       : `$${offer.discountValue} off`;
 
+  // Image priority: business banner → business logo → initials fallback
+  const bannerImg = business.imageUrls?.[0] || business.bannerUrl || null;
+  const logoImg = business.logoUrl || null;
+  const initial = (business.name || "B")[0].toUpperCase();
+
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group">
-      {/* Business logo / banner */}
-      <div className="h-24 bg-gradient-to-br from-[#1C4D8D]/10 to-[#4988C4]/10 flex items-center justify-center relative overflow-hidden">
-        {business.logoUrl ? (
-          <img
-            src={business.logoUrl}
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden group">
+      {/* ── Image banner ── */}
+      <div className="relative h-44 overflow-hidden bg-slate-100">
+        {bannerImg ? (
+          <AppImage
+            src={bannerImg}
             alt={business.name}
-            className="h-14 w-auto object-contain"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
+        ) : logoImg ? (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1C4D8D]/8 to-[#4988C4]/8">
+            <AppImage
+              src={logoImg}
+              alt={business.name}
+              className="h-20 w-auto object-contain"
+            />
+          </div>
         ) : (
-          <div className="w-14 h-14 bg-[#1C4D8D]/20 rounded-xl flex items-center justify-center">
-            <span className="text-[#1C4D8D] font-black text-xl">
-              {(business.name || "B")[0].toUpperCase()}
-            </span>
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1C4D8D]/10 to-[#4988C4]/10">
+            <div className="w-16 h-16 bg-[#1C4D8D]/20 rounded-2xl flex items-center justify-center">
+              <span className="text-[#1C4D8D] font-black text-2xl">
+                {initial}
+              </span>
+            </div>
           </div>
         )}
+
+        {/* Overlapping logo badge when banner is present */}
+        {bannerImg && logoImg && (
+          <div className="absolute bottom-3 left-3 w-10 h-10 rounded-xl bg-white shadow-md overflow-hidden border border-white">
+            <AppImage
+              src={logoImg}
+              alt={business.name}
+              className="w-full h-full object-contain p-1"
+            />
+          </div>
+        )}
+
         {/* B2B tag */}
-        <span className="absolute top-3 right-3 text-[10px] font-black px-2 py-0.5 bg-[#1C4D8D] text-white rounded-full uppercase tracking-wide">
+        <span className="absolute top-3 right-3 text-[10px] font-black px-2.5 py-1 bg-[#1C4D8D] text-white rounded-full uppercase tracking-wide shadow-sm">
           B2B
         </span>
+
+        {/* Category badge */}
+        {business.category?.name && (
+          <span className="absolute top-3 left-3 text-[10px] font-semibold px-2 py-0.5 bg-white/90 text-slate-700 rounded-full shadow-sm backdrop-blur-sm">
+            {business.category.name}
+          </span>
+        )}
       </div>
 
+      {/* ── Card body ── */}
       <div className="p-5">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <div className="min-w-0">
-            <p className="font-bold text-slate-900 text-sm truncate">
-              {business.name || "—"}
-            </p>
-            <p className="text-xs text-slate-400 mt-0.5">
-              {business.district || "Cayman Islands"}
-            </p>
-          </div>
-          {business.category?.name && (
-            <CategoryBadge name={business.category.name} />
-          )}
+        <div className="mb-3">
+          <p className="font-bold text-slate-900 truncate">
+            {business.name || "—"}
+          </p>
+          <p className="text-xs text-slate-400 mt-0.5">
+            {business.district || "Cayman Islands"}
+          </p>
         </div>
 
-        <p className="text-sm text-slate-600 mb-4 line-clamp-2">
-          {offer.title || offer.description || "Exclusive B2B discount"}
-        </p>
+        {offer.title && (
+          <p className="text-sm text-slate-500 mb-3 line-clamp-2">
+            {offer.title}
+          </p>
+        )}
 
-        {/* Discount value highlight */}
+        {/* Discount highlight */}
         <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-4 text-center">
           <p className="text-xl font-black text-[#1C4D8D]">{discount}</p>
           {offer.minSpend && (
@@ -75,7 +102,6 @@ const OfferCard = ({ offer }) => {
           )}
         </div>
 
-        {/* Validity */}
         {offer.expiryDate && (
           <p className="text-xs text-slate-400 mb-3">
             Valid until{" "}
@@ -98,13 +124,13 @@ const OfferCard = ({ offer }) => {
   );
 };
 
-const B2BDiscountsContent = () => {
+const B2BDiscountsContent = ({ embedded = false }) => {
   const user = getUser();
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [categories, setCategories] = useState([]);
 
@@ -112,7 +138,6 @@ const B2BDiscountsContent = () => {
     setLoading(true);
     setError("");
     try {
-      // GET /api/discounts?isB2B=true  (or however your API filters B2B offers)
       const params = { isB2B: true, limit: 40 };
       if (search) params.search = search;
       if (category) params.category = category;
@@ -121,8 +146,7 @@ const B2BDiscountsContent = () => {
         ? res
         : (res?.discounts ?? res?.data ?? []);
       setOffers(list);
-
-      // Extract unique categories for filter
+      // Extract unique categories for filter pill
       const cats = [
         ...new Set(list.map((o) => o.business?.category?.name).filter(Boolean)),
       ];
@@ -138,7 +162,7 @@ const B2BDiscountsContent = () => {
     load();
   }, [load]);
 
-  // Debounce search input
+  // Debounce search
   useEffect(() => {
     const t = setTimeout(() => setSearch(searchInput), 400);
     return () => clearTimeout(t);
@@ -157,32 +181,36 @@ const B2BDiscountsContent = () => {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50/60">
-      <div className="max-w-7xl mx-auto px-5 py-10">
+    <div className={embedded ? "" : "min-h-screen bg-slate-50/60"}>
+      <div className={embedded ? "px-5 py-6" : "max-w-7xl mx-auto px-5 py-10"}>
         {/* Header */}
-        <div className="mb-8">
-          <p className="text-xs font-bold uppercase tracking-widest text-[#1C4D8D] mb-1">
-            Association Network
-          </p>
-          <h1 className="text-3xl font-black text-slate-900 mb-2">
+        <div className="mb-7">
+          {!embedded && (
+            <p className="text-xs font-bold uppercase tracking-widest text-[#1C4D8D] mb-1">
+              Association Network
+            </p>
+          )}
+          <h1
+            className={`font-black text-slate-900 mb-1 ${embedded ? "text-xl" : "text-3xl"}`}
+          >
             B2B Discounts
           </h1>
           <p className="text-slate-400 text-sm max-w-lg">
-            Exclusive business-to-business offers available through your
-            association network.
+            Exclusive business-to-business offers through your association
+            network.
             {user?.role === "ASSOCIATION" &&
               " Share these with your members and partners."}
           </p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+          <div className="mb-5 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
             {error}
           </div>
         )}
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-8">
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1 max-w-sm">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-sm">
               🔍
@@ -216,9 +244,8 @@ const B2BDiscountsContent = () => {
           )}
         </div>
 
-        {/* Results count */}
         {!loading && (
-          <p className="text-sm text-slate-400 mb-5">
+          <p className="text-xs text-slate-400 mb-5">
             {filtered.length} offer{filtered.length !== 1 ? "s" : ""} available
           </p>
         )}
@@ -226,12 +253,12 @@ const B2BDiscountsContent = () => {
         {/* Grid */}
         {loading ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-72" />
+            {Array.from({ length: embedded ? 4 : 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-80" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl border border-slate-100">
+          <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
             <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
               🤝
             </div>

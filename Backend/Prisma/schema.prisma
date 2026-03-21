@@ -72,11 +72,31 @@ enum AdStatus {
   SCHEDULED
 }
 
-// ── NEW: Employee invite/status lifecycle ─────────────────────────────────────
+// ── Employee invite/status lifecycle ─────────────────────────────────────────
 enum EmployeeStatus {
   INVITED    // email sent, not yet accepted
   ACTIVE     // accepted invite, membership activated
   REMOVED    // employer removed them
+}
+
+// ── Association type ──────────────────────────────────────────────────────────
+enum AssociationType {
+  MEMBER    // links individual members (like employer but for associations)
+  BUSINESS  // links/manages businesses under the association
+}
+
+// ── AssociationMember status ──────────────────────────────────────────────────
+enum AssociationMemberStatus {
+  INVITED   // CSV-imported, invite email sent
+  ACTIVE    // accepted invite or joined via code
+  REMOVED   // association removed them
+}
+
+// ── AssociationBusiness status ────────────────────────────────────────────────
+enum AssociationBusinessStatus {
+  PENDING   // invite sent, not yet accepted
+  LINKED    // business accepted or was linked by ID
+  REMOVED   // association removed the business
 }
 
 // ── NEW: Employer bulk purchase plan tiers ────────────────────────────────────
@@ -246,27 +266,116 @@ model Employee {
 // ─────────────────────────────────────────
 
 model Association {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String   @unique @db.ObjectId
-  user            User     @relation(fields: [userId], references: [id])
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String          @unique @db.ObjectId
+  user            User            @relation(fields: [userId], references: [id])
 
   name            String
-  type            String?
+  // associationType distinguishes MEMBER vs BUSINESS associations
+  associationType AssociationType @default(MEMBER)
+  // type is kept for legacy/org-type labelling (professional, trade, etc.)
+  orgType         String?
   district        String?
   phone           String?
+  email           String?
+  website         String?
   logoUrl         String?
-  isApproved      Boolean  @default(false)
+  description     String?
 
+  isApproved      Boolean  @default(false)
+  status          String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  rejectionReason String?
+
+  // ── MEMBER association: join code for self-service member linking ─────────
+  joinCode        String?  @unique  // e.g. "CAYMAN-NURSES-2024"
+  joinCodeEnabled Boolean  @default(true)
+
+  // ── Aggregated stats ───────────────────────────────────────────────────────
   totalMembershipCost Float @default(0)
   totalSavings        Float @default(0)
 
-  members         Member[]
-  memberships     Membership[]
+  // ── Relations ──────────────────────────────────────────────────────────────
+  members              Member[]
+  memberships          Membership[]
+  associationMembers   AssociationMember[]    // ← NEW: MEMBER type
+  associationBusinesses AssociationBusiness[] // ← NEW: BUSINESS type
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   @@map("associations")
+}
+
+// ─────────────────────────────────────────
+// ASSOCIATION MEMBER  ← NEW
+// Represents a person linked to a MEMBER-type association.
+// Similar to Employee — can be invited via CSV or join via code.
+// ─────────────────────────────────────────
+
+model AssociationMember {
+  id              String                @id @default(auto()) @map("_id") @db.ObjectId
+
+  associationId   String                @db.ObjectId
+  association     Association           @relation(fields: [associationId], references: [id])
+
+  email           String
+  name            String
+  status          AssociationMemberStatus @default(INVITED)
+
+  // Invite flow (CSV path)
+  inviteToken     String?               @unique
+  inviteExpiresAt DateTime?
+  inviteSentAt    DateTime?
+  inviteAcceptedAt DateTime?
+
+  // Once member accepts → link their User + Member records
+  userId          String?               @unique @db.ObjectId
+  memberId        String?               @unique @db.ObjectId
+
+  // Snapshot savings for dashboard
+  totalSavings    Float                 @default(0)
+  totalRedemptions Int                  @default(0)
+
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@unique([associationId, email])
+  @@map("association_members")
+}
+
+// ─────────────────────────────────────────
+// ASSOCIATION BUSINESS  ← NEW
+// Represents a business linked to a BUSINESS-type association.
+// Can be linked by ID (existing) or invited to register.
+// ─────────────────────────────────────────
+
+model AssociationBusiness {
+  id              String                  @id @default(auto()) @map("_id") @db.ObjectId
+
+  associationId   String                  @db.ObjectId
+  association     Association             @relation(fields: [associationId], references: [id])
+
+  // Linked business (set when business already exists)
+  businessId      String?                 @db.ObjectId
+  business        Business?               @relation(fields: [businessId], references: [id])
+
+  // Pre-invite fields (when business doesn't exist yet)
+  email           String?
+  businessName    String?
+
+  status          AssociationBusinessStatus @default(PENDING)
+
+  // Invite token for new business registration under association
+  inviteToken     String?                 @unique
+  inviteExpiresAt DateTime?
+  inviteSentAt    DateTime?
+  inviteAcceptedAt DateTime?
+
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  @@unique([associationId, businessId])
+  @@map("association_businesses")
 }
 
 // ─────────────────────────────────────────
@@ -301,6 +410,7 @@ model Business {
   offers        Offer[]
   transactions  Transaction[]
   advertisements Advertisement[]
+  associationBusinesses AssociationBusiness[]  // ← NEW: business assoc link
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

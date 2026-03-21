@@ -65,6 +65,8 @@ const AssociationDashboardContent = () => {
   const [renewalFilter, setRenewalFilter] = useState("30");
 
   const [loading, setLoading] = useState(false);
+  const [associationStatus, setAssociationStatus] = useState("APPROVED");
+  const [statusMessage, setStatusMessage] = useState("");
 
   useEffect(() => {
     if (activeTab === "home") fetchHomeData();
@@ -79,8 +81,17 @@ const AssociationDashboardContent = () => {
     try {
       const [dashboard, members] = await Promise.all([
         associationAPI.getDashboard(),
-        associationAPI.getMembers(),
+        associationAPI.getMembers().catch(() => []), // Handle member fetch failure gracefully
       ]);
+
+      // Check if pending approval
+      if (dashboard?.status && dashboard.status !== "APPROVED") {
+        setAssociationStatus(dashboard.status);
+        setStatusMessage(
+          dashboard.message || "Your association is pending approval",
+        );
+      }
+
       const summary = dashboard?.summary || {
         totalMembershipCost: 0,
         totalSavings: 0,
@@ -399,6 +410,25 @@ const AssociationDashboardContent = () => {
             Manage your association members and revenue
           </p>
         </div>
+
+        {/* Pending Approval Banner */}
+        {associationStatus !== "APPROVED" && (
+          <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
+            <div className="flex items-start gap-3">
+              <div className="text-yellow-600 mt-0.5">
+                <Icon name="ExclamationTriangleIcon" size={20} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-yellow-800">
+                  {associationStatus === "PENDING"
+                    ? "Pending Admin Approval"
+                    : "Status: " + associationStatus}
+                </h3>
+                <p className="text-yellow-700 text-sm mt-1">{statusMessage}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Analytics Period Stats */}
         <AnalyticsStatsPanel title="Association Analytics" />

@@ -28,6 +28,8 @@ router.patch("/employers/:id/approve", ctrl.approveEmployer);
 router.patch("/employers/:id/reject", ctrl.rejectEmployer);
 // Association approvals
 router.patch("/associations/:id/approve", ctrl.approveAssociation);
+router.patch("/associations/:id/reject", ctrl.rejectAssociation);
+
 // Business approvals
 router.patch("/businesses/:id/approve", ctrl.approveBusiness);
 router.patch("/businesses/:id/reject", ctrl.rejectBusiness);
