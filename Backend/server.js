@@ -29,7 +29,8 @@ const corsOptions = {
       "http://localhost:3000", // Alternative dev port
       "http://127.0.0.1:5173",
       "http://127.0.0.1:3000",
-      "https://dcc-frontend-production.vercel.app", // Add your production frontend URL
+      "https://dcc-frontend-ce9z.onrender.com", // Production frontend on Render
+      "https://dcc-frontend-production.vercel.app", // Alternative Vercel deployment
     ];
 
     // Allow requests with no origin (like mobile apps or Postman)
