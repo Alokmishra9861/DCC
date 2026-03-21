@@ -54,6 +54,14 @@ const request = async (endpoint, options = {}) => {
         : { message: `HTTP ${response.status}` };
 
     if (!response.ok) {
+      if (response.status === 401) {
+        removeToken();
+        removeUser();
+        if (typeof window !== "undefined") {
+          const atLogin = window.location?.pathname === "/login";
+          if (!atLogin) window.location.assign("/login");
+        }
+      }
       throw new Error(
         json.message || `HTTP ${response.status}: ${response.statusText}`,
       );
@@ -73,13 +81,11 @@ export const authAPI = {
       method: "POST",
       body: JSON.stringify({ email, password, role, profile }),
     }),
-
   login: (email, password) =>
     request("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }),
-
   me: () => request("/auth/me"),
   forgotPassword: (email) =>
     request("/auth/forgot-password", {
@@ -96,7 +102,6 @@ export const authAPI = {
 
 // ─── Role → dashboard route mapping ──────────────────────────────────────────
 // ASSOCIATION is intentionally absent — routing is handled by getAssociationRoute()
-// which reads associationType and returns the correct typed dashboard path.
 export const ROLE_ROUTES = {
   MEMBER: "/member-dashboard",
   BUSINESS: "/business-dashboard",
@@ -112,7 +117,6 @@ export const ROLE_ROUTES = {
 };
 
 // ─── Association type helpers ─────────────────────────────────────────────────
-
 /**
  * Returns "MEMBER" | "BUSINESS"
  * Priority: user object → localStorage → default "MEMBER"
@@ -126,11 +130,8 @@ export const getAssociationType = (user) => {
 
 /**
  * Returns the correct dashboard path for an ASSOCIATION user.
- *   MEMBER  → /association-member-dashboard
+ *   MEMBER   → /association-member-dashboard
  *   BUSINESS → /association-business-dashboard
- *
- * Pass the user object right after login for the freshest value.
- * Without a user object it reads from localStorage (works on page refresh).
  */
 export const getAssociationRoute = (user) => {
   const type = getAssociationType(user);
@@ -140,18 +141,11 @@ export const getAssociationRoute = (user) => {
 };
 
 // ─── Auth data persistence ────────────────────────────────────────────────────
-/**
- * Saves tokens + user from the login/register response.
- * Also persists associationType separately for quick guard checks
- * without having to parse the full user object.
- */
 export const saveAuthData = (data) => {
   const token = data.accessToken || data.token;
   const user = data.user || data;
-
   localStorage.setItem("dcc_token", token);
   localStorage.setItem("dcc_user", JSON.stringify(user));
-
   if (user.role === "ASSOCIATION" && user.associationType) {
     localStorage.setItem("dcc_association_type", user.associationType);
   } else {
@@ -159,7 +153,7 @@ export const saveAuthData = (data) => {
   }
 };
 
-// ─── Users ───────────────────────────────────────────────────────────────────
+// ─── Users ────────────────────────────────────────────────────────────────────
 export const userAPI = {
   getById: (id) => request(`/users/${id}`),
   update: (id, data) =>
@@ -178,25 +172,34 @@ export const memberAPI = {
     return request(`/member/transactions${qs ? `?${qs}` : ""}`);
   },
 
-  // NEW: Member enters association join code to self-link
-  // Backend route: POST /api/association/join  (requires MEMBER auth)
-  // Returns: { associationName: string }
+  // Self-link to a member association via join code
+  // Backend: POST /api/association/join  (MEMBER auth required)
   joinAssociation: (joinCode) =>
     request("/association/join", {
       method: "POST",
       body: JSON.stringify({ joinCode }),
     }),
+
+  // ── Payment verification after Stripe redirect ────────────────────────────
+  // Called by PaymentSuccessPage after Stripe sends the member to /payment/success?session_id=...
+  // Backend: POST /api/payments/stripe/verify  OR  GET /api/payments/stripe/verify?session_id=...
+  // Activates the membership and returns { membership, user }
+  // Using the same endpoint as paymentAPI.verifyStripeSession for consistency.
+  verifyPayment: (sessionId) =>
+    request(
+      `/payments/stripe/verify?session_id=${encodeURIComponent(sessionId)}`,
+    ),
 };
 
 // ─── Employer ─────────────────────────────────────────────────────────────────
 export const employerAPI = {
   getProfile: () => request("/employer/profile"),
+  getDashboard: () => request("/employer/dashboard"),
   bulkPurchase: (data) =>
     request("/employer/bulk-purchase", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  getDashboard: () => request("/employer/dashboard"),
   getEmployees: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request(`/employer/employees${qs ? `?${qs}` : ""}`);
@@ -228,7 +231,7 @@ export const associationAPI = {
   getProfile: () => request("/association/profile"),
   getDashboard: () => request("/association/dashboard"),
 
-  // Join code (MEMBER-type)
+  // Join code (MEMBER-type associations)
   generateJoinCode: () =>
     request("/association/join-code/generate", { method: "POST" }),
   toggleJoinCode: (enabled) =>
@@ -275,18 +278,44 @@ export const associationAPI = {
   removeBusiness: (id) =>
     request(`/association/businesses/${id}`, { method: "DELETE" }),
 
-  // Read-only detail of a linked business — offers + certificates (view only, no purchase)
+  // Read-only detail of a linked business
   getLinkedBusinessDetail: (linkId) =>
     request(`/association/businesses/${linkId}/detail`),
 };
 
-// ─── Businesses ───────────────────────────────────────────────────────────────
+// ─── Business (own dashboard) ─────────────────────────────────────────────────
 export const businessAPI = {
+  // Public directory
   getAll: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request(`/businesses${qs ? `?${qs}` : ""}`);
   },
   getById: (id) => request(`/businesses/${id}`),
+
+  // Authenticated business owner endpoints
+  getProfile: () => request("/business/profile"),
+  getDashboard: () => request("/business/dashboard"),
+  updateProfile: (data) =>
+    request("/business/profile", { method: "PUT", body: JSON.stringify(data) }),
+
+  // Offers management
+  getOffers: () => request("/business/offers"),
+  createOffer: (data) =>
+    request("/business/offers", { method: "POST", body: JSON.stringify(data) }),
+  updateOffer: (id, data) =>
+    request(`/business/offers/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  deleteOffer: (id) => request(`/business/offers/${id}`, { method: "DELETE" }),
+
+  // Transactions
+  getTransactions: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/business/transactions${qs ? `?${qs}` : ""}`);
+  },
+
+  // Legacy aliases used by other pages
   getMyProfile: () => request("/businesses/me/profile"),
   updateMyProfile: (data) =>
     request("/businesses/me/profile", {
@@ -393,12 +422,12 @@ export const certificateAPI = {
 export const travelAPI = {
   getAll: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
-    return request(`/travel${qs ? `?${qs}` : ""}`);
+    return request(`/travel/packages${qs ? `?${qs}` : ""}`);
   },
   // search maps to getAll — /api/travel/search does not exist
   search: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
-    return request(`/travel${qs ? `?${qs}` : ""}`);
+    return request(`/travel/packages${qs ? `?${qs}` : ""}`);
   },
   getById: (id) => request(`/travel/${id}`),
   getMyBookings: () => request("/travel/my/bookings"),
@@ -431,15 +460,22 @@ export const uploadAPI = {
 
 // ─── Payment ──────────────────────────────────────────────────────────────────
 export const paymentAPI = {
+  // ── Stripe ──
   createStripeCheckout: (data = {}) =>
     request("/payments/stripe/checkout", {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  // Verify a Stripe Checkout session (called after redirect from Stripe).
+  // Also used by memberAPI.verifyPayment — both point to the same endpoint.
+  // Returns: { membership: { status, type, expiryDate, ... }, user: {...} }
   verifyStripeSession: (sessionId) =>
     request(
       `/payments/stripe/verify?session_id=${encodeURIComponent(sessionId)}`,
     ),
+
+  // ── PayPal ──
   createPayPalCheckout: (data = {}) =>
     request("/payments/paypal/checkout", {
       method: "POST",
@@ -450,6 +486,8 @@ export const paymentAPI = {
       method: "POST",
       body: JSON.stringify({ orderId, membershipId }),
     }),
+
+  // Legacy aliases (kept for backward compatibility)
   createOrder: () => request("/payment/paypal/checkout", { method: "POST" }),
   captureOrder: (orderId) =>
     request("/payment/paypal/capture", {

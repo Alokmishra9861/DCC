@@ -1,1 +1,20 @@
-/* /index.html 200
+# ── File 1: public/_redirects (for Render Static Sites) ──────────────────────
+# Place this file at: Frontend/public/_redirects
+# This tells Render to serve index.html for ALL routes (SPA catch-all).
+# Without this, /payment/success?session_id=... returns 404 on Render.
+/*    /index.html    200
+
+
+# ── File 2: render.yaml (alternative — Render config at project root) ─────────
+# If you use render.yaml instead of the Render dashboard, ensure it has:
+#
+# services:
+#   - type: web
+#     name: dcc-frontend
+#     env: static
+#     buildCommand: npm install && npm run build
+#     staticPublishPath: dist
+#     routes:
+#       - type: rewrite
+#         source: /*
+#         destination: /index.html
