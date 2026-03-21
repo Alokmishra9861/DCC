@@ -147,7 +147,7 @@ const UserLayout = () => (
         <Route
           path="/member-dashboard"
           element={
-            <ProtectedRoute roles={["MEMBER"]} requireMembership>
+            <ProtectedRoute roles={["MEMBER"]}>
               <MemberDashboardContent />
             </ProtectedRoute>
           }

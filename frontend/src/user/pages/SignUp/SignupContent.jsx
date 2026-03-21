@@ -137,7 +137,7 @@ const SignupForm = () => {
         district: formData.district || null, salaryLevel: formData.salaryLevel || null,
       });
       saveAuthData(data);
-      navigate(data.redirectTo || "/membership", { replace: true });
+      navigate(data.redirectTo || "/member-dashboard", { replace: true });
     } catch (err) {
       setError(err.message || "Something went wrong. Please try again.");
     } finally {
