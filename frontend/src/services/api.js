@@ -488,9 +488,9 @@ export const paymentAPI = {
     }),
 
   // Legacy aliases (kept for backward compatibility)
-  createOrder: () => request("/payment/paypal/checkout", { method: "POST" }),
+  createOrder: () => request("/payments/paypal/checkout", { method: "POST" }),
   captureOrder: (orderId) =>
-    request("/payment/paypal/capture", {
+    request("/payments/paypal/capture", {
       method: "POST",
       body: JSON.stringify({ orderId }),
     }),
@@ -662,7 +662,8 @@ export const adminAPI = {
 
 // ─── Stripe (legacy alias) ────────────────────────────────────────────────────
 export const stripeAPI = {
-  createCheckout: () => request("/payment/stripe/checkout", { method: "POST" }),
+  createCheckout: () =>
+    request("/payments/stripe/checkout", { method: "POST" }),
   createPaymentIntent: () =>
-    request("/payment/stripe/checkout", { method: "POST" }),
+    request("/payments/stripe/checkout", { method: "POST" }),
 };

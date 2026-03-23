@@ -1,10 +1,13 @@
+// Backend/services/payment.service.js
 const stripe = require("../config/stripe");
 const { ApiError } = require("../utils/ApiResponse");
 
-// ── STRIPE ────────────────────────────────────────────
+// ── STRIPE ────────────────────────────────────────────────────────────────────
 
 /**
- * Create a Stripe checkout session for membership purchase
+ * Create a Stripe checkout session for membership purchase.
+ * success_url / cancel_url read from FRONTEND_URL env var so they
+ * point to localhost in dev and to Render in production.
  */
 const createStripeCheckoutSession = async ({
   memberId,
@@ -12,6 +15,10 @@ const createStripeCheckoutSession = async ({
   priceUSD,
   metadata = {},
 }) => {
+  // ✅ FIX: was CLIENT_URL — backend .env uses FRONTEND_URL
+  const frontendUrl =
+    process.env.FRONTEND_URL || "https://dcc-frontend-ce9z.onrender.com";
+
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     mode: "payment",
@@ -29,16 +36,25 @@ const createStripeCheckoutSession = async ({
         quantity: 1,
       },
     ],
-    metadata: { memberId, type: "membership", ...metadata },
-    success_url: `${process.env.CLIENT_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}&type=membership`,
-    cancel_url: `${process.env.CLIENT_URL}/payment/cancelled`,
+    metadata: {
+      memberId: String(memberId),
+      type: "membership",
+      ...Object.fromEntries(
+        Object.entries(metadata).map(([k, v]) => [k, String(v)]),
+      ),
+    },
+    // ✅ FIX: FRONTEND_URL — local = http://localhost:5173, prod = Render URL
+    success_url: `${frontendUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}&type=membership`,
+    cancel_url: `${frontendUrl}/payment/cancelled`,
   });
 
   return session;
 };
 
 /**
- * Create Stripe checkout for certificate purchase
+ * Create Stripe checkout for certificate purchase.
+ * successUrl / cancelUrl are passed in by the caller (already built
+ * client-side using window.location.origin so they're always correct).
  */
 const createStripeCertificateCheckout = async ({
   memberId,
@@ -71,14 +87,14 @@ const createStripeCertificateCheckout = async ({
                 ? `Prepaid Gift Certificate: $${metadata.faceValue} face value at ${businessName}`
                 : `Value-Added Certificate: $${metadata.discountValue || metadata.faceValue} off at ${businessName}`,
           },
-          unit_amount: Math.round(Number(memberPrice) * 100), // dollars → cents
+          unit_amount: Math.round(Number(memberPrice) * 100),
         },
         quantity: 1,
       },
     ],
-    // All metadata fields must be strings (Stripe requirement)
+    // All metadata values must be strings (Stripe requirement)
     metadata: {
-      type: "certificate", // lets the webhook route correctly
+      type: "certificate",
       memberId: String(memberId),
       certificateId: String(certificateId),
       offerType: metadata.offerType || "",
@@ -104,7 +120,7 @@ const getStripeSession = async (sessionId) => {
 };
 
 /**
- * Verify Stripe webhook signature
+ * Verify Stripe webhook signature — throws if invalid
  */
 const verifyStripeWebhook = (rawBody, signature) => {
   try {
@@ -120,9 +136,55 @@ const verifyStripeWebhook = (rawBody, signature) => {
   }
 };
 
+// ── PAYPAL ────────────────────────────────────────────────────────────────────
+
+/**
+ * Create a PayPal order for membership purchase.
+ */
+const createPayPalOrder = async ({ priceUSD, description, metadata = {} }) => {
+  const isLive = process.env.PAYPAL_MODE === "live";
+  const baseUrl = isLive
+    ? "https://api-m.paypal.com"
+    : "https://api-m.sandbox.paypal.com";
+
+  const auth = Buffer.from(
+    `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`,
+  ).toString("base64");
+
+  const tokenRes = await fetch(`${baseUrl}/v1/oauth2/token`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${auth}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: "grant_type=client_credentials",
+  });
+  const { access_token } = await tokenRes.json();
+
+  const orderRes = await fetch(`${baseUrl}/v2/checkout/orders`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${access_token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      intent: "CAPTURE",
+      purchase_units: [
+        {
+          amount: { currency_code: "USD", value: priceUSD.toFixed(2) },
+          description,
+        },
+      ],
+    }),
+  });
+
+  return await orderRes.json();
+};
+
 module.exports = {
   createStripeCheckoutSession,
   createStripeCertificateCheckout,
   getStripeSession,
   verifyStripeWebhook,
+  createPayPalOrder,
 };

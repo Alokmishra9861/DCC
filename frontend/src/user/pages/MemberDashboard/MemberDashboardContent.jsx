@@ -45,7 +45,9 @@ const JoinAssociationWidget = () => {
     setLoading(true);
     setResult(null);
     try {
-      const res = await associationAPI.joinByCode(code.trim().toUpperCase());
+      const res = await associationAPI.joinAssociation(
+        code.trim().toUpperCase(),
+      );
       setResult({
         success: true,
         message:

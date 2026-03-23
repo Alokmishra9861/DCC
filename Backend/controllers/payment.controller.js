@@ -270,7 +270,10 @@ exports.verifyStripeSession = asyncHandler(async (req, res) => {
     throw ApiError.badRequest("Invalid session type");
   }
 
-  if (session.metadata?.memberId && session.metadata.memberId !== member.id) {
+  if (
+    session.metadata?.memberId &&
+    session.metadata.memberId !== String(member.id)
+  ) {
     throw ApiError.forbidden("Session does not belong to this member");
   }
 

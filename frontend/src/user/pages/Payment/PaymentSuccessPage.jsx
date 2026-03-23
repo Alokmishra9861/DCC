@@ -1,14 +1,15 @@
 // Frontend/src/user/pages/Payment/PaymentSuccessPage.jsx
-// Stripe redirects here after successful checkout: /payment/success?session_id=cs_test_...
-// This page:
-//  1. Reads session_id from the URL
-//  2. Calls backend to verify the session + activate membership
-//  3. Shows a success screen with membership details
-//  4. Auto-redirects to /member-dashboard after 5 seconds
+// Stripe redirects here: /payment/success?session_id=cs_test_...&type=membership
+//
+// Flow:
+//  1. Read session_id from URL
+//  2. GET /api/payments/stripe/verify?session_id=... → activates membership
+//     Backend returns: { type: "membership", activated: true }
+//  3. Show success screen → auto-redirect to /member-dashboard in 5s
 
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { memberAPI, saveAuthData, getUser } from "../../../services/api";
+import { memberAPI } from "../../../services/api";
 
 const PaymentSuccessPage = () => {
   const [searchParams] = useSearchParams();
@@ -16,15 +17,14 @@ const PaymentSuccessPage = () => {
   const sessionId = searchParams.get("session_id");
 
   const [status, setStatus] = useState("verifying"); // verifying | success | error | already_active
-  const [membership, setMembership] = useState(null);
   const [countdown, setCountdown] = useState(5);
   const [error, setError] = useState("");
 
-  // ── Step 1: Verify payment with backend ────────────────────────────────────
+  // ── 1. Verify payment ─────────────────────────────────────────────────────
   useEffect(() => {
     if (!sessionId) {
       setError(
-        "No session ID found in URL. If you just paid, your membership may already be active.",
+        "No session ID found. If you just paid, your membership may already be active.",
       );
       setStatus("error");
       return;
@@ -34,27 +34,20 @@ const PaymentSuccessPage = () => {
 
     const verify = async () => {
       try {
-        // POST /api/membership/verify-payment  { sessionId }
-        // Backend: verifies Stripe session → activates membership → returns membership data
-        const res = await memberAPI.verifyPayment(sessionId);
+        // memberAPI.verifyPayment → GET /api/payments/stripe/verify?session_id=...
+        // Backend verifies the Stripe session and activates membership if needed.
+        // Returns: { type: "membership", activated: true }
+        await memberAPI.verifyPayment(sessionId);
         if (cancelled) return;
-
-        if (res?.membership) {
-          setMembership(res.membership);
-          setStatus("success");
-
-          // Refresh the cached user data so dashboard shows ACTIVE status without re-login
-          if (res.user) {
-            const currentUser = getUser();
-            saveAuthData({ ...res, user: { ...currentUser, ...res.user } });
-          }
-        } else {
-          setStatus("success"); // payment confirmed even if no full membership object
-        }
+        setStatus("success");
       } catch (err) {
         if (cancelled) return;
-        // If membership already active (e.g. user refreshed the page)
-        if (err.message?.toLowerCase().includes("already")) {
+        const msg = (err.message || "").toLowerCase();
+        if (
+          msg.includes("already") ||
+          msg.includes("conflict") ||
+          msg.includes("active")
+        ) {
           setStatus("already_active");
         } else {
           setError(
@@ -72,10 +65,9 @@ const PaymentSuccessPage = () => {
     };
   }, [sessionId]);
 
-  // ── Step 2: Countdown + auto-redirect on success ───────────────────────────
+  // ── 2. Auto-redirect countdown ────────────────────────────────────────────
   useEffect(() => {
     if (status !== "success" && status !== "already_active") return;
-
     const interval = setInterval(() => {
       setCountdown((c) => {
         if (c <= 1) {
@@ -86,11 +78,10 @@ const PaymentSuccessPage = () => {
         return c - 1;
       });
     }, 1000);
-
     return () => clearInterval(interval);
   }, [status, navigate]);
 
-  // ── Verifying state ────────────────────────────────────────────────────────
+  // ── Verifying ─────────────────────────────────────────────────────────────
   if (status === "verifying") {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
@@ -107,7 +98,7 @@ const PaymentSuccessPage = () => {
     );
   }
 
-  // ── Error state ────────────────────────────────────────────────────────────
+  // ── Error ─────────────────────────────────────────────────────────────────
   if (status === "error") {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
@@ -120,7 +111,7 @@ const PaymentSuccessPage = () => {
           </h1>
           <p className="text-slate-500 text-sm mb-2">{error}</p>
           <p className="text-slate-400 text-xs mb-8">
-            If you were charged, please contact support with your session ID:
+            If you were charged, contact support with your session ID:
             <br />
             <code className="bg-slate-100 px-2 py-0.5 rounded text-xs mt-1 inline-block break-all">
               {sessionId}
@@ -145,19 +136,11 @@ const PaymentSuccessPage = () => {
     );
   }
 
-  // ── Success state (or already active) ─────────────────────────────────────
-  const expiryDate = membership?.expiryDate
-    ? new Date(membership.expiryDate).toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      })
-    : null;
-
+  // ── Success / Already active ──────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/30 flex items-center justify-center px-4">
       <div className="bg-white rounded-3xl p-10 max-w-lg w-full shadow-xl border border-slate-100 text-center">
-        {/* Success animation */}
+        {/* Animated checkmark */}
         <div className="relative w-20 h-20 mx-auto mb-6">
           <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center">
             <svg
@@ -174,7 +157,6 @@ const PaymentSuccessPage = () => {
               />
             </svg>
           </div>
-          {/* Pulse ring */}
           <div className="absolute inset-0 rounded-full border-4 border-emerald-200 animate-ping opacity-50" />
         </div>
 
@@ -189,48 +171,40 @@ const PaymentSuccessPage = () => {
             : "Your membership is now active. Start saving with 200+ local businesses!"}
         </p>
 
-        {/* Membership details card */}
-        {membership && (
-          <div className="bg-gradient-to-br from-[#1C4D8D] to-[#163d71] rounded-2xl p-5 mb-7 text-left text-white">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-black text-xs">D</span>
-                </div>
-                <span className="text-sm font-bold text-white/90">
-                  Discount Club Cayman
-                </span>
+        {/* Membership card */}
+        <div className="bg-gradient-to-br from-[#1C4D8D] to-[#163d71] rounded-2xl p-5 mb-7 text-left text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
+                <span className="text-white font-black text-xs">D</span>
               </div>
-              <span className="text-[11px] font-black bg-emerald-400 text-emerald-900 px-2.5 py-0.5 rounded-full uppercase tracking-wide">
-                ACTIVE
+              <span className="text-sm font-bold text-white/90">
+                Discount Club Cayman
               </span>
             </div>
-            <div className="space-y-2 text-sm">
-              {[
-                {
-                  label: "Plan",
-                  value:
-                    membership.type === "INDIVIDUAL"
-                      ? "Individual Membership"
-                      : membership.type,
-                },
-                { label: "Status", value: "Active" },
-                { label: "Expires", value: expiryDate || "1 Year from today" },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex items-center justify-between">
-                  <span className="text-white/60 text-xs uppercase tracking-wider">
-                    {label}
-                  </span>
-                  <span className="font-semibold text-white text-xs">
-                    {value}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <span className="text-[11px] font-black bg-emerald-400 text-emerald-900 px-2.5 py-0.5 rounded-full uppercase tracking-wide">
+              ACTIVE
+            </span>
           </div>
-        )}
+          <div className="space-y-2">
+            {[
+              { label: "Plan", value: "Individual Membership" },
+              { label: "Status", value: "Active" },
+              { label: "Expires", value: "1 Year from today" },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex items-center justify-between">
+                <span className="text-white/60 text-xs uppercase tracking-wider">
+                  {label}
+                </span>
+                <span className="font-semibold text-white text-xs">
+                  {value}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
 
-        {/* What's unlocked */}
+        {/* Unlocked features */}
         <div className="grid grid-cols-3 gap-3 mb-7">
           {[
             { icon: "🏪", label: "200+ Businesses" },
@@ -249,7 +223,7 @@ const PaymentSuccessPage = () => {
           ))}
         </div>
 
-        {/* Auto-redirect countdown */}
+        {/* Countdown bar */}
         <div className="mb-5">
           <div className="flex items-center justify-center gap-2 text-sm text-slate-400 mb-3">
             <svg
@@ -273,7 +247,6 @@ const PaymentSuccessPage = () => {
             </svg>
             Redirecting in {countdown}s…
           </div>
-          {/* Progress bar */}
           <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
             <div
               className="h-full bg-[#1C4D8D] rounded-full transition-all duration-1000 ease-linear"
