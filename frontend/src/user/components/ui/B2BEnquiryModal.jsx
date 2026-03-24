@@ -90,8 +90,7 @@ const B2BEnquiryModal = ({ partner, onClose }) => {
 
       {/* Modal panel */}
       <div
-        className="relative w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
-        style={{ maxHeight: "92vh", overflowY: "auto" }}
+        className="relative w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-screen flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header band */}
