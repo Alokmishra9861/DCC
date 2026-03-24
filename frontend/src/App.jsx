@@ -51,7 +51,7 @@ import AssociationMemberDashboard from "./user/pages/AssociationDashboard/Associ
 import AssociationBusinessDashboard from "./user/pages/AssociationDashboard/AssociationBusinessDashboard";
 import AcceptAssociationMemberInvite from "./user/pages/Association/AcceptAssociationMemberInvite";
 import AcceptAssociationBusinessInvite from "./user/pages/Association/AcceptAssociationBusinessInvite";
-import B2BDiscountsContent from "./user/pages/B2BDiscounts/B2BDiscountsContent";
+import B2BDiscountsContent from "./user/pages/B2Bdiscounts/B2BDiscountsContent";
 
 import { getAssociationType, associationAPI } from "./services/api";
 
