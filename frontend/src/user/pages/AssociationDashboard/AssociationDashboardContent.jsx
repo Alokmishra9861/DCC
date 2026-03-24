@@ -391,11 +391,12 @@ const AssociationDashboardContent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
       {/* Decorative background elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-125 h-125 bg-blue-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-125 h-125 bg-green-100/40 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-blue-200/30 to-indigo-100/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-emerald-100/30 to-teal-100/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3"></div>
+        <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-violet-100/15 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
       </div>
 
       <Toaster position="top-right" />
@@ -403,12 +404,20 @@ const AssociationDashboardContent = () => {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-10">
-          <h1 className="font-heading text-3xl md:text-4xl font-bold text-slate-900 mb-2">
-            Association Dashboard
-          </h1>
-          <p className="text-lg text-slate-600">
-            Manage your association members and revenue
-          </p>
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0A1628] via-[#1C4D8D] to-[#4988C4] p-8 md:p-10 shadow-[0_20px_60px_rgba(10,22,40,0.3)]">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+            <div className="absolute top-1/2 left-1/4 w-40 h-40 bg-blue-400/10 rounded-full blur-2xl" />
+            <div className="relative z-10">
+              <p className="text-blue-300/80 text-[11px] font-black uppercase tracking-[0.2em] mb-2">Dashboard</p>
+              <h1 className="font-heading text-3xl md:text-4xl font-black text-white mb-2 tracking-tight drop-shadow-lg">
+                Association Dashboard
+              </h1>
+              <p className="text-blue-200/80 text-base">
+                Manage your association members and revenue
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Pending Approval Banner */}
@@ -433,9 +442,9 @@ const AssociationDashboardContent = () => {
         {/* Analytics Period Stats */}
         <AnalyticsStatsPanel title="Association Analytics" />
 
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm mb-10 overflow-hidden">
-          <div className="border-b border-slate-100 px-6">
-            <div className="flex gap-8 overflow-x-auto scrollbar-hide">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-white/60 shadow-[0_4px_24px_rgba(0,0,0,0.04)] mb-10 overflow-hidden">
+          <div className="border-b border-slate-100/80 px-4">
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide py-2">
               {[
                 { key: "home", label: "Overview", icon: "HomeIcon" },
                 {
@@ -455,13 +464,13 @@ const AssociationDashboardContent = () => {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`py-4 border-b-2 font-semibold transition-colors whitespace-nowrap flex items-center gap-2 ${
+                  className={`py-2.5 px-4 rounded-xl font-semibold transition-all whitespace-nowrap flex items-center gap-2 text-sm ${
                     activeTab === tab.key
-                      ? "border-[#1C4D8D] text-[#1C4D8D]"
-                      : "border-transparent text-slate-500 hover:text-slate-900"
+                      ? "bg-gradient-to-r from-[#1C4D8D] to-[#2a5fa8] text-white shadow-md shadow-[#1C4D8D]/20"
+                      : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
                   }`}
                 >
-                  <Icon name={tab.icon} size={20} />
+                  <Icon name={tab.icon} size={18} />
                   {tab.label}
                 </button>
               ))}
@@ -472,9 +481,12 @@ const AssociationDashboardContent = () => {
             {activeTab === "home" && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-slate-900">
-                    Dashboard Overview
-                  </h2>
+                  <div>
+                    <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                      Dashboard Overview
+                    </h2>
+                    <p className="text-sm text-slate-400 mt-0.5">Key performance metrics at a glance</p>
+                  </div>
                   <button
                     onClick={handleExportMembers}
                     className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-2 font-medium"
@@ -524,11 +536,11 @@ const AssociationDashboardContent = () => {
                   ].map((card, i) => (
                     <div
                       key={i}
-                      className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-all"
+                      className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-white/60 hover:shadow-[0_16px_40px_rgba(28,77,141,0.1)] hover:-translate-y-1 transition-all duration-300"
                     >
                       <div className="flex items-center gap-4">
                         <div
-                          className={`w-12 h-12 ${card.color} rounded-xl flex items-center justify-center shadow-lg shadow-black/5`}
+                          className={`w-12 h-12 ${card.color} rounded-xl flex items-center justify-center shadow-lg shadow-${card.color.replace('bg-','')}/20`}
                         >
                           <Icon
                             name={card.icon}
@@ -547,9 +559,9 @@ const AssociationDashboardContent = () => {
                   ))}
                 </div>
 
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-white/60">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg font-bold text-slate-900">
+                    <h2 className="text-lg font-black text-slate-900 tracking-tight">
                       Revenue vs Cost vs Profit
                     </h2>
                     <div className="flex gap-2">
@@ -621,7 +633,7 @@ const AssociationDashboardContent = () => {
                 <h2 className="text-xl font-bold text-slate-900">
                   Registered Members
                 </h2>
-                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-white/60 shadow-[0_4px_24px_rgba(0,0,0,0.04)] overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead className="bg-slate-50">
@@ -738,7 +750,7 @@ const AssociationDashboardContent = () => {
                 <h2 className="text-xl font-bold text-slate-900">
                   Revenue Summary (P&L)
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                   {[
                     {
                       label: "Total Revenue",
@@ -763,7 +775,7 @@ const AssociationDashboardContent = () => {
                   ].map((card, i) => (
                     <div
                       key={i}
-                      className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200"
+                      className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-white/60 hover:shadow-[0_16px_40px_rgba(28,77,141,0.1)] hover:-translate-y-1 transition-all duration-300"
                     >
                       <p className="text-sm text-slate-500 mb-2">
                         {card.label}
@@ -793,7 +805,7 @@ const AssociationDashboardContent = () => {
                     </button>
                   ))}
                 </div>
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-white/60">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-lg font-bold text-slate-900">
                       Breakdown by Member
@@ -884,7 +896,7 @@ const AssociationDashboardContent = () => {
                   Analytics (Usage + Savings + ROI)
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                  <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-white/60">
                     <p className="text-sm text-slate-500 mb-2">
                       Total Active Employees
                     </p>
@@ -925,7 +937,7 @@ const AssociationDashboardContent = () => {
                     </p>
                   </div>
                 </div>
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-white/60">
                   <h2 className="text-lg font-bold text-slate-900 mb-6">
                     Member Analytics
                   </h2>
@@ -1247,7 +1259,7 @@ const AssociationDashboardContent = () => {
                     </button>
                   ))}
                 </div>
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-white/60">
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>

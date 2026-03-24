@@ -475,6 +475,14 @@ export const paymentAPI = {
       `/payments/stripe/verify?session_id=${encodeURIComponent(sessionId)}`,
     ),
 
+  // Verify certificate purchase after Stripe redirect
+  // Called by PaymentSuccessPage after certificate purchase
+  // Returns: { success: true, certificate: { ... } }
+  verifyCertificateSession: (sessionId) =>
+    request(
+      `/payments/verify-certificate-session?session_id=${encodeURIComponent(sessionId)}`,
+    ),
+
   // ── PayPal ──
   createPayPalCheckout: (data = {}) =>
     request("/payments/paypal/checkout", {
@@ -607,6 +615,19 @@ export const adminAPI = {
       body: JSON.stringify(data),
     }),
 
+  // B2B Partners
+  getB2BPartners: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/admin/b2b${qs ? `?${qs}` : ""}`);
+  },
+  approveB2BPartner: (id) =>
+    request(`/admin/b2b/${id}/approve`, { method: "PATCH" }),
+  rejectB2BPartner: (id, reason) =>
+    request(`/admin/b2b/${id}/reject`, {
+      method: "PATCH",
+      body: JSON.stringify({ reason }),
+    }),
+
   // Users
   getUsers: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
@@ -658,6 +679,37 @@ export const adminAPI = {
     const qs = new URLSearchParams(params).toString();
     return request(`/admin/audit${qs ? `?${qs}` : ""}`);
   },
+};
+
+// ─── B2B Partner ──────────────────────────────────────────────────────────────
+export const b2bAPI = {
+  // B2B dashboard — authenticated B2B partner
+  getProfile: () => request("/b2b/profile"),
+  updateProfile: (data) =>
+    request("/b2b/profile", { method: "PUT", body: JSON.stringify(data) }),
+  getStats: () => request("/b2b/stats"),
+  getEnquiries: () => request("/b2b/enquiries"),
+
+  // Public directory — all authenticated roles can browse
+  getDirectory: (params = {}) => {
+    // Strip undefined/null values — URLSearchParams serializes undefined as the
+    // literal string "undefined", which breaks the backend search filter
+    const clean = Object.fromEntries(
+      Object.entries(params).filter(
+        ([, v]) => v !== undefined && v !== null && v !== "",
+      ),
+    );
+    const qs = new URLSearchParams(clean).toString();
+    return request(`/b2b/directory${qs ? `?${qs}` : ""}`);
+  },
+
+  // Submit enquiry to a B2B partner (MEMBER / EMPLOYER / ASSOCIATION)
+  // data: { name, email, phone, subject, message }
+  submitEnquiry: (partnerId, data) =>
+    request(`/b2b/enquire/${partnerId}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };
 
 // ─── Stripe (legacy alias) ────────────────────────────────────────────────────

@@ -1,10 +1,10 @@
 // Frontend/src/admin/component/approvals/Approvals.jsx
 import React, { useEffect, useState, useCallback } from "react";
-import { adminAPI } from "../../../../src/services/api";
+import { adminAPI } from "../../../services/api";
 
 const timeAgo = (dateStr) => {
   const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
+  const mins = Math.floor(diff / 60000);  
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
   if (mins < 60) return `${mins}m ago`;
@@ -16,13 +16,21 @@ const COLORS = {
   employer: "bg-blue-100 text-blue-700",
   business: "bg-emerald-100 text-emerald-700",
   association: "bg-violet-100 text-violet-700",
+  b2bPartner: "bg-pink-100 text-pink-700",
+};
+
+const TYPE_LABELS = {
+  employer: "Employer",
+  business: "Business",
+  association: "Association",
+  b2bPartner: "B2B Partner",
 };
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 const CardSkeleton = () => (
   <div className="bg-white rounded-2xl border border-slate-100 p-5 animate-pulse">
     <div className="flex gap-3 mb-4">
-      <div className="w-10 h-10 bg-slate-100 rounded-xl shrink-0" />
+      <div className="w-10 h-10 bg-slate-100 rounded-xl flex-shrink-0" />
       <div className="flex-1 space-y-2 pt-1">
         <div className="h-3.5 bg-slate-100 rounded w-32" />
         <div className="h-3 bg-slate-100 rounded w-44" />
@@ -51,7 +59,7 @@ const RejectModal = ({ item, type, onConfirm, onCancel, loading }) => {
           ✕
         </div>
         <h3 className="text-lg font-bold text-slate-900 text-center mb-1">
-          Reject {type}?
+          Reject {TYPE_LABELS[type]}?
         </h3>
         <p className="text-sm text-slate-500 text-center mb-5">
           A notification will be sent to{" "}
@@ -97,11 +105,24 @@ const ApprovalCard = ({ item, type, onApprove, onReject, actionId }) => {
   const email = item.user?.email || "—";
   const isLoading = actionId === item.id;
 
+  // Extra detail tags per type
+  const tags = [
+    item.industry,
+    item.type,
+    item.district && `📍 ${item.district}`,
+    item.phone && `📞 ${item.phone}`,
+    // B2B specific
+    item.servicesOffered &&
+      `🛠 ${item.servicesOffered.slice(0, 40)}${item.servicesOffered.length > 40 ? "…" : ""}`,
+    item.website &&
+      `🌐 ${item.website.replace(/^https?:\/\//, "").slice(0, 30)}`,
+  ].filter(Boolean);
+
   return (
     <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-all group">
       <div className="flex items-start gap-3">
         <div
-          className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${COLORS[type]}`}
+          className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${COLORS[type] || "bg-slate-100 text-slate-600"}`}
         >
           {name[0].toUpperCase()}
         </div>
@@ -109,21 +130,23 @@ const ApprovalCard = ({ item, type, onApprove, onReject, actionId }) => {
           <div className="flex items-start justify-between gap-2">
             <p className="font-bold text-slate-900 truncate">{name}</p>
             {item.createdAt && (
-              <span className="text-[11px] text-slate-300 shrink-0">
+              <span className="text-[11px] text-slate-300 flex-shrink-0">
                 {timeAgo(item.createdAt)}
               </span>
             )}
           </div>
           <p className="text-xs text-slate-400 mt-0.5 truncate">{email}</p>
-          <div className="flex flex-wrap gap-1.5 mt-2.5">
-            {[
-              item.industry,
-              item.type,
-              item.district && `📍 ${item.district}`,
-              item.phone && `📞 ${item.phone}`,
-            ]
-              .filter(Boolean)
-              .map((tag) => (
+
+          {/* Type badge */}
+          <span
+            className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-1.5 ${COLORS[type] || "bg-slate-100 text-slate-500"}`}
+          >
+            {TYPE_LABELS[type]}
+          </span>
+
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2.5">
+              {tags.map((tag) => (
                 <span
                   key={tag}
                   className="text-[11px] bg-slate-50 border border-slate-100 text-slate-500 px-2 py-0.5 rounded-full"
@@ -131,7 +154,8 @@ const ApprovalCard = ({ item, type, onApprove, onReject, actionId }) => {
                   {tag}
                 </span>
               ))}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -169,6 +193,7 @@ const Approvals = () => {
     employers: [],
     associations: [],
     businesses: [],
+    b2bPartners: [], // ✅ B2B Partners included
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -179,7 +204,7 @@ const Approvals = () => {
 
   const showToast = (type, msg) => {
     setToast({ type, msg });
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), 3500);
   };
 
   const load = useCallback(async () => {
@@ -191,6 +216,7 @@ const Approvals = () => {
         employers: res.employers || [],
         associations: res.associations || [],
         businesses: res.businesses || [],
+        b2bPartners: res.b2bPartners || [], // ✅ picked from backend response
       });
     } catch (err) {
       setError(err.message || "Failed to load pending approvals");
@@ -209,13 +235,16 @@ const Approvals = () => {
       if (type === "employer") await adminAPI.approveEmployer(id);
       if (type === "business") await adminAPI.approveBusiness(id);
       if (type === "association") await adminAPI.approveAssociation(id);
-      showToast(
-        "success",
-        `${type.charAt(0).toUpperCase() + type.slice(1)} approved successfully`,
-      );
+      if (type === "b2bPartner") await adminAPI.approveB2BPartner(id); // ✅ B2B approval
+
+      const label = TYPE_LABELS[type] || type;
+      showToast("success", `${label} approved — now visible in the directory`);
+
+      // Remove from local list immediately
+      const listKey = type === "b2bPartner" ? "b2bPartners" : `${type}s`;
       setData((prev) => ({
         ...prev,
-        [`${type}s`]: prev[`${type}s`].filter((i) => i.id !== id),
+        [listKey]: prev[listKey].filter((i) => i.id !== id),
       }));
     } catch (err) {
       showToast("error", err.message || "Approval failed");
@@ -234,13 +263,16 @@ const Approvals = () => {
       if (type === "association") {
         /* no reject endpoint yet — just remove */
       }
-      showToast(
-        "success",
-        `${type.charAt(0).toUpperCase() + type.slice(1)} rejected`,
-      );
+      if (type === "b2bPartner")
+        await adminAPI.rejectB2BPartner(item.id, reason); // ✅ B2B reject
+
+      const label = TYPE_LABELS[type] || type;
+      showToast("success", `${label} rejected`);
+
+      const listKey = type === "b2bPartner" ? "b2bPartners" : `${type}s`;
       setData((prev) => ({
         ...prev,
-        [`${type}s`]: prev[`${type}s`].filter((i) => i.id !== item.id),
+        [listKey]: prev[listKey].filter((i) => i.id !== item.id),
       }));
       setRejectModal(null);
     } catch (err) {
@@ -250,17 +282,40 @@ const Approvals = () => {
     }
   };
 
+  // ── Tabs — 4 tabs now including B2B Partners ──────────────────────────────
   const TABS = [
-    { key: "employers", label: "Employers", count: data.employers.length },
-    { key: "businesses", label: "Businesses", count: data.businesses.length },
+    {
+      key: "employers",
+      type: "employer",
+      label: "Employers",
+      icon: "🏢",
+      count: data.employers.length,
+    },
+    {
+      key: "businesses",
+      type: "business",
+      label: "Businesses",
+      icon: "🏪",
+      count: data.businesses.length,
+    },
     {
       key: "associations",
+      type: "association",
       label: "Associations",
+      icon: "👥",
       count: data.associations.length,
+    },
+    {
+      key: "b2bPartners",
+      type: "b2bPartner",
+      label: "B2B Partners",
+      icon: "🤝",
+      count: data.b2bPartners.length,
     },
   ];
 
-  const currentType = tab.slice(0, -1);
+  const currentTab = TABS.find((t) => t.key === tab);
+  const currentType = currentTab?.type || "employer";
   const currentList = data[tab] || [];
   const totalPending = TABS.reduce((s, t) => s + t.count, 0);
 
@@ -307,6 +362,25 @@ const Approvals = () => {
         </button>
       </div>
 
+      {/* B2B info callout — shown only when B2B tab active */}
+      {tab === "b2bPartners" && (
+        <div className="mb-5 p-4 bg-pink-50 border border-pink-100 rounded-2xl flex items-start gap-3">
+          <span className="text-xl flex-shrink-0 mt-0.5">🤝</span>
+          <div>
+            <p className="font-bold text-pink-800 text-sm">
+              B2B Partner approvals
+            </p>
+            <p className="text-xs text-pink-600 mt-0.5 leading-relaxed">
+              Approving a B2B partner sets{" "}
+              <code className="bg-pink-100 px-1 rounded">isApproved: true</code>{" "}
+              on their record, which makes them immediately visible in the
+              public <strong>/b2b-directory</strong> page seen by all members,
+              employers, and associations.
+            </p>
+          </div>
+        </div>
+      )}
+
       {error && (
         <div className="mb-5 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
           {error}
@@ -314,17 +388,18 @@ const Approvals = () => {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-slate-100 p-1 rounded-2xl mb-6">
-        {TABS.map(({ key, label, count }) => (
+      <div className="flex gap-1 bg-slate-100 p-1 rounded-2xl mb-6 overflow-x-auto">
+        {TABS.map(({ key, label, icon, count }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
               tab === key
                 ? "bg-white text-slate-900 shadow-sm"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >
+            <span className="text-base">{icon}</span>
             {label}
             {count > 0 && (
               <span
@@ -353,7 +428,9 @@ const Approvals = () => {
           <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl border border-emerald-100">
             ✓
           </div>
-          <p className="font-bold text-slate-600">No pending {tab}</p>
+          <p className="font-bold text-slate-600">
+            No pending {currentTab?.label.toLowerCase()}
+          </p>
           <p className="text-sm text-slate-400 mt-1">
             You're all caught up here.
           </p>

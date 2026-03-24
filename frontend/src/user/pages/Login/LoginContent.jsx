@@ -1,3 +1,4 @@
+// Frontend/src/user/pages/Login/LoginContent.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Icon from "../../components/ui/AppIcon";
@@ -8,13 +9,24 @@ import {
   getAssociationRoute,
 } from "../../../services/api";
 
+// ── 6 tabs — B2B Partner added ────────────────────────────────────────────────
 const ROLE_TABS = [
   { key: "member", label: "Individual" },
   { key: "employer", label: "Employer" },
   { key: "business", label: "Business" },
   { key: "association", label: "Association" },
+  { key: "b2b", label: "B2B Partner" },
   { key: "admin", label: "Admin" },
 ];
+
+const ROLE_HINTS = {
+  member: "Access your discounts, certificates & travel savings.",
+  employer: "Manage your team's membership benefits & ROI.",
+  business: "Manage your offers, certificates & transactions.",
+  association: "Manage your members or business network.",
+  b2b: "Access your B2B partner dashboard & directory profile.",
+  admin: "Platform administration & approvals.",
+};
 
 const LoginContent = () => {
   const navigate = useNavigate();
@@ -28,24 +40,22 @@ const LoginContent = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
-    const savedLogins =
-      JSON.parse(localStorage.getItem("dcc_saved_logins")) || [];
-    setSuggestions(savedLogins);
+    const saved = JSON.parse(localStorage.getItem("dcc_saved_logins")) || [];
+    setSuggestions(saved);
   }, []);
 
   const handleEmailChange = (e) => {
-    const value = e.target.value;
-    setEmail(value);
-    const savedLogins =
-      JSON.parse(localStorage.getItem("dcc_saved_logins")) || [];
-    if (value.trim()) {
-      const filtered = savedLogins.filter((login) =>
-        login.email.toLowerCase().includes(value.toLowerCase()),
+    const val = e.target.value;
+    setEmail(val);
+    const saved = JSON.parse(localStorage.getItem("dcc_saved_logins")) || [];
+    if (val.trim()) {
+      const filtered = saved.filter((l) =>
+        l.email.toLowerCase().includes(val.toLowerCase()),
       );
       setSuggestions(filtered);
       setShowSuggestions(filtered.length > 0);
     } else {
-      setSuggestions(savedLogins);
+      setSuggestions(saved);
       setShowSuggestions(false);
     }
   };
@@ -66,9 +76,9 @@ const LoginContent = () => {
       saveAuthData(data);
 
       if (rememberMe) {
-        const savedLogins =
+        const saved =
           JSON.parse(localStorage.getItem("dcc_saved_logins")) || [];
-        const filtered = savedLogins.filter((login) => login.email !== email);
+        const filtered = saved.filter((l) => l.email !== email);
         filtered.unshift({ email, password });
         localStorage.setItem(
           "dcc_saved_logins",
@@ -76,13 +86,12 @@ const LoginContent = () => {
         );
       }
 
-      // Use backend-computed redirectTo (includes associationType-aware path).
-      // Falls back to client-side resolution if backend didn't return it.
+      const role = data.user?.role;
       const destination =
         data.redirectTo ||
-        (data.user?.role === "ASSOCIATION"
+        (role === "ASSOCIATION"
           ? getAssociationRoute(data.user)
-          : ROLE_ROUTES[data.user?.role] || "/member-dashboard");
+          : ROLE_ROUTES[role] || "/member-dashboard");
 
       navigate(destination, { replace: true });
     } catch (err) {
@@ -93,12 +102,11 @@ const LoginContent = () => {
   };
 
   const handleRememberMeChange = (e) => {
-    const isChecked = e.target.checked;
-    setRememberMe(isChecked);
-    if (!isChecked && email && password) {
-      const savedLogins =
-        JSON.parse(localStorage.getItem("dcc_saved_logins")) || [];
-      const filtered = savedLogins.filter((login) => login.email !== email);
+    const checked = e.target.checked;
+    setRememberMe(checked);
+    if (!checked && email) {
+      const saved = JSON.parse(localStorage.getItem("dcc_saved_logins")) || [];
+      const filtered = saved.filter((l) => l.email !== email);
       localStorage.setItem("dcc_saved_logins", JSON.stringify(filtered));
       setSuggestions(filtered);
     }
@@ -107,15 +115,14 @@ const LoginContent = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center py-12 px-6">
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyaWJhKDMwLCA1OCwgMTM5LCAwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc=')] opacity-100" />
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyaWJhKDMwLCA1OCwgMTM5LCAwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-100" />
       </div>
 
       <div className="max-w-md w-full relative z-10">
+        {/* Logo + title */}
         <div className="text-center mb-8 animate-fade-up">
-          <div className="w-16 h-16 bg-[#1C4D8D] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-900/20 transform hover:rotate-0 transition-transform duration-300">
-            <span className="text-white font-bold text-3xl">
-              <img src="/public/logo2.png" alt="Logo" className="scale-120" />
-            </span>
+          <div className="w-16 h-16 bg-[#1C4D8D] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-900/20">
+            <img src="/public/logo2.png" alt="DCC Logo" className="scale-120" />
           </div>
           <h1 className="font-heading text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">
             Welcome Back
@@ -123,27 +130,57 @@ const LoginContent = () => {
           <p className="text-slate-500">Log in to access your account</p>
         </div>
 
-        {/* Role Toggle */}
-        <div className="bg-white rounded-2xl p-1.5 flex gap-1 mb-4 border border-slate-100 shadow-sm animate-fade-up">
-          {ROLE_TABS.map(({ key, label }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => {
-                setSelectedRole(key);
-                setError("");
-              }}
-              className={`flex-1 py-2.5 px-1 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                selectedRole === key
-                  ? "bg-[#1C4D8D] text-white shadow-md"
-                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+        {/* Role toggle — 3+3 grid so B2B fits without squishing */}
+        <div className="bg-white rounded-2xl p-1.5 mb-1 border border-slate-100 shadow-sm animate-fade-up">
+          <div className="grid grid-cols-3 gap-1 sm:grid-cols-6">
+            {ROLE_TABS.map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => {
+                  setSelectedRole(key);
+                  setError("");
+                }}
+                className={`py-2.5 px-1 rounded-xl text-xs font-semibold transition-all duration-200 ${
+                  selectedRole === key
+                    ? "bg-[#1C4D8D] text-white shadow-md"
+                    : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
+        {/* Role hint line */}
+        <p className="text-center text-xs text-slate-400 mb-4 min-h-[1.25rem]">
+          {ROLE_HINTS[selectedRole]}
+        </p>
+
+        {/* B2B callout — only shown when B2B tab is selected */}
+        {selectedRole === "b2b" && (
+          <div className="mb-4 p-4 bg-gradient-to-r from-[#1C4D8D]/8 to-[#4988C4]/8 border border-[#1C4D8D]/20 rounded-2xl flex items-start gap-3">
+            <span className="text-xl flex-shrink-0 mt-0.5">🤝</span>
+            <div>
+              <p className="font-bold text-[#1C4D8D] text-sm">
+                B2B Partner Portal
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                Manage your directory listing, services profile, and member
+                enquiries. Not registered yet?{" "}
+                <Link
+                  to="/sign-up"
+                  className="text-[#1C4D8D] font-semibold hover:underline"
+                >
+                  Sign up as a B2B Partner →
+                </Link>
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Main card */}
         <div className="bg-white rounded-3xl p-8 md:p-10 border border-slate-100 shadow-xl animate-fade-up animation-delay-100">
           <form onSubmit={handleSubmit} className="space-y-6">
             <p className="text-sm text-slate-500 font-medium">
@@ -164,6 +201,7 @@ const LoginContent = () => {
               </div>
             )}
 
+            {/* Email */}
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">
                 Email Address
@@ -175,11 +213,11 @@ const LoginContent = () => {
                   value={email}
                   onChange={handleEmailChange}
                   onFocus={() => {
-                    const savedLogins =
+                    const saved =
                       JSON.parse(localStorage.getItem("dcc_saved_logins")) ||
                       [];
-                    setSuggestions(savedLogins);
-                    setShowSuggestions(savedLogins.length > 0);
+                    setSuggestions(saved);
+                    setShowSuggestions(saved.length > 0);
                   }}
                   onBlur={() =>
                     setTimeout(() => setShowSuggestions(false), 200)
@@ -220,6 +258,7 @@ const LoginContent = () => {
               </div>
             </div>
 
+            {/* Password */}
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">
                 Password
@@ -234,6 +273,7 @@ const LoginContent = () => {
               />
             </div>
 
+            {/* Remember + Forgot */}
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer group">
                 <input
@@ -254,6 +294,7 @@ const LoginContent = () => {
               </Link>
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
@@ -290,6 +331,7 @@ const LoginContent = () => {
             </button>
           </form>
 
+          {/* Google SSO */}
           <div className="mt-8">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -301,7 +343,6 @@ const LoginContent = () => {
                 </span>
               </div>
             </div>
-
             <button className="mt-6 w-full px-6 py-3 border-2 border-slate-200 rounded-xl font-semibold text-slate-700 hover:border-[#1C4D8D] hover:text-[#1C4D8D] hover:bg-blue-50/50 transition-all flex items-center justify-center gap-3">
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path

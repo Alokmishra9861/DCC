@@ -347,7 +347,7 @@ const StatCard = ({
   icon,
   accent = "bg-blue-50 text-[#1C4D8D]",
 }) => (
-  <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex items-start gap-4">
+  <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border border-white/60 shadow-[0_4px_24px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_40px_rgba(28,77,141,0.1)] hover:-translate-y-1 transition-all duration-300 flex items-start gap-4">
     <div
       className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${accent}`}
     >
@@ -507,20 +507,21 @@ const EmployerDashboardContent = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50/60">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
       {/* Decorative blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-125 h-125 bg-blue-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-125 h-125 bg-emerald-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-blue-200/30 to-indigo-100/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-emerald-100/30 to-teal-100/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3" />
+        <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-violet-100/15 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
       </div>
 
       {/* Toast */}
       {toast && (
         <div
-          className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-lg border text-sm font-semibold ${
+          className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] backdrop-blur-sm border text-sm font-semibold ${
             toast.type === "success"
-              ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-              : "bg-red-50 border-red-200 text-red-600"
+              ? "bg-emerald-50/90 border-emerald-200 text-emerald-700"
+              : "bg-red-50/90 border-red-200 text-red-600"
           }`}
         >
           <Icon
@@ -537,8 +538,8 @@ const EmployerDashboardContent = () => {
 
       {/* Remove confirm modal */}
       {confirmRemove && (
-        <div className="fixed inset-0 bg-black/40 z-40 flex items-center justify-center px-4">
-          <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center px-4">
+          <div className="bg-white/95 backdrop-blur-xl rounded-2xl p-8 max-w-sm w-full shadow-[0_24px_64px_rgba(0,0,0,0.15)]">
             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Icon
                 name="ExclamationTriangleIcon"
@@ -572,42 +573,50 @@ const EmployerDashboardContent = () => {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Page header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">
-              Employer Dashboard
-            </h1>
-            <p className="text-slate-500 mt-1">
-              Manage your company memberships and employee benefits
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => navigate("/employer-dashboard/bulk-purchase")}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#1C4D8D] text-white rounded-xl text-sm font-bold hover:bg-[#163d71] transition-colors shadow-sm"
-            >
-              <Icon name="ShoppingCartIcon" size={16} /> Buy Seats
-            </button>
-            <button
-              onClick={() => navigate("/employer-dashboard/employees/upload")}
-              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-colors shadow-sm"
-            >
-              <Icon name="ArrowUpTrayIcon" size={16} /> Add Employees
-            </button>
+        <div className="mb-8">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0A1628] via-[#1C4D8D] to-[#4988C4] p-8 md:p-10 shadow-[0_20px_60px_rgba(10,22,40,0.3)]">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+            <div className="absolute top-1/2 left-1/4 w-40 h-40 bg-blue-400/10 rounded-full blur-2xl" />
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <p className="text-blue-300/80 text-[11px] font-black uppercase tracking-[0.2em] mb-2">Dashboard</p>
+                <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight drop-shadow-lg">
+                  Employer Dashboard
+                </h1>
+                <p className="text-blue-200/80 mt-1">
+                  Manage your company memberships and employee benefits
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => navigate("/employer-dashboard/bulk-purchase")}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white/20 backdrop-blur-sm text-white rounded-xl text-sm font-bold hover:bg-white/30 transition-all border border-white/20 shadow-sm"
+                >
+                  <Icon name="ShoppingCartIcon" size={16} /> Buy Seats
+                </button>
+                <button
+                  onClick={() => navigate("/employer-dashboard/employees/upload")}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500/80 backdrop-blur-sm text-white rounded-xl text-sm font-bold hover:bg-emerald-500 transition-all border border-emerald-400/30 shadow-sm"
+                >
+                  <Icon name="ArrowUpTrayIcon" size={16} /> Add Employees
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* ── Tab nav ── */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm mb-6 overflow-hidden">
-          <div className="border-b border-slate-100 px-2">
-            <div className="flex gap-1 overflow-x-auto scrollbar-hide py-1">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-white/60 shadow-[0_4px_24px_rgba(0,0,0,0.04)] mb-6 overflow-hidden">
+          <div className="border-b border-slate-100/80 px-3">
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide py-2">
               {tabs.map(({ key, label, icon }) => (
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
-                  className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
                     activeTab === key
-                      ? "bg-[#1C4D8D] text-white shadow-sm"
+                      ? "bg-gradient-to-r from-[#1C4D8D] to-[#2a5fa8] text-white shadow-md shadow-[#1C4D8D]/20"
                       : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
                   }`}
                 >
@@ -691,9 +700,9 @@ const EmployerDashboardContent = () => {
                         color: "text-emerald-600",
                       },
                     ].map(({ label, value, color }) => (
-                      <div
-                        key={label}
-                        className="bg-slate-50 rounded-xl p-5 border border-slate-100"
+                        <div
+                          key={label}
+                          className="bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-xl p-5 border border-slate-100/80"
                       >
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                           {label}
@@ -1001,7 +1010,7 @@ const EmployerDashboardContent = () => {
                 </div>
               ) : (
                 <>
-                  <div className="overflow-x-auto rounded-xl border border-slate-200">
+                  <div className="overflow-x-auto rounded-xl border border-white/60 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
                     <table className="w-full text-sm">
                       <thead className="bg-slate-50 border-b border-slate-200">
                         <tr>
@@ -1176,7 +1185,7 @@ const EmployerDashboardContent = () => {
               ) : dashboard ? (
                 <>
                   {/* Visual seat usage bar */}
-                  <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                  <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-white/60 shadow-[0_4px_24px_rgba(0,0,0,0.04)] p-6">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-semibold text-slate-700">
                         Seat Usage

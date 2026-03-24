@@ -10,118 +10,69 @@ const {
   sendEmployerApprovalEmail,
   sendEmployerRejectionEmail,
 } = require("../services/employer.email.service");
+const {
+  sendB2BApprovalEmail,
+  sendB2BRejectionEmail,
+} = require("../services/b2b.email.service");
 const { generateMemberQR } = require("../services/qr.service");
 const { getPagination, buildPaginationMeta } = require("../utils/Paginate");
 
-const {
-  sendAssociationApprovalEmail,
-  sendAssociationRejectionEmail,
-} = require("../services/association.email.service");
-
 // ── Dashboard stats ───────────────────────────────────────────────────────────
-exports.getDashboardStats = async (req, res) => {
-  try {
-    console.log("📊 Fetching dashboard stats...");
+exports.getDashboardStats = asyncHandler(async (req, res) => {
+  const [
+    totalUsers,
+    totalMembers,
+    activeMembers,
+    totalBusinesses,
+    pendingBusinesses,
+    pendingEmployers,
+    pendingAssociations,
+    totalTransactions,
+    totalSavingsAgg,
+    recentMembers,
+    recentBusinesses,
+  ] = await Promise.all([
+    prisma.user.count(),
+    prisma.member.count(),
+    prisma.membership.count({ where: { status: "ACTIVE" } }),
+    prisma.business.count({ where: { status: "APPROVED" } }),
+    prisma.business.count({ where: { status: "PENDING" } }),
+    prisma.employer.count({ where: { isApproved: false } }),
+    prisma.association.count({ where: { isApproved: false } }),
+    prisma.transaction.count(),
+    prisma.transaction.aggregate({ _sum: { savingsAmount: true } }),
+    prisma.member.findMany({
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: { select: { id: true, email: true, isActive: true } },
+        membership: { select: { status: true, type: true, expiryDate: true } },
+      },
+    }),
+    prisma.business.findMany({
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: { select: { id: true, email: true } },
+      },
+    }),
+  ]);
 
-    // Get all counts
-    const totalUsers = await prisma.user.count();
-    const totalMembers = await prisma.member.count();
-    const activeMembers = await prisma.membership.count({
-      where: { status: "ACTIVE" },
-    });
-    const totalBusinesses = await prisma.business.count({
-      where: { status: "APPROVED" },
-    });
-    const pendingBusinesses = await prisma.business.count({
-      where: { status: "PENDING" },
-    });
-    const pendingEmployers = await prisma.employer.count({
-      where: { status: "PENDING" },
-    });
-    const pendingAssociations = await prisma.association.count({
-      where: { isApproved: false },
-    });
-    const totalTransactions = await prisma.transaction.count();
-
-    let totalSavings = 0;
-    try {
-      const result = await prisma.transaction.aggregate({
-        _sum: { savingsAmount: true },
-      });
-      totalSavings = result?._sum?.savingsAmount || 0;
-    } catch (e) {
-      console.error("Error aggregating savings:", e.message);
-    }
-
-    const recentMembers = await prisma.member
-      .findMany({
-        take: 5,
-        orderBy: { createdAt: "desc" },
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          phone: true,
-          age: true,
-          district: true,
-          totalSavings: true,
-          createdAt: true,
-        },
-      })
-      .catch(() => []);
-
-    const recentBusinesses = await prisma.business
-      .findMany({
-        take: 5,
-        orderBy: { createdAt: "desc" },
-        select: {
-          id: true,
-          name: true,
-          phone: true,
-          email: true,
-          createdAt: true,
-        },
-      })
-      .catch(() => []);
-
-    const responseData = {
-      totalUsers,
-      totalMembers,
-      activeMembers,
-      totalBusinesses,
-      totalTransactions,
-      totalSavings,
-      pendingBusinesses,
-      pendingEmployers,
-      pendingAssociations,
-      totalPending: pendingBusinesses + pendingEmployers + pendingAssociations,
-      recentMembers,
-      recentBusinesses,
-    };
-
-    console.log("✓ All metrics fetched successfully");
-    return ApiResponse.success(res, responseData);
-  } catch (error) {
-    console.error("❌ getDashboardStats error:", error.message);
-    console.error(error.stack);
-
-    // Return fallback data
-    return ApiResponse.success(res, {
-      totalUsers: 0,
-      totalMembers: 0,
-      activeMembers: 0,
-      totalBusinesses: 0,
-      totalTransactions: 0,
-      totalSavings: 0,
-      pendingBusinesses: 0,
-      pendingEmployers: 0,
-      pendingAssociations: 0,
-      totalPending: 0,
-      recentMembers: [],
-      recentBusinesses: [],
-    });
-  }
-};
+  return ApiResponse.success(res, {
+    totalUsers,
+    totalMembers,
+    activeMembers,
+    totalBusinesses,
+    totalTransactions,
+    totalSavings: totalSavingsAgg._sum.savingsAmount ?? 0,
+    pendingBusinesses,
+    pendingEmployers,
+    pendingAssociations,
+    totalPending: pendingBusinesses + pendingEmployers + pendingAssociations,
+    recentMembers,
+    recentBusinesses,
+  });
+});
 
 // ── Get all users ─────────────────────────────────────────────────────────────
 exports.getAllUsers = asyncHandler(async (req, res) => {
@@ -331,25 +282,38 @@ exports.deleteMember = asyncHandler(async (req, res) => {
 
 // ── Pending approvals ─────────────────────────────────────────────────────────
 exports.getPendingApprovals = asyncHandler(async (req, res) => {
-  const [employersRaw, associationsRaw, businessesRaw] = await Promise.all([
-    prisma.employer.findMany({
-      where: { isApproved: false },
-      select: { id: true, userId: true, companyName: true, createdAt: true },
-    }),
-    prisma.association.findMany({
-      where: { isApproved: false },
-      select: { id: true, userId: true, name: true, createdAt: true },
-    }),
-    prisma.business.findMany({
-      where: { isApproved: false },
-      select: { id: true, userId: true, name: true, createdAt: true },
-    }),
-  ]);
+  // ✅ B2B partners included alongside employers, associations, businesses
+  const [employersRaw, associationsRaw, businessesRaw, b2bRaw] =
+    await Promise.all([
+      prisma.employer.findMany({
+        where: { isApproved: false },
+        select: { id: true, userId: true, companyName: true, createdAt: true },
+      }),
+      prisma.association.findMany({
+        where: { isApproved: false },
+        select: { id: true, userId: true, name: true, createdAt: true },
+      }),
+      prisma.business.findMany({
+        where: { isApproved: false },
+        select: { id: true, userId: true, name: true, createdAt: true },
+      }),
+      prisma.b2BPartner.findMany({
+        where: { isApproved: false },
+        select: {
+          id: true,
+          userId: true,
+          companyName: true,
+          servicesOffered: true,
+          createdAt: true,
+        },
+      }),
+    ]);
 
   const userIds = [
     ...employersRaw.map((e) => e.userId),
     ...associationsRaw.map((a) => a.userId),
     ...businessesRaw.map((b) => b.userId),
+    ...b2bRaw.map((b) => b.userId),
   ].filter(Boolean);
 
   const users = await prisma.user.findMany({
@@ -371,10 +335,13 @@ exports.getPendingApprovals = asyncHandler(async (req, res) => {
       ...b,
       user: userById.get(b.userId) || null,
     })),
+    b2bPartners: b2bRaw.map((b) => ({
+      ...b,
+      user: userById.get(b.userId) || null,
+    })),
   });
 });
 
-// ── Pending memberships ───────────────────────────────────────────────────────
 exports.getPendingMemberships = asyncHandler(async (req, res) => {
   const memberships = await prisma.membership.findMany({
     where: { status: "PENDING" },
@@ -535,92 +502,14 @@ exports.rejectEmployer = asyncHandler(async (req, res) => {
 // ── Approve association ───────────────────────────────────────────────────────
 exports.approveAssociation = asyncHandler(async (req, res) => {
   const { id } = req.params;
-
-  const association = await prisma.association.findUnique({ where: { id } });
-  if (!association) throw ApiError.notFound("Association not found");
-  if (association.status === "APPROVED")
-    throw ApiError.badRequest("Association already approved");
-
-  await prisma.association.update({
-    where: { id },
-    data: { status: "APPROVED", isApproved: true },
-  });
-
-  // Fetch the user separately to get their email
-  const user = await prisma.user.findUnique({
-    where: { id: association.userId },
-    select: { email: true },
-  });
-
-  if (user?.email) {
-    await sendAssociationApprovalEmail({
-      associationEmail: user.email,
-      associationName: association.name,
-      associationType: association.associationType || "MEMBER",
-    }).catch((err) =>
-      console.error("Association approval email failed:", err.message),
-    );
-  }
-
-  await prisma.auditLog
-    .create({
-      data: {
-        action: "APPROVE",
-        entity: "Association",
-        entityId: id,
-        adminId: req.user.id,
-        details: `Approved association: ${association.name}`,
-      },
-    })
-    .catch(() => {}); // audit log is non-critical
-
-  return ApiResponse.success(res, {}, "Association approved successfully");
-});
-
-exports.rejectAssociation = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const { reason } = req.body;
-
   const association = await prisma.association.findUnique({ where: { id } });
   if (!association) throw ApiError.notFound("Association not found");
 
   await prisma.association.update({
     where: { id },
-    data: {
-      status: "REJECTED",
-      isApproved: false,
-      rejectionReason: reason || null,
-    },
+    data: { isApproved: true },
   });
-
-  const user = await prisma.user.findUnique({
-    where: { id: association.userId },
-    select: { email: true },
-  });
-
-  if (user?.email) {
-    await sendAssociationRejectionEmail({
-      associationEmail: user.email,
-      associationName: association.name,
-      reason,
-    }).catch((err) =>
-      console.error("Association rejection email failed:", err.message),
-    );
-  }
-
-  await prisma.auditLog
-    .create({
-      data: {
-        action: "REJECT",
-        entity: "Association",
-        entityId: id,
-        adminId: req.user.id,
-        details: reason ? `Rejected: ${reason}` : "Rejected without reason",
-      },
-    })
-    .catch(() => {});
-
-  return ApiResponse.success(res, {}, "Association rejected");
+  return ApiResponse.success(res, {}, "Association approved");
 });
 
 // ── Approve business ──────────────────────────────────────────────────────────
@@ -821,4 +710,88 @@ exports.getAuditLog = asyncHandler(async (req, res) => {
     logs,
     buildPaginationMeta(total, page, limit),
   );
+});
+
+// ── Approve B2B partner ────────────────────────────────────────────────────────
+// Sets isApproved: true → partner immediately appears in GET /api/b2b/directory
+exports.approveB2BPartner = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const partner = await prisma.b2BPartner.findUnique({
+    where: { id },
+    include: { user: { select: { email: true } } },
+  });
+  if (!partner) throw ApiError.notFound("B2B partner not found");
+
+  await prisma.b2BPartner.update({
+    where: { id },
+    data: { isApproved: true },
+  });
+
+  // Send approval email
+  try {
+    await sendB2BApprovalEmail({
+      b2bEmail: partner.user.email,
+      companyName: partner.companyName,
+    });
+  } catch (emailErr) {
+    console.error("❌ Failed to send B2B approval email:", emailErr.message);
+    // Don't fail the approval if email fails
+  }
+
+  return ApiResponse.success(
+    res,
+    {},
+    "B2B partner approved — now visible in directory",
+  );
+});
+
+// ── Reject B2B partner ─────────────────────────────────────────────────────────
+exports.rejectB2BPartner = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { reason } = req.body;
+
+  const partner = await prisma.b2BPartner.findUnique({
+    where: { id },
+    include: { user: { select: { email: true } } },
+  });
+  if (!partner) throw ApiError.notFound("B2B partner not found");
+
+  // Send rejection email
+  try {
+    await sendB2BRejectionEmail({
+      b2bEmail: partner.user.email,
+      companyName: partner.companyName,
+      reason: reason || null,
+    });
+  } catch (emailErr) {
+    console.error("❌ Failed to send B2B rejection email:", emailErr.message);
+    // Don't fail the rejection if email fails
+  }
+
+  return ApiResponse.success(res, {}, "B2B partner application rejected");
+});
+
+// ── Get all B2B partners (admin list) ─────────────────────────────────────────
+exports.getB2BPartners = asyncHandler(async (req, res) => {
+  const { search, status } = req.query;
+
+  const where = {
+    ...(status === "approved" && { isApproved: true }),
+    ...(status === "pending" && { isApproved: false }),
+    ...(search && {
+      OR: [
+        { companyName: { contains: search, mode: "insensitive" } },
+        { servicesOffered: { contains: search, mode: "insensitive" } },
+      ],
+    }),
+  };
+
+  const partners = await prisma.b2BPartner.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    include: { user: { select: { id: true, email: true, isActive: true } } },
+  });
+
+  return ApiResponse.success(res, partners);
 });

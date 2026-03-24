@@ -1,3 +1,4 @@
+// Frontend/src/user/pages/SignUp/SignupContent.jsx
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Icon from "../../components/ui/AppIcon";
@@ -9,6 +10,7 @@ import {
   categoryAPI,
 } from "../../../services/api";
 
+// ── Role tabs — B2B Partner added ─────────────────────────────────────────────
 const ROLE_TABS = [
   {
     key: "member",
@@ -27,7 +29,7 @@ const ROLE_TABS = [
   {
     key: "business",
     label: "Business",
-    description: "List & promote your business",
+    description: "Offer discounts & certificates",
     icon: "BuildingStorefrontIcon",
     color: "from-emerald-500 to-teal-600",
   },
@@ -38,8 +40,16 @@ const ROLE_TABS = [
     icon: "UserGroupIcon",
     color: "from-orange-500 to-amber-600",
   },
+  {
+    key: "b2b",
+    label: "B2B Partner",
+    description: "Provide business services",
+    icon: "BuildingOffice2Icon",
+    color: "from-pink-500 to-rose-600",
+  },
 ];
 
+// ── Org field config by role ───────────────────────────────────────────────────
 const ORG_ROLE_CONFIG = {
   employer: {
     orgLabel: "Organization / Company Name",
@@ -50,25 +60,26 @@ const ORG_ROLE_CONFIG = {
     orgLabel: "Association Name",
     orgPlaceholder: "Cayman Association",
   },
+  b2b: { orgLabel: "Company Name", orgPlaceholder: "Marketing Agency LLC" },
 };
 
-const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-const validatePhone = (phone) =>
-  /^[\d\s\-\(\)\+]+$/.test(phone) && phone.replace(/\D/g, "").length >= 8;
-const validatePassword = (password) =>
-  password.length >= 8 &&
-  /[A-Z]/.test(password) &&
-  /[a-z]/.test(password) &&
-  /\d/.test(password) &&
-  /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
-const validateName = (name) =>
-  name.trim().length >= 2 && /^[a-zA-Z\s]+$/.test(name);
+// ── Helpers ────────────────────────────────────────────────────────────────────
+const validateEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+const validatePhone = (p) =>
+  /^[\d\s\-\(\)\+]+$/.test(p) && p.replace(/\D/g, "").length >= 8;
+const validatePassword = (p) =>
+  p.length >= 8 &&
+  /[A-Z]/.test(p) &&
+  /[a-z]/.test(p) &&
+  /\d/.test(p) &&
+  /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p);
+const validateName = (n) => n.trim().length >= 2 && /^[a-zA-Z\s]+$/.test(n);
 
 const getInputCls = (hasError) =>
-  `w-full px-4 py-3 bg-white border-2 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none transition-all text-sm ${
+  `w-full px-4 py-3 bg-white/80 border rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none transition-all text-sm shadow-sm ${
     hasError
-      ? "border-red-300 focus:border-red-500 bg-red-50/30"
-      : "border-slate-200 focus:border-[#1C4D8D] hover:border-slate-300"
+      ? "border-red-300 focus:border-red-500 bg-red-50/40"
+      : "border-slate-200 focus:border-[#1C4D8D] focus:ring-2 focus:ring-[#1C4D8D]/10"
   }`;
 
 const selectCls =
@@ -76,9 +87,9 @@ const selectCls =
 
 const Label = ({ children, required }) => (
   <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
-    {children}{" "}
+    {children}
     {required && (
-      <span className="text-red-500 normal-case tracking-normal">*</span>
+      <span className="text-red-500 normal-case tracking-normal"> *</span>
     )}
   </label>
 );
@@ -165,7 +176,6 @@ const SignupForm = () => {
       const nameParts = formData.fullName.trim().split(" ");
       const firstName = nameParts[0] || "";
       const lastName = nameParts.slice(1).join(" ") || firstName;
-      // register now returns tokens + redirectTo directly — no second login needed
       const data = await authAPI.register(
         formData.email,
         formData.password,
@@ -196,7 +206,6 @@ const SignupForm = () => {
 
   return (
     <div className="grid lg:grid-cols-3 gap-6">
-      {/* Main Form */}
       <div className="lg:col-span-2">
         <form
           onSubmit={handleSubmit}
@@ -443,7 +452,6 @@ const SignupForm = () => {
         </form>
       </div>
 
-      {/* Sidebar */}
       <div className="lg:col-span-1 flex flex-col gap-4">
         <div className="bg-gradient-to-br from-[#1C4D8D] to-[#163d71] rounded-2xl p-7 text-white shadow-lg">
           <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-4">
@@ -455,12 +463,12 @@ const SignupForm = () => {
               "Instant access to all discounts",
               "Digital membership card",
               "30-day money-back guarantee",
-            ].map((feat) => (
-              <div key={feat} className="flex items-start gap-2.5">
+            ].map((f) => (
+              <div key={f} className="flex items-start gap-2.5">
                 <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <Icon name="CheckIcon" size={12} />
                 </div>
-                <span className="text-sm text-blue-100">{feat}</span>
+                <span className="text-sm text-blue-100">{f}</span>
               </div>
             ))}
           </div>
@@ -482,22 +490,22 @@ const SignupForm = () => {
   );
 };
 
-// ─── Org Signup Form (Employer / Business / Association) ──────────────────────
+// ─── Org / B2B Signup Form ────────────────────────────────────────────────────
 const OrgSignupForm = ({ role }) => {
   const navigate = useNavigate();
-  const { orgLabel, orgPlaceholder } = ORG_ROLE_CONFIG[role];
   const roleUpper = role.toUpperCase();
+  const { orgLabel, orgPlaceholder } = ORG_ROLE_CONFIG[role];
 
   const [formData, setFormData] = useState({
     orgName: "",
     contactName: "",
     categoryId: "",
     categoryName: "",
-    // NEW: associationType only used when role === ASSOCIATION
-    // defaults to "MEMBER" — user picks via the type selector below
-    associationType: "MEMBER",
+    associationType: "MEMBER", // only relevant for ASSOCIATION
+    servicesOffered: "", // only relevant for B2B
     email: "",
     phone: "",
+    website: "",
     password: "",
     confirmPassword: "",
   });
@@ -512,13 +520,11 @@ const OrgSignupForm = ({ role }) => {
 
   const handleCategoryChange = (e) => {
     const selectedId = e.target.value;
-    const selectedCategory = categories.find(
-      (cat) => String(cat.id) === String(selectedId),
-    );
+    const cat = categories.find((c) => String(c.id) === String(selectedId));
     setFormData((p) => ({
       ...p,
       categoryId: selectedId,
-      categoryName: selectedCategory?.name || "",
+      categoryName: cat?.name || "",
     }));
   };
 
@@ -534,7 +540,11 @@ const OrgSignupForm = ({ role }) => {
       return false;
     }
     if (roleUpper === "BUSINESS" && !formData.categoryId) {
-      setError("Category selection is required for business registration");
+      setError("Category selection is required for business registration.");
+      return false;
+    }
+    if (roleUpper === "B2B" && !formData.servicesOffered.trim()) {
+      setError("Please describe the services your company offers.");
       return false;
     }
     if (formData.password.length < 6) {
@@ -555,6 +565,7 @@ const OrgSignupForm = ({ role }) => {
     setLoading(true);
     try {
       let profile;
+
       if (roleUpper === "EMPLOYER") {
         profile = {
           companyName: formData.orgName,
@@ -563,24 +574,21 @@ const OrgSignupForm = ({ role }) => {
           phone: formData.phone,
         };
       } else if (roleUpper === "BUSINESS") {
-        const numericCategoryId =
+        const numId =
           formData.categoryId && !isNaN(Number(formData.categoryId))
             ? Number(formData.categoryId)
             : null;
         profile = {
           name: formData.orgName,
-          ...(numericCategoryId ? { categoryId: numericCategoryId } : {}),
+          ...(numId ? { categoryId: numId } : {}),
           categoryName: formData.categoryName,
           description: "",
           phone: formData.phone,
           address: "",
           district: "",
-          website: "",
+          website: formData.website || "",
         };
-      } else {
-        // ASSOCIATION — pass the selected associationType to the backend
-        // Backend saves it on the Association record.
-        // Login response will include it so frontend can route to the correct dashboard.
+      } else if (roleUpper === "ASSOCIATION") {
         profile = {
           name: formData.orgName,
           associationType: formData.associationType, // "MEMBER" | "BUSINESS"
@@ -588,11 +596,17 @@ const OrgSignupForm = ({ role }) => {
           district: "",
           phone: formData.phone,
         };
+      } else if (roleUpper === "B2B") {
+        // ✅ B2B profile — maps to B2BPartner model in the backend auth.controller:
+        //   roleData.b2bPartner = { create: { companyName, servicesOffered, phone, email, website } }
+        profile = {
+          companyName: formData.orgName,
+          servicesOffered: formData.servicesOffered.trim(),
+          phone: formData.phone,
+          website: formData.website || "",
+        };
       }
 
-      // register now returns { accessToken, refreshToken, redirectTo, user }
-      // redirectTo is computed by buildAuthResponse on the backend
-      // For ASSOCIATION: redirectTo = "/association-member-dashboard" or "/association-business-dashboard"
       const data = await authAPI.register(
         formData.email,
         formData.password,
@@ -601,12 +615,12 @@ const OrgSignupForm = ({ role }) => {
       );
       saveAuthData(data);
 
-      // Prefer backend-computed redirectTo; fallback to client-side resolution
       const dest =
         data.redirectTo ||
         (data.user?.role === "ASSOCIATION"
           ? getAssociationRoute(data.user)
           : ROLE_ROUTES[data.user?.role] || "/member-dashboard");
+
       navigate(dest, { replace: true });
     } catch (err) {
       setError(err.message || "Registration failed. Please try again.");
@@ -615,32 +629,30 @@ const OrgSignupForm = ({ role }) => {
     }
   };
 
+  // Load categories for BUSINESS role
   useEffect(() => {
     if (roleUpper !== "BUSINESS") return;
-    let isMounted = true;
+    let mounted = true;
     setCategoriesLoading(true);
     categoryAPI
       .getAll()
       .then((data) => {
-        if (!isMounted) return;
+        if (!mounted) return;
         const list = Array.isArray(data)
           ? data
           : Array.isArray(data?.data)
             ? data.data
             : [];
         setCategories(list);
-        if (list.length === 0) console.warn("No categories returned from API.");
       })
-      .catch((err) => {
-        if (!isMounted) return;
-        console.error("categoryAPI.getAll() failed:", err.message);
-        setCategories([]);
+      .catch(() => {
+        if (mounted) setCategories([]);
       })
       .finally(() => {
-        if (isMounted) setCategoriesLoading(false);
+        if (mounted) setCategoriesLoading(false);
       });
     return () => {
-      isMounted = false;
+      mounted = false;
     };
   }, [roleUpper]);
 
@@ -653,6 +665,8 @@ const OrgSignupForm = ({ role }) => {
         className="bg-white rounded-2xl p-7 md:p-9 border border-slate-100 shadow-lg space-y-5"
       >
         <StepDots total={3} current={0} />
+
+        {/* Role header */}
         <div className="flex items-center gap-3 mb-1">
           <div
             className={`w-10 h-10 rounded-xl bg-gradient-to-br ${roleConfig?.color || "from-blue-500 to-indigo-600"} flex items-center justify-center text-white shadow-sm`}
@@ -664,16 +678,25 @@ const OrgSignupForm = ({ role }) => {
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-900 leading-tight">
-              {role === "employer"
-                ? "Employer"
-                : role === "business"
-                  ? "Business"
-                  : "Association"}{" "}
-              Registration
+              {roleConfig?.label} Registration
             </h2>
             <p className="text-xs text-slate-500">{roleConfig?.description}</p>
           </div>
         </div>
+
+        {/* B2B info banner */}
+        {roleUpper === "B2B" && (
+          <div className="p-4 bg-gradient-to-r from-[#1C4D8D]/8 to-[#4988C4]/8 border border-[#1C4D8D]/20 rounded-xl">
+            <p className="text-sm font-bold text-[#1C4D8D] mb-1">
+              🤝 B2B Partner Registration
+            </p>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Your profile will appear in the B2B Partner Directory visible to
+              all DCC members, employers, and associations. Admin approval
+              required before going live.
+            </p>
+          </div>
+        )}
 
         {error && (
           <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
@@ -682,7 +705,7 @@ const OrgSignupForm = ({ role }) => {
           </div>
         )}
 
-        {/* Common fields — identical to original */}
+        {/* Common fields */}
         {[
           { label: orgLabel, key: "orgName", placeholder: orgPlaceholder },
           {
@@ -716,14 +739,40 @@ const OrgSignupForm = ({ role }) => {
           </div>
         ))}
 
-        {/* ── NEW: Association type selector ────────────────────────────────
-            Only shown when role === "association".
-            Two card buttons — Member Association vs Business Association.
-            Sets formData.associationType which is sent in the profile object.
-            The backend saves this as Association.associationType (enum: MEMBER | BUSINESS).
-            On login, the response includes associationType so the frontend
-            can navigate to /association-member-dashboard or /association-business-dashboard.
-        ─────────────────────────────────────────────────────────────────── */}
+        {/* Website — shown for BUSINESS and B2B */}
+        {(roleUpper === "BUSINESS" || roleUpper === "B2B") && (
+          <div>
+            <Label>Website URL</Label>
+            <input
+              type="url"
+              value={formData.website}
+              onChange={(e) => field("website", e.target.value)}
+              className={getInputCls(false)}
+              placeholder="https://yourwebsite.com"
+            />
+          </div>
+        )}
+
+        {/* ── B2B: Services Offered textarea ────────────────────────────────── */}
+        {roleUpper === "B2B" && (
+          <div>
+            <Label required>Services Offered</Label>
+            <p className="text-xs text-slate-400 mb-1.5">
+              Describe what services your business provides to other DCC
+              businesses, employers, or associations.
+            </p>
+            <textarea
+              required
+              value={formData.servicesOffered}
+              onChange={(e) => field("servicesOffered", e.target.value)}
+              rows={4}
+              className={`${getInputCls(false)} resize-none`}
+              placeholder="e.g. Digital marketing, SEO, social media management, content creation, office supplies, logistics..."
+            />
+          </div>
+        )}
+
+        {/* ── ASSOCIATION: Type selector ─────────────────────────────────────── */}
         {roleUpper === "ASSOCIATION" && (
           <div>
             <Label required>Association Type</Label>
@@ -783,7 +832,7 @@ const OrgSignupForm = ({ role }) => {
           </div>
         )}
 
-        {/* Business category — identical to original */}
+        {/* ── BUSINESS: Category selector ────────────────────────────────────── */}
         {roleUpper === "BUSINESS" && (
           <div>
             <Label required>Business Category</Label>
@@ -833,7 +882,7 @@ const OrgSignupForm = ({ role }) => {
           </div>
         )}
 
-        {/* Password fields — identical to original */}
+        {/* Password fields */}
         <div className="pt-2 border-t border-slate-100">
           <p className="text-xs text-slate-400 mb-4 mt-3">
             Set a secure password for your account.
@@ -875,7 +924,7 @@ const OrgSignupForm = ({ role }) => {
           ))}
         </div>
 
-        {/* Terms — identical to original */}
+        {/* Terms */}
         <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
           <input
             type="checkbox"
@@ -959,6 +1008,7 @@ const SignupContent = () => {
     employer: "Offer exclusive benefits to your team",
     business: "Reach thousands of DCC members",
     association: "Connect your members with exclusive discounts",
+    b2b: "Join the B2B Partner Directory",
   };
 
   return (
@@ -981,28 +1031,24 @@ const SignupContent = () => {
           </p>
         </div>
 
-        <div className="flex justify-center mb-8">
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-1.5 flex flex-wrap justify-center gap-1 border border-slate-200/80 shadow-sm w-full max-w-xl">
-            {ROLE_TABS.map(({ key, label, description, color }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setSelectedRole(key)}
-                className={`flex-1 min-w-[90px] px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex flex-col items-center gap-0.5 ${
-                  selectedRole === key
-                    ? `bg-gradient-to-br ${color} text-white shadow-md`
-                    : "text-slate-500 hover:text-slate-800 hover:bg-slate-50/80"
-                }`}
-              >
-                <span className="text-sm">{label}</span>
-                <span
-                  className={`text-[10px] font-normal leading-tight text-center ${selectedRole === key ? "text-white/70" : "text-slate-400"}`}
-                >
-                  {description}
-                </span>
-              </button>
-            ))}
-          </div>
+        {/* Role selector — 5 cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-10">
+          {ROLE_TABS.map(({ key, label, icon, color }) => (
+            <button
+              key={key}
+              onClick={() => setSelectedRole(key)}
+              className={`p-4 rounded-2xl border-2 text-center transition-all duration-300 ${
+                selectedRole === key
+                  ? `bg-gradient-to-br ${color} text-white border-transparent shadow-lg scale-[1.03]`
+                  : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-md"
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <Icon name={icon} size={20} />
+                <span className="text-xs font-bold">{label}</span>
+              </div>
+            </button>
+          ))}
         </div>
 
         {selectedRole === "member" ? (

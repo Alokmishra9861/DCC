@@ -62,6 +62,7 @@ const Header = () => {
     { href: "/business-dashboard", label: "Dashboard" },
     { href: "/discounts", label: "Discounts" },
     { href: "/certification", label: "Certificates" },
+    { href: "/b2b-directory", label: "B2B Directory" },
     { href: "/categories", label: "Categories" },
     { href: "/about", label: "About Us" },
     { href: "/contact", label: "Contact Us" },
@@ -69,7 +70,17 @@ const Header = () => {
 
   const employerNavLinks = [
     { href: "/employer-dashboard", label: "Dashboard" },
+    { href: "/b2b-directory", label: "B2B Directory" },
+    { href: "/b2b-discounts", label: "B2B Discounts" },
     { href: "/categories", label: "Categories" },
+    { href: "/about", label: "About Us" },
+    { href: "/contact", label: "Contact Us" },
+  ];
+
+  // ── B2B PARTNER nav ──────────────────────────────────────────────────────────
+  const b2bNavLinks = [
+    { href: "/b2b-dashboard", label: "Dashboard" },
+    { href: "/b2b-directory", label: "B2B Directory" },
     { href: "/about", label: "About Us" },
     { href: "/contact", label: "Contact Us" },
   ];
@@ -88,6 +99,7 @@ const Header = () => {
 
   const associationNavLinks = [
     { href: assocDashboardHref, label: "Dashboard" },
+    { href: "/b2b-directory", label: "B2B Directory" },
     { href: "/b2b-discounts", label: "B2B Discounts" },
     { href: "/about", label: "About Us" },
     { href: "/contact", label: "Contact Us" },
@@ -102,6 +114,8 @@ const Header = () => {
         return employerNavLinks;
       case "ASSOCIATION":
         return associationNavLinks;
+      case "B2B":
+        return b2bNavLinks;
       case "ADMIN":
         return [{ href: "/admin", label: "Admin Panel" }];
       default:

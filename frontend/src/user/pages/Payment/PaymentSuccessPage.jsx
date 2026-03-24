@@ -9,22 +9,29 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { memberAPI } from "../../../services/api";
+import { memberAPI, paymentAPI } from "../../../services/api";
 
 const PaymentSuccessPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const sessionId = searchParams.get("session_id");
+  const typeParam = searchParams.get("type") || "";
+
+  // Detect if this is a certificate or membership payment
+  // type=PREPAID_CERTIFICATE or type=VALUE_ADDED_CERTIFICATE means certificate
+  // Otherwise it's membership
+  const isCertificatePayment = typeParam.includes("CERTIFICATE");
 
   const [status, setStatus] = useState("verifying"); // verifying | success | error | already_active
   const [countdown, setCountdown] = useState(5);
   const [error, setError] = useState("");
+  const [redirectPath, setRedirectPath] = useState("/member-dashboard");
 
   // ── 1. Verify payment ─────────────────────────────────────────────────────
   useEffect(() => {
     if (!sessionId) {
       setError(
-        "No session ID found. If you just paid, your membership may already be active.",
+        "No session ID found. If you just paid, your payment may already be processed.",
       );
       setStatus("error");
       return;
@@ -34,10 +41,16 @@ const PaymentSuccessPage = () => {
 
     const verify = async () => {
       try {
-        // memberAPI.verifyPayment → GET /api/payments/stripe/verify?session_id=...
-        // Backend verifies the Stripe session and activates membership if needed.
-        // Returns: { type: "membership", activated: true }
-        await memberAPI.verifyPayment(sessionId);
+        if (isCertificatePayment) {
+          // Certificate payment — verify via paymentAPI.verifyCertificateSession
+          await paymentAPI.verifyCertificateSession(sessionId);
+          setRedirectPath("/member-dashboard/certificates");
+        } else {
+          // Membership payment — use memberAPI.verifyPayment
+          await memberAPI.verifyPayment(sessionId);
+          setRedirectPath("/member-dashboard");
+        }
+
         if (cancelled) return;
         setStatus("success");
       } catch (err) {
@@ -63,7 +76,7 @@ const PaymentSuccessPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [sessionId]);
+  }, [sessionId, isCertificatePayment]);
 
   // ── 2. Auto-redirect countdown ────────────────────────────────────────────
   useEffect(() => {
@@ -72,14 +85,14 @@ const PaymentSuccessPage = () => {
       setCountdown((c) => {
         if (c <= 1) {
           clearInterval(interval);
-          navigate("/member-dashboard", { replace: true });
+          navigate(redirectPath, { replace: true });
           return 0;
         }
         return c - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [status, navigate]);
+  }, [status, navigate, redirectPath]);
 
   // ── Verifying ─────────────────────────────────────────────────────────────
   if (status === "verifying") {
@@ -91,7 +104,9 @@ const PaymentSuccessPage = () => {
             Confirming your payment…
           </h2>
           <p className="text-slate-400 text-sm">
-            Please wait while we activate your membership.
+            {isCertificatePayment
+              ? "Please wait while we process your certificate purchase."
+              : "Please wait while we activate your membership."}
           </p>
         </div>
       </div>
@@ -119,7 +134,7 @@ const PaymentSuccessPage = () => {
           </p>
           <div className="flex gap-3">
             <Link
-              to="/member-dashboard"
+              to={redirectPath}
               className="flex-1 py-3 border-2 border-slate-200 text-slate-600 rounded-xl text-sm font-semibold hover:border-slate-300 text-center"
             >
               Go to Dashboard
@@ -161,55 +176,104 @@ const PaymentSuccessPage = () => {
         </div>
 
         <h1 className="text-3xl font-black text-slate-900 mb-2">
-          {status === "already_active"
-            ? "Already Active!"
-            : "Welcome to DCC! 🎉"}
+          {isCertificatePayment
+            ? status === "already_active"
+              ? "Certificate Ready!"
+              : "Certificate Purchased! 🎟️"
+            : status === "already_active"
+              ? "Already Active!"
+              : "Welcome to DCC! 🎉"}
         </h1>
         <p className="text-slate-500 mb-7">
-          {status === "already_active"
-            ? "Your membership is already active. Redirecting you to your dashboard…"
-            : "Your membership is now active. Start saving with 200+ local businesses!"}
+          {isCertificatePayment
+            ? "Your certificate is now available. Start using it at the business!"
+            : status === "already_active"
+              ? "Your membership is already active. Redirecting you to your dashboard…"
+              : "Your membership is now active. Start saving with 200+ local businesses!"}
         </p>
 
-        {/* Membership card */}
-        <div className="bg-gradient-to-br from-[#1C4D8D] to-[#163d71] rounded-2xl p-5 mb-7 text-left text-white">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
-                <span className="text-white font-black text-xs">D</span>
+        {isCertificatePayment ? (
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-5 mb-7 text-left border border-amber-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center text-lg">
+                  🎟️
+                </div>
+                <span className="text-sm font-bold text-amber-900">
+                  Certificate Purchased
+                </span>
               </div>
-              <span className="text-sm font-bold text-white/90">
-                Discount Club Cayman
+              <span className="text-[11px] font-black bg-emerald-400 text-emerald-900 px-2.5 py-0.5 rounded-full uppercase tracking-wide">
+                Ready
               </span>
             </div>
-            <span className="text-[11px] font-black bg-emerald-400 text-emerald-900 px-2.5 py-0.5 rounded-full uppercase tracking-wide">
-              ACTIVE
-            </span>
-          </div>
-          <div className="space-y-2">
-            {[
-              { label: "Plan", value: "Individual Membership" },
-              { label: "Status", value: "Active" },
-              { label: "Expires", value: "1 Year from today" },
-            ].map(({ label, value }) => (
-              <div key={label} className="flex items-center justify-between">
-                <span className="text-white/60 text-xs uppercase tracking-wider">
-                  {label}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-amber-800/70 text-xs uppercase tracking-wider">
+                  Status
                 </span>
-                <span className="font-semibold text-white text-xs">
-                  {value}
+                <span className="font-semibold text-amber-900 text-xs">
+                  Purchased & Active
                 </span>
               </div>
-            ))}
+              <div className="flex items-center justify-between">
+                <span className="text-amber-800/70 text-xs uppercase tracking-wider">
+                  View In
+                </span>
+                <span className="font-semibold text-amber-900 text-xs">
+                  Your Certificates Section
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-gradient-to-br from-[#1C4D8D] to-[#163d71] rounded-2xl p-5 mb-7 text-left text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-black text-xs">D</span>
+                </div>
+                <span className="text-sm font-bold text-white/90">
+                  Discount Club Cayman
+                </span>
+              </div>
+              <span className="text-[11px] font-black bg-emerald-400 text-emerald-900 px-2.5 py-0.5 rounded-full uppercase tracking-wide">
+                ACTIVE
+              </span>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label: "Plan", value: "Individual Membership" },
+                { label: "Status", value: "Active" },
+                { label: "Expires", value: "1 Year from today" },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex items-center justify-between">
+                  <span className="text-white/60 text-xs uppercase tracking-wider">
+                    {label}
+                  </span>
+                  <span className="font-semibold text-white text-xs">
+                    {value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Unlocked features */}
         <div className="grid grid-cols-3 gap-3 mb-7">
           {[
-            { icon: "🏪", label: "200+ Businesses" },
-            { icon: "💰", label: "Exclusive Discounts" },
-            { icon: "🎟️", label: "Certificates" },
+            ...(isCertificatePayment
+              ? [
+                  { icon: "🎟️", label: "Certificate Ready" },
+                  { icon: "🏪", label: "Visit Business" },
+                  { icon: "💎", label: "Get Best Value" },
+                ]
+              : [
+                  { icon: "🏪", label: "200+ Businesses" },
+                  { icon: "💰", label: "Exclusive Discounts" },
+                  { icon: "🎟️", label: "Certificates" },
+                ]),
           ].map(({ icon, label }) => (
             <div
               key={label}
@@ -256,10 +320,12 @@ const PaymentSuccessPage = () => {
         </div>
 
         <button
-          onClick={() => navigate("/member-dashboard", { replace: true })}
+          onClick={() => navigate(redirectPath, { replace: true })}
           className="w-full py-3.5 bg-[#1C4D8D] text-white rounded-xl font-bold text-sm hover:bg-[#163d71] transition-colors"
         >
-          Go to Dashboard Now →
+          {isCertificatePayment
+            ? "View Your Certificates →"
+            : "Go to Dashboard Now →"}
         </button>
       </div>
     </div>

@@ -38,6 +38,10 @@ exports.getAllDiscounts = asyncHandler(async (req, res) => {
   const where = {
     type: "DISCOUNT",
     isActive: true,
+    business: {
+      isApproved: true,
+      status: "APPROVED",
+    },
     ...(businessId && { businessId }),
     ...(category && { business: { category } }),
   };
@@ -99,7 +103,14 @@ exports.getAllDiscounts = asyncHandler(async (req, res) => {
 // BUSINESS users cannot view other businesses' discounts
 exports.getDiscountById = asyncHandler(async (req, res) => {
   const offer = await prisma.offer.findFirst({
-    where: { id: req.params.id, type: "DISCOUNT" },
+    where: {
+      id: req.params.id,
+      type: "DISCOUNT",
+      business: {
+        isApproved: true,
+        status: "APPROVED",
+      },
+    },
     include: {
       business: {
         select: {

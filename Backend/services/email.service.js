@@ -1,6 +1,6 @@
 const transporter = require("../config/email");
 
-const FROM = `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM}>`;
+const FROM = `"${process.env.EMAIL_FROM_NAME || "Discount Club Cayman"}" <${process.env.SMTP_FROM}>`;
 
 // ── Generic send ──────────────────────────────────────
 const sendEmail = async ({ to, subject, html }) => {

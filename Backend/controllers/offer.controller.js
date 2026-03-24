@@ -162,7 +162,14 @@ exports.getBusinessOffers = asyncHandler(async (req, res) => {
   }
 
   const offers = await prisma.offer.findMany({
-    where: { businessId, isActive: true },
+    where: {
+      businessId,
+      isActive: true,
+      business: {
+        isApproved: true,
+        status: "APPROVED",
+      },
+    },
     include: {
       business: {
         include: { category: true },
@@ -210,6 +217,7 @@ exports.getOffersByCategory = asyncHandler(async (req, res) => {
     where: {
       categoryId,
       isApproved: true,
+      status: "APPROVED",
     },
     include: {
       category: true,

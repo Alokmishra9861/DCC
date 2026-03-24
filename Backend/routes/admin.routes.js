@@ -1,54 +1,61 @@
-﻿const express = require("express");
+﻿// Backend/routes/admin.routes.js
+// Mount in app.js: app.use("/api/admin", require("./routes/admin.routes"))
+
+const express = require("express");
 const router = express.Router();
 const ctrl = require("../controllers/admin.controller");
 const { protect, authorize } = require("../middlewares/auth.middleware");
 
 // All admin routes require ADMIN role
-router.use(protect);
-router.use(authorize("ADMIN"));
+router.use(protect, authorize("ADMIN"));
 
-// Dashboard stats
+// ── Dashboard ─────────────────────────────────────────────────────────────────
 router.get("/stats", ctrl.getDashboardStats);
 
-// Users
+// ── Users ─────────────────────────────────────────────────────────────────────
 router.get("/users", ctrl.getAllUsers);
-router.put("/users/:id/status", ctrl.toggleUserStatus);
 router.put("/users/:id/role", ctrl.updateUserRole);
+router.put("/users/:id/status", ctrl.toggleUserStatus);
 router.delete("/users/:id", ctrl.deleteUser);
 
-// Membersa
+// ── Members ───────────────────────────────────────────────────────────────────
 router.get("/members", ctrl.getAdminMembers);
 router.patch("/members/:id", ctrl.updateMember);
 router.delete("/members/:id", ctrl.deleteMember);
 
-// Approvals
+// ── Pending approvals (all types in one call) ─────────────────────────────────
 router.get("/pending", ctrl.getPendingApprovals);
-// Employer approvals
-router.patch("/employers/:id/approve", ctrl.approveEmployer);
-router.patch("/employers/:id/reject", ctrl.rejectEmployer);
-// Association approvals
-router.patch("/associations/:id/approve", ctrl.approveAssociation);
-router.patch("/associations/:id/reject", ctrl.rejectAssociation);
 
-// Business approvals
-router.patch("/businesses/:id/approve", ctrl.approveBusiness);
-router.patch("/businesses/:id/reject", ctrl.rejectBusiness);
-
-// Membership approvals
+// ── Memberships ───────────────────────────────────────────────────────────────
 router.get("/memberships/pending", ctrl.getPendingMemberships);
 router.patch("/memberships/:id/approve", ctrl.approveMembership);
 
-// Businesses
+// ── Employers ─────────────────────────────────────────────────────────────────
+router.patch("/employers/:id/approve", ctrl.approveEmployer);
+router.patch("/employers/:id/reject", ctrl.rejectEmployer);
+
+// ── Associations ──────────────────────────────────────────────────────────────
+router.patch("/associations/:id/approve", ctrl.approveAssociation);
+
+// ── Businesses ────────────────────────────────────────────────────────────────
 router.get("/businesses", ctrl.getAdminBusinesses);
-router.put("/businesses/:id/approve", ctrl.approveBusiness);
 router.patch("/businesses/:id", ctrl.updateBusiness);
+router.patch("/businesses/:id/approve", ctrl.approveBusiness);
 router.patch("/businesses/:id/reject", ctrl.rejectBusiness);
 
-// Contact inquiries
+// ── B2B Partners ──────────────────────────────────────────────────────────────
+// GET  /api/admin/b2b             → list all B2B partners (filter: ?status=pending|approved)
+// PATCH /api/admin/b2b/:id/approve → set isApproved: true → partner appears in /b2b-directory
+// PATCH /api/admin/b2b/:id/reject  → keep isApproved: false
+router.get("/b2b", ctrl.getB2BPartners);
+router.patch("/b2b/:id/approve", ctrl.approveB2BPartner);
+router.patch("/b2b/:id/reject", ctrl.rejectB2BPartner);
+
+// ── Contact inquiries ─────────────────────────────────────────────────────────
 router.get("/inquiries", ctrl.getInquiries);
 router.put("/inquiries/:id/status", ctrl.updateInquiryStatus);
 
-// Audit log
+// ── Audit log ─────────────────────────────────────────────────────────────────
 router.get("/audit", ctrl.getAuditLog);
 
 module.exports = router;

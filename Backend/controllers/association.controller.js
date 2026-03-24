@@ -813,7 +813,14 @@ exports.getLinkedBusinessCatalog = asyncHandler(async (req, res) => {
   // Fetch active offers and available certificates from linked businesses
   const [offers, certificates] = await Promise.all([
     prisma.offer.findMany({
-      where: { businessId: { in: businessIds }, isActive: true },
+      where: {
+        businessId: { in: businessIds },
+        isActive: true,
+        business: {
+          isApproved: true,
+          status: "APPROVED",
+        },
+      },
       include: {
         business: {
           select: {

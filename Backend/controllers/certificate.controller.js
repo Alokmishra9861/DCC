@@ -65,7 +65,14 @@ exports.getAvailableCertificates = asyncHandler(async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const where = {
       status: "AVAILABLE",
-      ...(businessId && { offer: { businessId } }),
+      offer: {
+        isActive: true,
+        business: {
+          isApproved: true,
+          status: "APPROVED",
+        },
+        ...(businessId && { businessId }),
+      },
     };
 
     const [certificates, total] = await Promise.all([

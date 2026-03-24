@@ -38,6 +38,7 @@ import TravelContent from "./user/pages/Travel/TravelContent";
 import CategoriesDetailsPage from "./user/pages/Categories/CategoriesDetailsPage";
 import ForBusinessContent from "./user/pages/ForBusinesses/ForBusinessContent";
 import PaymentSuccessPage from "./user/pages/Payment/PaymentSuccessPage";
+import B2BDirectoryPage from "./user/pages/B2BDirectory/B2BDirectoryPage";
 
 // Employer sub-pages
 import BulkPurchase from "./user/pages/EmployerDashboard/BulkPurchase";
@@ -50,9 +51,9 @@ import AssociationMemberDashboard from "./user/pages/AssociationDashboard/Associ
 import AssociationBusinessDashboard from "./user/pages/AssociationDashboard/AssociationBusinessDashboard";
 import AcceptAssociationMemberInvite from "./user/pages/Association/AcceptAssociationMemberInvite";
 import AcceptAssociationBusinessInvite from "./user/pages/Association/AcceptAssociationBusinessInvite";
-import B2BDiscountsContent from "./user/pages/B2BDashboard/B2BDashboardContent";
+import B2BDiscountsContent from "./user/pages/B2BDiscounts/B2BDiscountsContent";
 
-import { getAssociationType } from "./services/api";
+import { getAssociationType, associationAPI } from "./services/api";
 
 // ── Scroll to top on route change ─────────────────────────────────────────────
 const ScrollToTop = () => {
@@ -64,19 +65,53 @@ const ScrollToTop = () => {
 };
 
 // ── AssociationTypeGuard ───────────────────────────────────────────────────────
-// After ProtectedRoute confirms the user is ASSOCIATION role,
-// this guard checks they're on the right dashboard for their type.
-// A BUSINESS association hitting /association-member-dashboard
-// gets silently redirected to /association-business-dashboard and vice versa.
+// Reads associationType from localStorage (set by saveAuthData on login).
+// If missing (e.g. old session before the patch), fetches from the API once
+// and caches it, then redirects to the correct dashboard.
 const AssociationTypeGuard = ({ requiredType, children }) => {
-  const type = getAssociationType();
-  if (type !== requiredType) {
+  const [resolved, setResolved] = React.useState(() => {
+    // Try reading from localStorage immediately
+    const stored = localStorage.getItem("dcc_association_type");
+    return stored || null; // null = not yet known
+  });
+  const [loading, setLoading] = React.useState(!resolved);
+
+  React.useEffect(() => {
+    if (resolved) return; // already known
+    // associationType missing from localStorage (old session / first load after patch)
+    // Fetch from API once and cache it
+    associationAPI
+      .getProfile()
+      .then((profile) => {
+        const type = profile?.associationType || "MEMBER";
+        localStorage.setItem("dcc_association_type", type);
+        setResolved(type);
+      })
+      .catch(() => {
+        setResolved("MEMBER"); // safe fallback
+      })
+      .finally(() => setLoading(false));
+  }, [resolved]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-[#1C4D8D] border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-400 text-sm">Loading dashboard…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (resolved !== requiredType) {
     const correct =
-      type === "BUSINESS"
+      resolved === "BUSINESS"
         ? "/association-business-dashboard"
         : "/association-member-dashboard";
     return <Navigate to={correct} replace />;
   }
+
   return children;
 };
 
@@ -147,7 +182,7 @@ const UserLayout = () => (
         <Route
           path="/member-dashboard"
           element={
-            <ProtectedRoute roles={["MEMBER"]}>
+            <ProtectedRoute roles={["MEMBER"]} requireMembership>
               <MemberDashboardContent />
             </ProtectedRoute>
           }
@@ -257,12 +292,26 @@ const UserLayout = () => (
         />
 
         {/* ── B2B ─────────────────────────────────────────────────────────── */}
-        {/* ── B2B Discounts — accessible to ASSOCIATION (both types) and B2B ─ */}
+        {/* ── B2B Discounts — businesses, employers, associations and B2B ─ */}
         <Route
           path="/b2b-discounts"
           element={
-            <ProtectedRoute roles={["ASSOCIATION", "B2B", "MEMBER"]}>
+            <ProtectedRoute
+              roles={["BUSINESS", "EMPLOYER", "ASSOCIATION", "B2B"]}
+            >
               <B2BDiscountsContent />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ── B2B Directory — businesses, employers, associations, B2B (not members) ── */}
+        <Route
+          path="/b2b-directory"
+          element={
+            <ProtectedRoute
+              roles={["BUSINESS", "EMPLOYER", "ASSOCIATION", "B2B"]}
+            >
+              <B2BDirectoryPage />
             </ProtectedRoute>
           }
         />
@@ -277,7 +326,14 @@ const UserLayout = () => (
         />
 
         {/* ── Payment ─────────────────────────────────────────────────────── */}
-        <Route path="/payment/success" element={<PaymentSuccessPage />} />
+        <Route
+          path="/payment/success"
+          element={
+            <ProtectedRoute>
+              <PaymentSuccessPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/payment/cancelled"
           element={<Navigate to="/pricing" replace />}
