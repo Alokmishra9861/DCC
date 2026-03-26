@@ -25,7 +25,12 @@ const Section = ({ title, sub, action, children }) => (
   <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
     <div className="flex items-center justify-between px-6 py-5 border-b border-slate-50">
       <div>
-        <h3 className="font-bold text-slate-900">{title}</h3>
+        <h3
+          className="font-bold text-slate-900"
+          style={{ fontFamily: "'Playfair Display', serif" }}
+        >
+          {title}
+        </h3>
         {sub && <p className="text-xs text-slate-400 mt-0.5">{sub}</p>}
       </div>
       {action}
@@ -253,7 +258,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-3 md:p-4 lg:p-6 max-w-5xl mx-auto">
       {/* Toast */}
       {toast && (
         <div
@@ -269,7 +274,15 @@ const Settings = () => {
 
       {/* Header */}
       <div className="mb-7">
-        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
+        <h1
+          className="text-xl md:text-2xl font-bold text-slate-900"
+          style={{
+            fontFamily: "'Playfair Display', serif",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          Settings
+        </h1>
         <p className="text-sm text-slate-400 mt-0.5">
           Platform configuration, advertisements, and logs
         </p>

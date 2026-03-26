@@ -119,7 +119,12 @@ const EditModal = ({ member, onSave, onClose, saving }) => {
       >
         <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100">
           <div>
-            <h3 className="font-bold text-slate-900">Edit Member</h3>
+            <h3
+              className="font-bold text-slate-900"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              Edit Member
+            </h3>
             <p className="text-xs text-slate-400 mt-0.5">
               {member.firstName} {member.lastName}
             </p>
@@ -341,7 +346,7 @@ const Members = () => {
   const totalPages = Math.ceil(total / LIMIT);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-3 md:p-4 lg:p-6 max-w-7xl mx-auto">
       {/* Toast */}
       {toast && (
         <div
@@ -381,8 +386,16 @@ const Members = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Members</h1>
-          <p className="text-sm text-slate-400 mt-0.5">
+          <h1
+            className="text-xl md:text-2xl font-bold text-slate-900"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Members
+          </h1>
+          <p className="text-xs md:text-sm text-slate-400 mt-0.5">
             {total > 0
               ? `${total} member${total !== 1 ? "s" : ""} total`
               : "Manage memberships and access"}

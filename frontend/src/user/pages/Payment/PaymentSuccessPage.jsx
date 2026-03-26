@@ -17,15 +17,19 @@ const PaymentSuccessPage = () => {
   const sessionId = searchParams.get("session_id");
   const typeParam = searchParams.get("type") || "";
 
-  // Detect if this is a certificate or membership payment
+  // Detect if this is a certificate, banner, or membership payment
   // type=PREPAID_CERTIFICATE or type=VALUE_ADDED_CERTIFICATE means certificate
+  // type=banner means banner advertisement
   // Otherwise it's membership
   const isCertificatePayment = typeParam.includes("CERTIFICATE");
+  const isBannerPayment = typeParam === "banner";
 
   const [status, setStatus] = useState("verifying"); // verifying | success | error | already_active
   const [countdown, setCountdown] = useState(5);
   const [error, setError] = useState("");
-  const [redirectPath, setRedirectPath] = useState("/member-dashboard");
+  const [redirectPath, setRedirectPath] = useState(
+    isBannerPayment ? "/business-dashboard" : "/member-dashboard",
+  );
 
   // ── 1. Verify payment ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -41,18 +45,24 @@ const PaymentSuccessPage = () => {
 
     const verify = async () => {
       try {
-        if (isCertificatePayment) {
+        if (isBannerPayment) {
+          // Banner payment — webhook handles creation, just confirm success
+          // The banner is created with PENDING status and needs admin approval
+          if (cancelled) return;
+          setStatus("success");
+        } else if (isCertificatePayment) {
           // Certificate payment — verify via paymentAPI.verifyCertificateSession
           await paymentAPI.verifyCertificateSession(sessionId);
           setRedirectPath("/member-dashboard/certificates");
+          if (cancelled) return;
+          setStatus("success");
         } else {
           // Membership payment — use memberAPI.verifyPayment
           await memberAPI.verifyPayment(sessionId);
           setRedirectPath("/member-dashboard");
+          if (cancelled) return;
+          setStatus("success");
         }
-
-        if (cancelled) return;
-        setStatus("success");
       } catch (err) {
         if (cancelled) return;
         const msg = (err.message || "").toLowerCase();
@@ -76,7 +86,7 @@ const PaymentSuccessPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [sessionId, isCertificatePayment]);
+  }, [sessionId, isCertificatePayment, isBannerPayment]);
 
   // ── 2. Auto-redirect countdown ────────────────────────────────────────────
   useEffect(() => {
@@ -104,9 +114,11 @@ const PaymentSuccessPage = () => {
             Confirming your payment…
           </h2>
           <p className="text-slate-400 text-sm">
-            {isCertificatePayment
-              ? "Please wait while we process your certificate purchase."
-              : "Please wait while we activate your membership."}
+            {isBannerPayment
+              ? "Please wait while we process your banner advertisement."
+              : isCertificatePayment
+                ? "Please wait while we process your certificate purchase."
+                : "Please wait while we activate your membership."}
           </p>
         </div>
       </div>
@@ -176,23 +188,111 @@ const PaymentSuccessPage = () => {
         </div>
 
         <h1 className="text-3xl font-black text-slate-900 mb-2">
-          {isCertificatePayment
-            ? status === "already_active"
-              ? "Certificate Ready!"
-              : "Certificate Purchased! 🎟️"
-            : status === "already_active"
-              ? "Already Active!"
-              : "Welcome to DCC! 🎉"}
+          {isBannerPayment
+            ? "Banner Submitted! 📢"
+            : isCertificatePayment
+              ? status === "already_active"
+                ? "Certificate Ready!"
+                : "Certificate Purchased! 🎟️"
+              : status === "already_active"
+                ? "Already Active!"
+                : "Welcome to DCC! 🎉"}
         </h1>
         <p className="text-slate-500 mb-7">
-          {isCertificatePayment
-            ? "Your certificate is now available. Start using it at the business!"
-            : status === "already_active"
-              ? "Your membership is already active. Redirecting you to your dashboard…"
-              : "Your membership is now active. Start saving with 200+ local businesses!"}
+          {isBannerPayment
+            ? "Your banner payment is confirmed. It's now pending admin approval. You'll be notified when it goes live!"
+            : isCertificatePayment
+              ? "Your certificate is now available. Start using it at the business!"
+              : status === "already_active"
+                ? "Your membership is already active. Redirecting you to your dashboard…"
+                : "Your membership is now active. Start saving with 200+ local businesses!"}
         </p>
 
-        {isCertificatePayment ? (
+        {isBannerPayment ? (
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-5 mb-7 text-left border border-purple-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center text-lg">
+                  📢
+                </div>
+                <span className="text-sm font-bold text-purple-900">
+                  Banner Advertisement
+                </span>
+              </div>
+              <span className="text-[11px] font-black bg-yellow-300 text-yellow-900 px-2.5 py-0.5 rounded-full uppercase tracking-wide">
+                Pending Approval
+              </span>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-purple-800/70 text-xs uppercase tracking-wider">
+                  Status
+                </span>
+                <span className="font-semibold text-purple-900 text-xs">
+                  Awaiting Admin Review
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-purple-800/70 text-xs uppercase tracking-wider">
+                  Next Step
+                </span>
+                <span className="font-semibold text-purple-900 text-xs">
+                  Monitor Dashboard
+                </span>
+              </div>
+              {sessionId && (
+                <div className="flex items-center justify-between pt-2 border-t border-purple-200">
+                  <span className="text-purple-800/70 text-xs uppercase tracking-wider">
+                    Session ID
+                  </span>
+                  <code className="text-purple-900 text-xs font-mono bg-white px-2 py-1 rounded">
+                    {sessionId.substring(0, 12)}...
+                  </code>
+                </div>
+              )}
+            </div>
+            {sessionId && (
+              <div className="mt-4 pt-4 border-t border-purple-200 space-y-2">
+                <button
+                  onClick={async () => {
+                    try {
+                      const data = await paymentAPI.debugSession(sessionId);
+                      console.log("Session metadata:", data.session.metadata);
+                      alert(
+                        `✅ Session found!\n\nMetadata:\n${JSON.stringify(data.session.metadata, null, 2)}`,
+                      );
+                    } catch (err) {
+                      alert(`❌ Error: ${err.message}`);
+                    }
+                  }}
+                  className="w-full py-2 px-3 bg-purple-600 text-white text-xs font-semibold rounded-lg hover:bg-purple-700 transition"
+                >
+                  📋 Check Session Metadata
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      const result =
+                        await paymentAPI.manualBannerCreate(sessionId);
+                      alert(
+                        `✅ Banner created manually!\n\nID: ${result.banner.id}`,
+                      );
+                      setTimeout(
+                        () => (window.location.href = "/business-dashboard"),
+                        2000,
+                      );
+                    } catch (err) {
+                      alert(`❌ Error: ${err.message}`);
+                    }
+                  }}
+                  className="w-full py-2 px-3 bg-purple-600 text-white text-xs font-semibold rounded-lg hover:bg-purple-700 transition"
+                >
+                  🔧 Create Banner Now (Manual)
+                </button>
+              </div>
+            )}
+          </div>
+        ) : isCertificatePayment ? (
           <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-5 mb-7 text-left border border-amber-200">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -263,17 +363,23 @@ const PaymentSuccessPage = () => {
         {/* Unlocked features */}
         <div className="grid grid-cols-3 gap-3 mb-7">
           {[
-            ...(isCertificatePayment
+            ...(isBannerPayment
               ? [
-                  { icon: "🎟️", label: "Certificate Ready" },
-                  { icon: "🏪", label: "Visit Business" },
-                  { icon: "💎", label: "Get Best Value" },
+                  { icon: "📢", label: "Banner Created" },
+                  { icon: "⏳", label: "Awaiting Review" },
+                  { icon: "🚀", label: "Going Live Soon" },
                 ]
-              : [
-                  { icon: "🏪", label: "200+ Businesses" },
-                  { icon: "💰", label: "Exclusive Discounts" },
-                  { icon: "🎟️", label: "Certificates" },
-                ]),
+              : isCertificatePayment
+                ? [
+                    { icon: "🎟️", label: "Certificate Ready" },
+                    { icon: "🏪", label: "Visit Business" },
+                    { icon: "💎", label: "Get Best Value" },
+                  ]
+                : [
+                    { icon: "🏪", label: "200+ Businesses" },
+                    { icon: "💰", label: "Exclusive Discounts" },
+                    { icon: "🎟️", label: "Certificates" },
+                  ]),
           ].map(({ icon, label }) => (
             <div
               key={label}

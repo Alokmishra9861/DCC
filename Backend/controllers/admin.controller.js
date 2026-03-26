@@ -44,16 +44,26 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
     prisma.member.findMany({
       take: 5,
       orderBy: { createdAt: "desc" },
-      include: {
-        user: { select: { id: true, email: true, isActive: true } },
-        membership: { select: { status: true, type: true, expiryDate: true } },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        district: true,
+        age: true,
+        createdAt: true,
       },
     }),
     prisma.business.findMany({
       take: 5,
       orderBy: { createdAt: "desc" },
-      include: {
-        user: { select: { id: true, email: true } },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        status: true,
+        isApproved: true,
+        createdAt: true,
       },
     }),
   ]);

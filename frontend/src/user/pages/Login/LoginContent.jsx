@@ -72,7 +72,7 @@ const LoginContent = () => {
     setError("");
     setLoading(true);
     try {
-      const data = await authAPI.login(email, password);
+      const data = await authAPI.login(email, password, selectedRole);
       saveAuthData(data);
 
       if (rememberMe) {

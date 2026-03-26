@@ -5,19 +5,32 @@ const { ApiError } = require("../utils/ApiResponse");
 // ── STRIPE ────────────────────────────────────────────────────────────────────
 
 /**
- * Create a Stripe checkout session for membership purchase.
+ * Create a Stripe checkout session for membership or banner purchase.
  * success_url / cancel_url read from FRONTEND_URL env var so they
  * point to localhost in dev and to Render in production.
  */
 const createStripeCheckoutSession = async ({
   memberId,
+  businessId,
   email,
   priceUSD,
+  type = "membership",
   metadata = {},
 }) => {
   // ✅ FIX: was CLIENT_URL — backend .env uses FRONTEND_URL
   const frontendUrl =
     process.env.FRONTEND_URL || "https://dcc-frontend-ce9z.onrender.com";
+
+  // Determine product name and description based on type
+  let productName = "DCC Membership";
+  let productDescription = "Discount Club Cayman Annual Membership";
+
+  if (type === "banner") {
+    const position = metadata.bannerPosition || "Standard";
+    const duration = metadata.bannerDuration || "Monthly";
+    productName = `${position} Banner Advertisement`;
+    productDescription = `${duration} Banner Campaign`;
+  }
 
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
@@ -29,22 +42,24 @@ const createStripeCheckoutSession = async ({
           currency: "usd",
           unit_amount: Math.round(priceUSD * 100),
           product_data: {
-            name: "DCC Membership",
-            description: "Discount Club Cayman Annual Membership",
+            name: productName,
+            description: productDescription,
           },
         },
         quantity: 1,
       },
     ],
     metadata: {
-      memberId: String(memberId),
-      type: "membership",
+      ...(memberId && { memberId: String(memberId) }),
+      ...(businessId && { businessId: String(businessId) }),
+      type: String(type),
       ...Object.fromEntries(
         Object.entries(metadata).map(([k, v]) => [k, String(v)]),
       ),
     },
     // ✅ FIX: FRONTEND_URL — local = http://localhost:5173, prod = Render URL
-    success_url: `${frontendUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}&type=membership`,
+    // Use dynamic type parameter in success URL
+    success_url: `${frontendUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}&type=${type}`,
     cancel_url: `${frontendUrl}/payment/cancelled`,
   });
 

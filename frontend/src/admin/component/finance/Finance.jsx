@@ -130,12 +130,20 @@ const Finance = () => {
   const PERIODS = ["today", "week", "month", "quarter", "year"];
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="p-3 md:p-4 lg:p-6 max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Finance</h1>
-          <p className="text-sm text-slate-400 mt-0.5">
+          <h1
+            className="text-xl md:text-2xl font-bold text-slate-900"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Finance
+          </h1>
+          <p className="text-xs md:text-sm text-slate-400 mt-0.5">
             Revenue, savings and transaction reporting
           </p>
         </div>
@@ -224,7 +232,12 @@ const Finance = () => {
 
       {/* Revenue vs Savings chart */}
       <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-        <h3 className="font-bold text-slate-900 mb-1">Revenue vs Savings</h3>
+        <h3
+          className="font-bold text-slate-900 mb-1"
+          style={{ fontFamily: "'Playfair Display', serif" }}
+        >
+          Revenue vs Savings
+        </h3>
         <p className="text-xs text-slate-400 mb-5">
           Current vs previous {period}
         </p>
@@ -287,7 +300,12 @@ const Finance = () => {
       {/* Revenue by category table */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-50">
-          <h3 className="font-bold text-slate-900">Revenue by Category</h3>
+          <h3
+            className="font-bold text-slate-900"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
+            Revenue by Category
+          </h3>
           <p className="text-xs text-slate-400 mt-0.5">
             Top performing categories this {period}
           </p>

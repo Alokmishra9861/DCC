@@ -197,7 +197,7 @@ exports.register = asyncHandler(async (req, res) => {
 // POST /api/auth/login
 // ─────────────────────────────────────────────────────────────────────────────
 exports.login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, role } = req.body;
 
   const user = await prisma.user.findUnique({
     where: { email },
@@ -209,6 +209,16 @@ exports.login = asyncHandler(async (req, res) => {
 
   const passwordMatch = await bcrypt.compare(password, user.password);
   if (!passwordMatch) throw ApiError.unauthorized("Invalid email or password");
+
+  // ✅ NEW: Validate that selected role matches user's actual role
+  if (role) {
+    const selectedRole = role.toUpperCase();
+    if (selectedRole !== user.role) {
+      throw ApiError.unauthorized(
+        `This email is registered as a ${user.role.toLowerCase()}, not ${selectedRole.toLowerCase()}. Please select the correct account type.`,
+      );
+    }
+  }
 
   const accessToken = generateToken(
     user.id,

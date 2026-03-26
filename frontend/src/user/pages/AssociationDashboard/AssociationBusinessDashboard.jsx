@@ -1,44 +1,57 @@
 // Frontend/src/user/pages/AssociationDashboard/AssociationBusinessDashboard.jsx
-// Business Association dashboard.
-// Flow: register → admin approval → add businesses (link existing or invite new)
-// What association CAN see: their business list, overview stats
-// What association CANNOT see: businesses' discounts/certs (members only)
-// B2B offers are accessed via the header "B2B Discounts" link → B2BDiscountsContent
-
 import React, { useEffect, useState, useCallback } from "react";
 import { associationAPI } from "../../../services/api";
+import Icon from "../../components/ui/AppIcon";
+
+const HEADING_FONT = { fontFamily: "'Playfair Display', serif" };
 
 const Skeleton = ({ className }) => (
-  <div className={`animate-pulse bg-slate-100 rounded-xl ${className}`} />
+  <div className={`animate-pulse bg-slate-100/80 rounded-2xl ${className}`} />
 );
 
 const StatusBadge = ({ status }) => {
   const map = {
-    LINKED: "bg-emerald-50 text-emerald-700 border-emerald-100",
-    PENDING: "bg-amber-50 text-amber-700 border-amber-100",
-    REMOVED: "bg-red-50 text-red-400 border-red-100",
+    LINKED: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20",
+    PENDING: "bg-amber-50 text-amber-700 ring-1 ring-amber-600/20",
+    REMOVED: "bg-rose-50 text-rose-600 ring-1 ring-rose-600/20",
   };
   return (
     <span
-      className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${map[status] || "bg-slate-100 text-slate-500 border-slate-200"}`}
+      className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md inline-flex items-center gap-1.5 ${map[status] || "bg-slate-50 text-slate-500 ring-1 ring-slate-200"}`}
     >
+      <span
+        className={`w-1.5 h-1.5 rounded-full ${status === "LINKED" ? "bg-emerald-500" : status === "PENDING" ? "bg-amber-500" : status === "REMOVED" ? "bg-rose-500" : "bg-slate-400"}`}
+      />
       {status}
     </span>
   );
 };
 
-const StatCard = ({ icon, label, value, sub, color = "bg-blue-50" }) => (
-  <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-    <div
-      className={`w-10 h-10 ${color} rounded-xl flex items-center justify-center text-xl mb-3`}
-    >
-      {icon}
+const StatCard = ({
+  icon,
+  label,
+  value,
+  sub,
+  color = "bg-blue-50 text-blue-600",
+}) => (
+  <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+    <div className="flex items-center justify-between mb-4">
+      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 group-hover:text-slate-600 transition-colors">
+        {label}
+      </p>
+      <div
+        className={`w-10 h-10 ${color} rounded-xl flex items-center justify-center text-xl shadow-sm`}
+      >
+        {icon}
+      </div>
     </div>
-    <p className="text-2xl font-black text-slate-900 leading-none mb-1">
+    <p
+      className="text-4xl font-bold text-slate-900 tracking-tight"
+      style={HEADING_FONT}
+    >
       {value}
     </p>
-    <p className="text-sm font-semibold text-slate-700">{label}</p>
-    {sub && <p className="text-xs text-slate-400 mt-0.5">{sub}</p>}
+    {sub && <p className="text-xs font-medium text-slate-400 mt-1">{sub}</p>}
   </div>
 );
 
@@ -67,47 +80,63 @@ const LinkModal = ({ onClose, onLinked }) => {
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center px-4 transition-all duration-300">
       <div
-        className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl"
+        className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl flex flex-col relative overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="font-bold text-slate-900 mb-1">
-          Link Existing Business
-        </h3>
-        <p className="text-xs text-slate-400 mb-5">
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-500" />
+
+        <div className="flex items-center justify-between mb-2">
+          <h3
+            className="text-2xl font-bold text-slate-900"
+            style={HEADING_FONT}
+          >
+            Link Business
+          </h3>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          >
+            <Icon name="XMarkIcon" size={16} />
+          </button>
+        </div>
+        <p className="text-sm font-medium text-slate-500 mb-6">
           Enter the DCC Business ID of an already approved business on the
           platform.
         </p>
-        {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
-        <form onSubmit={handleSubmit} className="space-y-4">
+
+        {error && (
+          <div className="p-3 mb-5 bg-rose-50 border border-rose-100 rounded-xl text-xs font-bold text-rose-600 flex items-center gap-2">
+            <Icon name="ExclamationTriangleIcon" size={14} /> {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">
               Business ID
             </label>
             <input
               type="text"
               value={businessId}
               onChange={(e) => setBusinessId(e.target.value)}
-              placeholder="e.g. 64f3a2b1c5d7e8f9a0b1c2d3"
-              className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:border-[#1C4D8D] transition-colors"
+              placeholder="e.g. 64f3a2b1c5d7..."
+              className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold tracking-widest focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white transition-all placeholder:font-sans placeholder:tracking-normal placeholder:font-medium placeholder:text-slate-300"
             />
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-600"
+              className="flex-1 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-2.5 bg-[#1C4D8D] text-white rounded-xl text-sm font-bold hover:bg-[#163d71] disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl text-sm font-bold hover:shadow-lg shadow-emerald-900/20 disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
             >
               {loading && (
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -148,47 +177,70 @@ const InviteModal = ({ onClose, onInvited }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4"
+      className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center px-4 transition-all duration-300"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl"
+        className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl relative overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#1C4D8D] to-indigo-500" />
+
         {sent ? (
-          <div className="text-center py-4">
-            <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">
-              ✓
+          <div className="text-center py-6 animate-in zoom-in-95 duration-300">
+            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600 shadow-sm border border-emerald-200">
+              <Icon name="CheckIcon" size={32} />
             </div>
-            <p className="font-bold text-slate-900">Invite Sent!</p>
-            <p className="text-sm text-slate-400 mt-1">
+            <h3
+              className="text-2xl font-bold text-slate-900 mb-2"
+              style={HEADING_FONT}
+            >
+              Invite Sent!
+            </h3>
+            <p className="text-sm font-medium text-slate-500 mb-8 px-4">
               They'll receive an email with a link to register under your
               association.
             </p>
             <button
               onClick={onClose}
-              className="mt-5 px-6 py-2.5 bg-[#1C4D8D] text-white rounded-xl text-sm font-bold"
+              className="w-full py-3.5 bg-slate-900 text-white rounded-xl text-sm font-bold shadow-md hover:bg-slate-800 transition-colors"
             >
               Done
             </button>
           </div>
         ) : (
           <>
-            <h3 className="font-bold text-slate-900 mb-1">
-              Invite New Business
-            </h3>
-            <p className="text-xs text-slate-400 mb-5">
-              They'll receive an email with a link to register as a new DCC
-              business under your association.
+            <div className="flex items-center justify-between mb-2">
+              <h3
+                className="text-2xl font-bold text-slate-900"
+                style={HEADING_FONT}
+              >
+                Invite Business
+              </h3>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                <Icon name="XMarkIcon" size={16} />
+              </button>
+            </div>
+            <p className="text-sm font-medium text-slate-500 mb-6">
+              Invite a new business to register on DCC under your association.
             </p>
-            {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
-            <form onSubmit={handleSubmit} className="space-y-4">
+
+            {error && (
+              <div className="p-3 mb-5 bg-rose-50 border border-rose-100 rounded-xl text-xs font-bold text-rose-600 flex items-center gap-2">
+                <Icon name="ExclamationTriangleIcon" size={14} /> {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-5">
               {[
                 {
                   label: "Business Name",
                   key: "businessName",
                   type: "text",
-                  ph: "Island Grill Restaurant",
+                  ph: "e.g., Island Grill",
                 },
                 {
                   label: "Contact Email",
@@ -198,7 +250,7 @@ const InviteModal = ({ onClose, onInvited }) => {
                 },
               ].map(({ label, key, type, ph }) => (
                 <div key={key}>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">
                     {label}
                   </label>
                   <input
@@ -208,22 +260,22 @@ const InviteModal = ({ onClose, onInvited }) => {
                       setForm((p) => ({ ...p, [key]: e.target.value }))
                     }
                     placeholder={ph}
-                    className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#1C4D8D] transition-colors"
+                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1C4D8D]/20 focus:border-[#1C4D8D] focus:bg-white transition-all placeholder:font-medium placeholder:text-slate-300"
                   />
                 </div>
               ))}
-              <div className="flex gap-3">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-2.5 border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-600"
+                  className="flex-1 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 py-2.5 bg-[#1C4D8D] text-white rounded-xl text-sm font-bold hover:bg-[#163d71] disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-gradient-to-r from-[#1C4D8D] to-[#153a6b] text-white rounded-xl text-sm font-bold hover:shadow-lg shadow-blue-900/20 disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
                 >
                   {loading && (
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -291,6 +343,7 @@ const AssociationBusinessDashboard = () => {
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
+
   useEffect(() => {
     loadBusinesses();
   }, [loadBusinesses]);
@@ -310,14 +363,33 @@ const AssociationBusinessDashboard = () => {
   const totalPages = Math.ceil(total / 15);
 
   return (
-    <div className="min-h-screen bg-slate-50/60">
+    <div className="min-h-screen bg-slate-50/50 selection:bg-[#1C4D8D]/20">
+      {/* Decorative blobs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden mix-blend-multiply opacity-60">
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-br from-blue-100/40 to-indigo-100/40 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-emerald-50/40 to-teal-50/40 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/3" />
+      </div>
+
       {toast && (
         <div
-          className={`fixed top-6 right-6 z-50 px-5 py-3.5 rounded-2xl shadow-lg border text-sm font-semibold flex items-center gap-2 ${toast.type === "success" ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-red-50 border-red-200 text-red-600"}`}
+          className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-xl border text-sm font-bold animate-in slide-in-from-top-4 fade-in duration-300 ${
+            toast.type === "success"
+              ? "bg-white/95 backdrop-blur-md border-emerald-200 text-emerald-800"
+              : "bg-white/95 backdrop-blur-md border-rose-200 text-rose-800"
+          }`}
         >
-          {toast.type === "success" ? "✓" : "⚠"} {toast.msg}
+          <div
+            className={`w-6 h-6 rounded-full flex items-center justify-center text-white ${toast.type === "success" ? "bg-emerald-500" : "bg-rose-500"}`}
+          >
+            <Icon
+              name={toast.type === "success" ? "CheckIcon" : "XMarkIcon"}
+              size={14}
+            />
+          </div>
+          {toast.msg}
         </div>
       )}
+
       {showLink && (
         <LinkModal
           onClose={() => setShowLink(false)}
@@ -337,189 +409,236 @@ const AssociationBusinessDashboard = () => {
         />
       )}
 
-      <div className="max-w-6xl mx-auto px-5 py-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-7">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-emerald-600 mb-1">
-              Business Association
-            </p>
-            <h1 className="text-3xl font-black text-slate-900">
-              Association Dashboard
-            </h1>
-            {dashboard && (
-              <p className="text-slate-400 text-sm mt-1">
-                {dashboard.businessCounts?.linked ?? 0} linked businesses
-              </p>
-            )}
-          </div>
-          {tab === "businesses" && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowLink(true)}
-                disabled={dashboard?.isPending}
-                className="px-4 py-2.5 border-2 border-emerald-600 text-emerald-700 rounded-xl text-sm font-bold hover:bg-emerald-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                🔗 Link Existing
-              </button>
-              <button
-                onClick={() => setShowInvite(true)}
-                disabled={dashboard?.isPending}
-                className="px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                + Invite New
-              </button>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Header Hero */}
+        <div className="mb-10">
+          <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#0A1628] via-[#1C4D8D] to-[#4988C4] p-10 md:p-14 shadow-2xl shadow-blue-900/20">
+            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none" />
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-80 h-80 bg-black/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+              <div>
+                <p className="text-blue-300/90 text-xs font-black uppercase tracking-[0.3em] mb-3">
+                  Business Association
+                </p>
+                <h1
+                  className="text-4xl md:text-5xl font-bold text-white mb-3 tracking-tight drop-shadow-md"
+                  style={HEADING_FONT}
+                >
+                  Association Dashboard
+                </h1>
+                {dashboard && (
+                  <p className="text-blue-100/90 text-lg font-medium">
+                    Managing{" "}
+                    <span className="text-white font-black">
+                      {dashboard.businessCounts?.linked ?? 0}
+                    </span>{" "}
+                    linked businesses.
+                  </p>
+                )}
+              </div>
+              {tab === "businesses" && (
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => setShowLink(true)}
+                    disabled={dashboard?.isPending}
+                    className="flex items-center gap-2 px-6 py-3.5 bg-white/10 backdrop-blur-md text-white rounded-xl font-bold hover:bg-white/20 transition-all border border-white/20 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Icon name="LinkIcon" size={18} /> Link Existing
+                  </button>
+                  <button
+                    onClick={() => setShowInvite(true)}
+                    disabled={dashboard?.isPending}
+                    className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-400 hover:to-teal-400 transition-all shadow-lg shadow-emerald-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Icon name="EnvelopeIcon" size={18} /> Invite New
+                  </button>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {error && (
-          <div className="mb-5 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
-            {error}
+          <div className="mb-8 p-5 bg-gradient-to-r from-rose-50 to-red-50/50 border border-rose-200/60 rounded-2xl flex items-start gap-4 shadow-sm">
+            <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center flex-shrink-0 text-rose-600 shadow-sm">
+              <Icon name="ExclamationTriangleIcon" size={20} />
+            </div>
+            <div className="pt-2">
+              <p className="font-bold text-rose-900">{error}</p>
+            </div>
           </div>
         )}
 
         {/* Pending approval banner */}
         {!loading && !dashboard?.businessCounts && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-6">
-            <p className="font-bold text-amber-700 mb-1">Pending Approval</p>
-            <p className="text-sm text-amber-600">
-              Your association is awaiting admin approval. You'll be notified by
-              email once approved.
-            </p>
+          <div className="mb-8 p-5 bg-gradient-to-r from-amber-50 to-yellow-50/30 border border-amber-200/60 rounded-2xl flex items-start gap-4 shadow-sm animate-in fade-in duration-500">
+            <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0 text-amber-600 shadow-sm">
+              <Icon name="ClockIcon" size={20} />
+            </div>
+            <div className="pt-0.5">
+              <h3 className="font-bold text-amber-900 tracking-tight">
+                Pending Approval
+              </h3>
+              <p className="text-sm font-medium text-amber-700/80 mt-1">
+                Your association is awaiting admin approval. You'll be notified
+                by email once approved.
+              </p>
+            </div>
           </div>
         )}
 
-        {/* Tabs — Overview + Businesses only */}
-        <div className="flex gap-1 bg-slate-100 p-1 rounded-2xl mb-6">
-          {[
-            { key: "overview", label: "Overview" },
-            {
-              key: "businesses",
-              label: `Businesses${total > 0 ? ` (${total})` : ""}`,
-            },
-          ].map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => setTab(key)}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${tab === key ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
-            >
-              {label}
-            </button>
-          ))}
+        {/* Segmented Control Tabs */}
+        <div className="mb-10">
+          <div className="flex gap-1.5 bg-white/60 backdrop-blur-md p-1.5 rounded-2xl border border-slate-200/60 shadow-sm overflow-x-auto w-fit">
+            {[
+              { key: "overview", label: "Overview", icon: "HomeIcon" },
+              {
+                key: "businesses",
+                label: `Businesses${total > 0 ? ` (${total})` : ""}`,
+                icon: "BuildingStorefrontIcon",
+              },
+            ].map(({ key, label, icon }) => (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                className={`py-3 px-6 rounded-xl font-bold text-sm transition-all duration-300 whitespace-nowrap flex items-center gap-2 ${
+                  tab === key
+                    ? "bg-slate-900 text-white shadow-md"
+                    : "text-slate-500 hover:text-slate-900 hover:bg-white/80"
+                }`}
+              >
+                <Icon
+                  name={icon}
+                  size={18}
+                  className={tab === key ? "opacity-100" : "opacity-70"}
+                />
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* ── OVERVIEW TAB ── */}
         {tab === "overview" && (
-          <div className="space-y-6">
+          <div className="space-y-8 animate-in fade-in duration-500">
             {loading ? (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
                 {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-32" />
+                  <Skeleton key={i} className="h-36 rounded-[2rem]" />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
                 <StatCard
                   icon="🏪"
                   label="Total Businesses"
                   value={dashboard?.businessCounts?.total ?? 0}
-                  color="bg-teal-50"
+                  color="bg-blue-50 text-blue-600"
                 />
                 <StatCard
                   icon="🔗"
                   label="Linked"
                   value={dashboard?.businessCounts?.linked ?? 0}
                   sub="Active partners"
-                  color="bg-emerald-50"
+                  color="bg-emerald-50 text-emerald-600"
                 />
                 <StatCard
                   icon="📧"
                   label="Pending"
                   value={dashboard?.businessCounts?.pending ?? 0}
                   sub="Invite sent"
-                  color="bg-amber-50"
+                  color="bg-amber-50 text-amber-600"
                 />
                 <StatCard
                   icon="🎯"
                   label="Active Offers"
                   value={dashboard?.totalActiveOffers ?? 0}
                   sub="Live B2B offers"
-                  color="bg-violet-50"
+                  color="bg-indigo-50 text-indigo-600"
                 />
               </div>
             )}
 
-            {/* Info cards */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-              <h3 className="font-bold text-slate-900 mb-3">Getting started</h3>
-              <div className="grid sm:grid-cols-3 gap-4">
+            <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-8">
+              <h3
+                className="text-2xl font-bold text-slate-900 mb-8 tracking-tight"
+                style={HEADING_FONT}
+              >
+                Getting Started
+              </h3>
+              <div className="grid sm:grid-cols-3 gap-6">
                 {[
                   {
                     icon: "🔗",
                     title: "Link businesses",
-                    desc: "Add approved DCC businesses to your network by their ID",
+                    desc: "Add approved DCC businesses to your network using their unique Business ID.",
+                    color: "bg-emerald-50 border-emerald-100",
                   },
                   {
                     icon: "📧",
                     title: "Invite new ones",
-                    desc: "Invite businesses to register on DCC under your association",
+                    desc: "Send an email invitation for businesses to register on DCC directly under your association.",
+                    color: "bg-blue-50 border-blue-100",
                   },
                   {
                     icon: "🤝",
                     title: "View B2B offers",
-                    desc: "Browse exclusive B2B deals via B2B Discounts in the navigation",
+                    desc: "Browse exclusive B2B deals created by other businesses via B2B Discounts in the navigation.",
+                    color: "bg-indigo-50 border-indigo-100",
                   },
-                ].map(({ icon, title, desc }) => (
+                ].map(({ icon, title, desc, color }) => (
                   <div
                     key={title}
-                    className="bg-slate-50 rounded-xl p-4 border border-slate-100"
+                    className={`rounded-[1.5rem] p-6 border ${color} shadow-sm hover:shadow-md transition-shadow`}
                   >
-                    <span className="text-2xl">{icon}</span>
-                    <p className="font-bold text-slate-900 text-sm mt-2 mb-1">
+                    <span className="text-3xl mb-4 block">{icon}</span>
+                    <p className="font-bold text-slate-900 text-lg tracking-tight mb-2">
                       {title}
                     </p>
-                    <p className="text-xs text-slate-500">{desc}</p>
+                    <p className="text-sm font-medium text-slate-500 leading-relaxed">
+                      {desc}
+                    </p>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Access scope notice */}
-            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 flex items-start gap-3">
-              <span className="text-blue-500 text-lg flex-shrink-0 mt-0.5">
-                ℹ
-              </span>
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/60 rounded-[2rem] p-8 flex items-start gap-5 shadow-sm">
+              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-blue-600 flex-shrink-0">
+                <Icon name="InformationCircleIcon" size={24} />
+              </div>
               <div>
-                <p className="text-sm font-bold text-[#1C4D8D] mb-1">
+                <p
+                  className="text-xl font-bold text-slate-900 mb-4 tracking-tight"
+                  style={HEADING_FONT}
+                >
                   What you can access
                 </p>
-                <ul className="text-xs text-slate-600 space-y-1.5">
-                  <li className="flex items-start gap-1.5">
-                    <span className="text-emerald-500 font-bold flex-shrink-0">
-                      ✓
-                    </span>{" "}
+                <ul className="text-sm font-medium text-slate-600 space-y-3">
+                  <li className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                      <Icon name="CheckIcon" size={12} />
+                    </div>
                     Manage your linked and invited businesses
                   </li>
-                  <li className="flex items-start gap-1.5">
-                    <span className="text-emerald-500 font-bold flex-shrink-0">
-                      ✓
-                    </span>{" "}
+                  <li className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                      <Icon name="CheckIcon" size={12} />
+                    </div>
                     View B2B exclusive offers via <strong>B2B Discounts</strong>{" "}
                     in the header
                   </li>
-                  <li className="flex items-start gap-1.5">
-                    <span className="text-emerald-500 font-bold flex-shrink-0">
-                      ✓
-                    </span>{" "}
-                    Contact us and About Us pages
-                  </li>
-                  <li className="flex items-start gap-1.5">
-                    <span className="text-slate-300 font-bold flex-shrink-0">
-                      ✗
-                    </span>{" "}
-                    Individual member discounts and certificates (available to
-                    members only)
+                  <li className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center flex-shrink-0">
+                      <Icon name="XMarkIcon" size={12} />
+                    </div>
+                    <span className="opacity-70">
+                      Individual member discounts and certificates (available to
+                      members only)
+                    </span>
                   </li>
                 </ul>
               </div>
@@ -529,8 +648,15 @@ const AssociationBusinessDashboard = () => {
 
         {/* ── BUSINESSES TAB ── */}
         {tab === "businesses" && (
-          <div className="space-y-4">
-            <div className="flex gap-2 flex-wrap">
+          <div className="bg-white rounded-[2rem] border border-slate-200/60 p-8 shadow-sm animate-in fade-in duration-500">
+            <h2
+              className="text-2xl font-bold text-slate-900 tracking-tight mb-8"
+              style={HEADING_FONT}
+            >
+              Network Businesses
+            </h2>
+
+            <div className="flex gap-2 flex-wrap bg-slate-50 p-1.5 rounded-2xl w-fit mb-8 border border-slate-100">
               {["", "LINKED", "PENDING", "REMOVED"].map((s) => (
                 <button
                   key={s}
@@ -538,136 +664,143 @@ const AssociationBusinessDashboard = () => {
                     setStatusFilter(s);
                     setPage(1);
                   }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${statusFilter === s ? "bg-emerald-600 text-white border-emerald-600" : "border-slate-200 text-slate-500 hover:border-slate-300"}`}
+                  className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
+                    statusFilter === s
+                      ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/50"
+                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                  }`}
                 >
                   {s || "All"}
                 </button>
               ))}
             </div>
 
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-slate-50 border-b border-slate-100">
-                    <tr>
-                      {[
-                        "Business",
-                        "Category",
-                        "District",
-                        "Status",
-                        "Actions",
-                      ].map((h) => (
-                        <th
-                          key={h}
-                          className="px-5 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider"
-                        >
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {bizLoading ? (
-                      Array.from({ length: 5 }).map((_, i) => (
-                        <tr
-                          key={i}
-                          className="animate-pulse border-b border-slate-50"
-                        >
-                          {[1, 2, 3, 4, 5].map((j) => (
-                            <td key={j} className="px-5 py-4">
-                              <div className="h-3.5 bg-slate-100 rounded w-full" />
-                            </td>
-                          ))}
-                        </tr>
-                      ))
-                    ) : businesses.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={5}
-                          className="px-5 py-12 text-center text-slate-300 text-sm"
-                        >
-                          No businesses linked yet
+            <div className="overflow-x-auto rounded-2xl border border-slate-200/60 shadow-sm bg-white">
+              <table className="w-full text-left">
+                <thead className="bg-slate-50/80 border-b border-slate-200/60">
+                  <tr>
+                    {[
+                      "Business",
+                      "Category",
+                      "District",
+                      "Status",
+                      "Actions",
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500 whitespace-nowrap"
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100/80">
+                  {bizLoading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <tr key={i} className="animate-pulse">
+                        <td colSpan={5} className="px-6 py-4">
+                          <div className="h-10 bg-slate-100/80 rounded-xl w-full" />
                         </td>
                       </tr>
-                    ) : (
-                      businesses.map((b) => {
-                        const biz = b.business;
-                        const name = biz?.name || b.businessName || "—";
-                        return (
-                          <tr
-                            key={b.id}
-                            className="hover:bg-slate-50/60 transition-colors"
-                          >
-                            <td className="px-5 py-3.5">
-                              <div className="flex items-center gap-2.5">
-                                <div className="w-7 h-7 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-700 font-bold text-xs overflow-hidden flex-shrink-0">
-                                  {biz?.logoUrl ? (
-                                    <img
-                                      src={biz.logoUrl}
-                                      alt={name}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    name[0]?.toUpperCase()
-                                  )}
-                                </div>
-                                <span className="font-semibold text-slate-900">
-                                  {name}
-                                </span>
+                    ))
+                  ) : businesses.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-16 text-center">
+                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
+                          <Icon
+                            name="BuildingStorefrontIcon"
+                            size={28}
+                            className="text-slate-300"
+                          />
+                        </div>
+                        <p className="text-lg font-bold text-slate-700">
+                          No businesses linked yet
+                        </p>
+                        <p className="text-sm font-medium text-slate-500 mt-1">
+                          Use the buttons above to invite or link businesses.
+                        </p>
+                      </td>
+                    </tr>
+                  ) : (
+                    businesses.map((b) => {
+                      const biz = b.business;
+                      const name = biz?.name || b.businessName || "—";
+                      return (
+                        <tr
+                          key={b.id}
+                          className="hover:bg-slate-50/50 transition-colors group"
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center text-slate-500 font-black text-sm overflow-hidden flex-shrink-0 shadow-sm border border-slate-300/50">
+                                {biz?.logoUrl ? (
+                                  <img
+                                    src={biz.logoUrl}
+                                    alt={name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  name[0]?.toUpperCase()
+                                )}
                               </div>
-                            </td>
-                            <td className="px-5 py-3.5 text-slate-500 text-xs">
-                              {biz?.category?.name || "—"}
-                            </td>
-                            <td className="px-5 py-3.5 text-slate-500 text-xs">
-                              {biz?.district || "—"}
-                            </td>
-                            <td className="px-5 py-3.5">
-                              <StatusBadge status={b.status} />
-                            </td>
-                            <td className="px-5 py-3.5">
-                              {b.status !== "REMOVED" && (
-                                <button
-                                  onClick={() => handleRemove(b.id)}
-                                  className="px-2.5 py-1.5 text-xs font-bold bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors"
-                                >
-                                  Remove
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between px-5 py-4 border-t border-slate-50 bg-slate-50/50">
-                  <p className="text-xs text-slate-400">
-                    Page {page} of {totalPages} · {total} total
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                      className="px-4 py-1.5 text-xs border border-slate-200 rounded-lg text-slate-500 disabled:opacity-40"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={() =>
-                        setPage((p) => Math.min(totalPages, p + 1))
-                      }
-                      disabled={page === totalPages}
-                      className="px-4 py-1.5 text-xs border border-slate-200 rounded-lg text-slate-500 disabled:opacity-40"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
+                              <span className="font-bold text-slate-900 group-hover:text-[#1C4D8D] transition-colors">
+                                {name}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm font-medium text-slate-500 whitespace-nowrap">
+                            {biz?.category?.name || "—"}
+                          </td>
+                          <td className="px-6 py-4 text-sm font-medium text-slate-500 whitespace-nowrap">
+                            {biz?.district || "—"}
+                          </td>
+                          <td className="px-6 py-4">
+                            <StatusBadge status={b.status} />
+                          </td>
+                          <td className="px-6 py-4">
+                            {b.status !== "REMOVED" && (
+                              <button
+                                onClick={() => handleRemove(b.id)}
+                                className="p-2.5 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50 transition-colors opacity-100 sm:opacity-40 sm:group-hover:opacity-100 shadow-sm"
+                                title="Remove Business"
+                              >
+                                <Icon name="TrashIcon" size={16} />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-6 pt-6 border-t border-slate-100">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Page {page} of {totalPages}{" "}
+                  <span className="mx-2 opacity-50">·</span> {total} total
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-[#1C4D8D] hover:border-[#1C4D8D]/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+                  >
+                    Prev
+                  </button>
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-[#1C4D8D] hover:border-[#1C4D8D]/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

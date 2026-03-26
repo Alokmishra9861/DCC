@@ -81,10 +81,10 @@ export const authAPI = {
       method: "POST",
       body: JSON.stringify({ email, password, role, profile }),
     }),
-  login: (email, password) =>
+  login: (email, password, role) =>
     request("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, role }),
     }),
   me: () => request("/auth/me"),
   forgotPassword: (email) =>
@@ -483,6 +483,18 @@ export const paymentAPI = {
       `/payments/verify-certificate-session?session_id=${encodeURIComponent(sessionId)}`,
     ),
 
+  // [DEV ONLY] Manually create banner from Stripe session (for webhook debugging)
+  // Admin calls this when webhook doesn't trigger
+  manualBannerCreate: (sessionId) =>
+    request("/payments/stripe/manual-banner-create", {
+      method: "POST",
+      body: JSON.stringify({ sessionId }),
+    }),
+
+  // [DEV ONLY] Check Stripe session details (debug)
+  debugSession: (sessionId) =>
+    request(`/payments/stripe/debug/session/${sessionId}`),
+
   // ── PayPal ──
   createPayPalCheckout: (data = {}) =>
     request("/payments/paypal/checkout", {
@@ -569,10 +581,27 @@ export const advertisementAPI = {
     const qs = placement ? `?placement=${placement}` : "";
     return request(`/advertisements${qs}`);
   },
+  create: (data) =>
+    request("/advertisements", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
   setStatus: (id, status) =>
     request(`/advertisements/${id}/status`, {
       method: "PATCH",
       body: JSON.stringify({ status }),
+    }),
+  getPendingBanners: () => request("/advertisements/admin/pending"),
+  getAllBanners: () => request("/advertisements/admin/all"),
+  getAllBusinesses: () => request("/advertisements/admin/businesses-list"),
+  testCreateBanner: (bannerData) =>
+    request("/advertisements/admin/test-create", {
+      method: "POST",
+      body: JSON.stringify(bannerData),
+    }),
+  click: (id) =>
+    request(`/advertisements/${id}/click`, {
+      method: "POST",
     }),
 };
 

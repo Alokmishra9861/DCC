@@ -1,3 +1,4 @@
+// Frontend/src/user/pages/Shopping/DiscountsContent.jsx
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Icon from "../../components/ui/AppIcon";
@@ -71,7 +72,6 @@ const DiscountsContent = () => {
         : data?.discounts || data?.items || [];
       const normalized = list.map((offer) => {
         const rawValue = Number(offer.discountValue ?? 0);
-        // Use offer.type from backend to determine display format
         const offerType = offer.type || "DISCOUNT";
         const discountType = offerType === "DISCOUNT" ? "percentage" : "fixed";
         const value = rawValue;
@@ -149,21 +149,21 @@ const DiscountsContent = () => {
     if (!currentBanner) return null;
 
     return (
-      <div className="w-full mb-8">
-        <Link to={currentBanner.link_url || "#"} className="block">
-          <div className="relative w-full h-[200px] bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl overflow-hidden border border-border hover:shadow-lg transition-all">
+      <div className="w-full mb-12">
+        <Link to={currentBanner.link_url || "#"} className="block group">
+          <div className="relative w-full h-[240px] bg-slate-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
             <AppImage
               src={currentBanner.image_url}
               alt={currentBanner.title || "Advertisement"}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
-            <div className="absolute top-2 right-2 px-2 py-1 bg-black/50 text-white text-xs rounded">
-              Ad
+            <div className="absolute top-4 right-4 px-3 py-1 bg-black/40 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider rounded-lg border border-white/20">
+              Advertisement
             </div>
           </div>
         </Link>
         {banners.length > 1 && (
-          <div className="flex justify-center gap-2 mt-3">
+          <div className="flex justify-center gap-2.5 mt-4">
             {banners.map((_, index) => (
               <button
                 key={index}
@@ -173,7 +173,11 @@ const DiscountsContent = () => {
                     [position]: index,
                   }))
                 }
-                className={`w-2 h-2 rounded-full transition-all ${index === currentBannerIndex[position] ? "bg-primary w-6" : "bg-border"}`}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === currentBannerIndex[position]
+                    ? "bg-[#1C4D8D] w-8"
+                    : "bg-slate-300 w-2 hover:bg-slate-400"
+                }`}
               />
             ))}
           </div>
@@ -184,8 +188,11 @@ const DiscountsContent = () => {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4">
+        <div className="w-12 h-12 border-4 border-slate-200 border-t-[#1C4D8D] rounded-full animate-spin shadow-sm" />
+        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest animate-pulse">
+          Authenticating...
+        </p>
       </div>
     );
   }
@@ -217,12 +224,12 @@ const DiscountsContent = () => {
     return (
       <Wrapper
         {...wrapperProps}
-        className={`bg-white rounded-2xl overflow-hidden border border-border hover:shadow-xl transition-all group ${
+        className={`bg-white rounded-[2rem] overflow-hidden border border-slate-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_-12px_rgba(28,77,141,0.15)] transition-all duration-300 flex flex-col h-full group ${
           !canNavigate ? "cursor-pointer" : ""
         }`}
         aria-disabled={!canNavigate}
       >
-        <div className="relative h-48 overflow-hidden">
+        <div className="relative h-56 bg-slate-100 overflow-hidden">
           <AppImage
             src={
               discount.imageUrl ||
@@ -231,84 +238,119 @@ const DiscountsContent = () => {
               "https://images.unsplash.com/photo-1542838132-92c53300491e"
             }
             alt={discount.business?.name || "Business"}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
           {discount.isFeatured && (
-            <div className="absolute top-4 right-4 px-3 py-1 bg-accent text-white rounded-full text-sm font-semibold">
+            <div className="absolute top-4 right-4 px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full text-[11px] font-black uppercase tracking-wider shadow-lg">
               Featured
             </div>
           )}
           {!loadingMembership && isMember && !isMembershipActive && (
-            <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px] flex items-center justify-center">
-              <div className="px-4 py-2 rounded-full bg-white/90 text-slate-900 text-xs font-semibold">
-                Subscribe to unlock
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-10 transition-opacity duration-300">
+              <div className="text-center transform scale-100 bg-white/10 p-6 rounded-3xl border border-white/20 shadow-2xl">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-md">
+                  <Icon
+                    name="LockClosedIcon"
+                    size={20}
+                    className="text-white"
+                  />
+                </div>
+                <p className="text-white font-bold text-sm tracking-wide">
+                  Subscribe to unlock
+                </p>
               </div>
             </div>
           )}
         </div>
-        <div className="p-6">
-          <h3 className="font-heading text-xl font-bold text-foreground mb-2">
-            {discount.business?.name || "Business"}
-          </h3>
-          <p className="text-primary font-bold text-lg mb-3">
-            {discount.discountType === "percentage"
-              ? `${discount.value}% off`
-              : discount.discountType === "fixed"
-                ? `$${discount.value} off`
-                : discount.title}
-          </p>
-          <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-            {discount.description}
-          </p>
+
+        <div className="p-8 flex flex-col flex-grow relative bg-white">
+          <div className="mb-6">
+            <h3 className="font-heading text-2xl font-bold text-slate-900 mb-2 line-clamp-1 group-hover:text-[#1C4D8D] transition-colors">
+              {discount.business?.name || "Business"}
+            </h3>
+          </div>
+
+          <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/50 border border-blue-100/60 rounded-2xl p-5 mb-4 mt-auto group-hover:bg-blue-50 transition-colors relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-400/10 rounded-full blur-2xl -mr-10 -mt-10" />
+            <p className="text-transparent bg-clip-text bg-gradient-to-r from-[#1C4D8D] to-indigo-600 font-black text-2xl leading-tight mb-2 relative z-10">
+              {discount.discountType === "percentage"
+                ? `${discount.value}% off`
+                : discount.discountType === "fixed"
+                  ? `$${discount.value} off`
+                  : discount.title}
+            </p>
+            <p className="text-sm font-medium text-slate-500 line-clamp-2 relative z-10">
+              {discount.description}
+            </p>
+          </div>
           {discount.terms && (
-            <p className="text-xs text-muted-foreground">{discount.terms}</p>
+            <p className="text-[11px] font-medium text-slate-400 mt-2 px-2 uppercase tracking-wider">
+              {discount.terms}
+            </p>
           )}
         </div>
       </Wrapper>
     );
   };
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="bg-gradient-to-br from-primary/10 to-secondary/10 py-20">
-        <div className="max-w-7xl mx-auto px-6">
+    <div className="min-h-screen bg-slate-50/50 selection:bg-[#1C4D8D]/20 pt-20 md:pt-24">
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-br from-[#0f172a] via-[#1e3a8a] to-[#312e81] py-16 md:py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none" />
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-30 pointer-events-none">
+          <div className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full bg-blue-500 blur-[120px]" />
+          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full bg-indigo-500 blur-[140px]" />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center max-w-3xl mx-auto">
-            <h1 className="font-heading text-5xl md:text-6xl font-bold text-foreground mb-6">
-              Member-Exclusive Discounts
+            <h1
+              className="text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-6 tracking-tight drop-shadow-sm"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              Member-Exclusive Deals
             </h1>
-            <p className="text-xl text-muted-foreground mb-8">
-              Browse 150+ exclusive discounts from trusted local businesses
-              across the Cayman Islands.
+            <p className="text-lg md:text-xl text-blue-100/90 mb-10 font-medium">
+              Browse 150+ premium discounts from trusted local businesses across
+              the Cayman Islands.
             </p>
-            <div className="relative max-w-2xl mx-auto">
+
+            <div className="relative max-w-2xl mx-auto group">
+              <div className="absolute inset-0 bg-white/20 blur-xl rounded-full group-hover:bg-white/30 transition-all duration-300" />
               <input
                 type="text"
                 placeholder="Search businesses or discounts..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-6 py-4 pr-12 border-2 border-border rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
+                className="relative w-full px-8 py-5 pr-14 bg-white/10 backdrop-blur-md border border-white/20 rounded-full focus:outline-none focus:bg-white focus:text-slate-900 text-white placeholder:text-white/60 text-lg font-medium transition-all shadow-2xl"
               />
               <Icon
                 name="MagnifyingGlassIcon"
                 size={24}
-                className="absolute right-6 top-1/2 -translate-y-1/2 text-muted-foreground"
+                className="absolute right-6 top-1/2 -translate-y-1/2 text-white/60 group-focus-within:text-[#1C4D8D] transition-colors z-10 pointer-events-none"
               />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 py-16">
         <BannerDisplay banners={topBanners} position="top" />
 
-        <div className="flex flex-wrap gap-3 mb-12">
+        {/* Categories Pills */}
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-16">
           {categories.map((cat) => (
             <button
               key={cat.value}
               onClick={() => setSelectedCategory(cat.value)}
-              className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${
+              className={`px-6 py-3 rounded-full text-[13px] font-bold tracking-wide uppercase transition-all duration-300 shadow-sm ${
                 selectedCategory === cat.value
-                  ? "bg-primary text-primary-foreground shadow-lg"
-                  : "bg-white text-foreground border border-border hover:border-primary"
+                  ? "bg-gradient-to-r from-[#1C4D8D] to-indigo-600 text-white shadow-lg shadow-blue-900/20 scale-105"
+                  : "bg-white text-slate-600 border border-slate-200/60 hover:border-slate-300 hover:bg-slate-50"
               }`}
             >
               {cat.label}
@@ -316,12 +358,16 @@ const DiscountsContent = () => {
           ))}
         </div>
 
+        {/* Featured Section */}
         {featuredDiscounts.length > 0 && (
-          <div className="mb-16">
-            <h2 className="font-heading text-3xl font-bold text-foreground mb-8">
-              Featured Discounts
+          <div className="mb-20">
+            <h2
+              className="text-3xl font-bold text-slate-900 mb-8 tracking-tight flex items-center gap-3"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              <span className="text-amber-500">★</span> Featured Discounts
             </h2>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {featuredDiscounts.map((discount) => (
                 <DiscountCard key={discount.id} discount={discount} />
               ))}
@@ -331,27 +377,36 @@ const DiscountsContent = () => {
 
         <BannerDisplay banners={midBanners} position="mid" />
 
+        {/* All Discounts Section */}
         <div className="mb-16">
-          <h2 className="font-heading text-3xl font-bold text-foreground mb-8">
+          <h2
+            className="text-3xl font-bold text-slate-900 mb-8 tracking-tight"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
             All Discounts
           </h2>
           {loadingDiscounts ? (
-            <div className="flex justify-center py-12">
-              <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <div className="w-12 h-12 border-4 border-slate-200 border-t-[#1C4D8D] rounded-full animate-spin shadow-sm" />
             </div>
           ) : regularDiscounts.length === 0 ? (
-            <div className="text-center py-12">
-              <Icon
-                name="BuildingStorefrontIcon"
-                size={64}
-                className="text-muted-foreground mx-auto mb-4"
-              />
-              <p className="text-xl text-muted-foreground">
-                No discounts found matching your criteria.
+            <div className="text-center py-24 bg-white rounded-[2rem] border border-slate-100 shadow-sm">
+              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Icon
+                  name="BuildingStorefrontIcon"
+                  size={32}
+                  className="text-slate-400"
+                />
+              </div>
+              <p className="text-xl font-bold text-slate-900 mb-2">
+                No discounts found
+              </p>
+              <p className="text-slate-500 font-medium">
+                Try adjusting your filters or search query.
               </p>
             </div>
           ) : (
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {regularDiscounts.map((discount) => (
                 <DiscountCard key={discount.id} discount={discount} />
               ))}

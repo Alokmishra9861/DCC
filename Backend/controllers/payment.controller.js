@@ -11,8 +11,40 @@ const { activateMembership } = require("../services/membership.service");
 
 const MEMBERSHIP_PRICE_USD = 89.99; // Individual membership price
 
-// ── Create membership checkout (Stripe) ───────────────
+// ── Create membership or banner checkout (Stripe) ───────────────
 exports.createStripeCheckout = asyncHandler(async (req, res) => {
+  const { type, items, metadata } = req.body;
+
+  // ── BANNER PURCHASE FLOW ────────────────────────────────────────────
+  if (type === "banner") {
+    const business = await prisma.business.findUnique({
+      where: { userId: req.user.id },
+      include: { user: true },
+    });
+    if (!business) throw ApiError.notFound("Business profile not found");
+
+    // Calculate total price from items (already in cents)
+    const totalPriceUSD =
+      items.reduce((sum, item) => sum + item.price * item.quantity, 0) / 100;
+
+    const session = await createStripeCheckoutSession({
+      businessId: business.id,
+      email: business.user.email,
+      priceUSD: totalPriceUSD,
+      type: "banner",
+      metadata: {
+        businessId: business.id,
+        ...metadata,
+      },
+    });
+
+    return ApiResponse.success(res, {
+      checkoutUrl: session.url,
+      sessionId: session.id,
+    });
+  }
+
+  // ── MEMBERSHIP PURCHASE FLOW ────────────────────────────────────────
   const member = await prisma.member.findUnique({
     where: { userId: req.user.id },
     include: { user: true, membership: true },
@@ -78,134 +110,225 @@ exports.createPayPalCheckout = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, { orderId: order.id, links: order.links });
 });
 
-// ── Stripe webhook (membership & certificate) ───────────────────────
+// ── Stripe webhook (membership, certificate & banner) ───────────────────────
 exports.stripeWebhook = asyncHandler(async (req, res) => {
   const sig = req.headers["stripe-signature"];
-  const event = verifyStripeWebhook(req.body, sig);
 
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
-    const {
-      type,
-      membershipId,
-      memberId,
-      certificateId,
-      offerType,
-      faceValue,
-      discountValue,
-      minSpend,
-      businessName,
-      title,
-    } = session.metadata;
+  try {
+    const event = verifyStripeWebhook(req.body, sig);
+    console.log("[WEBHOOK] ✅ Signature verified");
+    console.log("[WEBHOOK] 📊 Event Type:", event.type);
+    console.log("[WEBHOOK] Event ID:", event.id);
 
-    if (type === "membership") {
-      await activateMembership(membershipId, session.payment_intent, "STRIPE");
+    // Log metadata for ALL events
+    if (event.data?.object?.metadata) {
+      console.log("[WEBHOOK] 📦 Metadata:", event.data.object.metadata);
     }
 
-    if (type === "certificate") {
-      // Generate unique code for certificate (DISC-XXXX-XXXX-XXXX)
-      const generateUniqueCode = () => {
-        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        let code = "DISC";
-        for (let i = 0; i < 3; i++) {
-          code += "-";
-          for (let j = 0; j < 4; j++) {
-            code += chars.charAt(Math.floor(Math.random() * chars.length));
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object;
+      console.log("[WEBHOOK] ✅ CHECKOUT.SESSION.COMPLETED fired!");
+      console.log("[WEBHOOK] Session ID:", session.id);
+      console.log("[WEBHOOK] Payment Status:", session.payment_status);
+
+      const {
+        type,
+        membershipId,
+        memberId,
+        certificateId,
+        offerType,
+        faceValue,
+        discountValue,
+        minSpend,
+        businessName,
+        title,
+        businessId,
+        bannerTitle,
+        bannerImageUrl,
+        bannerLinkUrl,
+        bannerPosition,
+        bannerDuration,
+      } = session.metadata || {};
+
+      console.log("[WEBHOOK] Session metadata:", session.metadata);
+      console.log("[WEBHOOK] Type from metadata:", type);
+
+      if (type === "membership") {
+        console.log("[WEBHOOK] Processing MEMBERSHIP...");
+        await activateMembership(
+          membershipId,
+          session.payment_intent,
+          "STRIPE",
+        );
+        console.log("[WEBHOOK] ✅ Membership activated");
+      }
+
+      if (type === "banner") {
+        console.log("[WEBHOOK] 🎯 Processing BANNER...");
+        console.log("[WEBHOOK] Banner data:", {
+          businessId,
+          bannerTitle,
+          bannerImageUrl,
+          bannerLinkUrl,
+          bannerPosition,
+          bannerDuration,
+        });
+
+        if (!businessId) {
+          console.error("[WEBHOOK] ❌ ERROR: businessId is missing!");
+          throw new Error("businessId is required in metadata");
+        }
+
+        try {
+          // Create Advertisement record with PENDING status for admin approval
+          const createdAd = await prisma.advertisement.create({
+            data: {
+              businessId: businessId,
+              title: bannerTitle,
+              image: bannerImageUrl,
+              link: bannerLinkUrl || null,
+              position: bannerPosition,
+              status: "PENDING",
+              startDate: new Date(),
+              duration: bannerDuration,
+              paymentStatus: "COMPLETED",
+              stripeSessionId: session.id,
+              stripePaymentId: session.payment_intent,
+              pricePaid: session.amount_total / 100,
+            },
+          });
+          console.log(
+            "[WEBHOOK] ✅ Banner created successfully:",
+            createdAd.id,
+          );
+        } catch (bannerErr) {
+          console.error(
+            "[WEBHOOK] ❌ Error creating banner:",
+            bannerErr.message,
+          );
+          console.error("[WEBHOOK] Stack:", bannerErr.stack);
+          throw bannerErr;
+        }
+      }
+
+      if (type === "certificate") {
+        // Generate unique code for certificate (DISC-XXXX-XXXX-XXXX)
+        const generateUniqueCode = () => {
+          const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+          let code = "DISC";
+          for (let i = 0; i < 3; i++) {
+            code += "-";
+            for (let j = 0; j < 4; j++) {
+              code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
           }
+          return code;
+        };
+
+        const savingsAmount =
+          (parseFloat(faceValue) || 0) - session.amount_total / 100;
+
+        // Create CertificatePurchase record
+        const purchase = await prisma.certificatePurchase.create({
+          data: {
+            stripeSessionId: session.id,
+            memberId: memberId,
+            certificateId: certificateId,
+            uniqueCode: generateUniqueCode(),
+            type: offerType || "PREPAID_CERTIFICATE",
+            status: "PURCHASED",
+            faceValue: parseFloat(faceValue) || 0,
+            discountValue: parseFloat(discountValue) || null,
+            minSpend: parseFloat(minSpend) || null,
+            amountPaid: session.amount_total / 100,
+            savingsAmount: savingsAmount,
+            businessName: businessName || "",
+            title: title || "",
+            paymentProvider: "STRIPE",
+            paymentId: session.payment_intent,
+            paymentStatus: "COMPLETED",
+          },
+        });
+
+        // Fetch certificate & member info to get business & demographics
+        try {
+          const [cert, member, business] = await Promise.all([
+            prisma.certificate.findUnique({
+              where: { id: certificateId },
+              include: { offer: true },
+            }),
+            prisma.member.findUnique({
+              where: { id: memberId },
+              include: { user: true },
+            }),
+            // Get business from certificate offer
+            prisma.certificate.findUnique({
+              where: { id: certificateId },
+              include: { offer: { include: { business: true } } },
+            }),
+          ]);
+
+          if (cert && member && business?.offer?.business) {
+            // Create Transaction record for member dashboard
+            await prisma.transaction.create({
+              data: {
+                memberId: memberId,
+                businessId: business.offer.business.id,
+                offerId: cert.offerId,
+                saleAmount: session.amount_total / 100,
+                discountAmount: 0,
+                savingsAmount: savingsAmount,
+                memberAge: member.age,
+                memberSex: member.sex,
+                memberDistrict: member.district,
+                memberSalaryLevel: member.salaryLevel,
+                businessCategory: business.offer.business.category,
+                businessDistrict: business.offer.business.district,
+                status: "COMPLETED",
+              },
+            });
+
+            // Update member's totalSavings
+            await prisma.member.update({
+              where: { id: memberId },
+              data: {
+                totalSavings: { increment: savingsAmount },
+                totalSpent: { increment: session.amount_total / 100 },
+              },
+            });
+          }
+        } catch (transErr) {
+          // Log but don't throw — purchase was already recorded
+          console.error("Error creating transaction record:", transErr.message);
         }
-        return code;
-      };
-
-      const savingsAmount =
-        (parseFloat(faceValue) || 0) - session.amount_total / 100;
-
-      // Create CertificatePurchase record
-      const purchase = await prisma.certificatePurchase.create({
-        data: {
-          stripeSessionId: session.id,
-          memberId: memberId,
-          certificateId: certificateId,
-          uniqueCode: generateUniqueCode(),
-          type: offerType || "PREPAID_CERTIFICATE",
-          status: "PURCHASED",
-          faceValue: parseFloat(faceValue) || 0,
-          discountValue: parseFloat(discountValue) || null,
-          minSpend: parseFloat(minSpend) || null,
-          amountPaid: session.amount_total / 100,
-          savingsAmount: savingsAmount,
-          businessName: businessName || "",
-          title: title || "",
-          paymentProvider: "STRIPE",
-          paymentId: session.payment_intent,
-          paymentStatus: "COMPLETED",
-        },
-      });
-
-      // Fetch certificate & member info to get business & demographics
-      try {
-        const [cert, member, business] = await Promise.all([
-          prisma.certificate.findUnique({
-            where: { id: certificateId },
-            include: { offer: true },
-          }),
-          prisma.member.findUnique({
-            where: { id: memberId },
-            include: { user: true },
-          }),
-          // Get business from certificate offer
-          prisma.certificate.findUnique({
-            where: { id: certificateId },
-            include: { offer: { include: { business: true } } },
-          }),
-        ]);
-
-        if (cert && member && business?.offer?.business) {
-          // Create Transaction record for member dashboard
-          await prisma.transaction.create({
-            data: {
-              memberId: memberId,
-              businessId: business.offer.business.id,
-              offerId: cert.offerId,
-              saleAmount: session.amount_total / 100,
-              discountAmount: 0,
-              savingsAmount: savingsAmount,
-              memberAge: member.age,
-              memberSex: member.sex,
-              memberDistrict: member.district,
-              memberSalaryLevel: member.salaryLevel,
-              businessCategory: business.offer.business.category,
-              businessDistrict: business.offer.business.district,
-              status: "COMPLETED",
-            },
-          });
-
-          // Update member's totalSavings
-          await prisma.member.update({
-            where: { id: memberId },
-            data: {
-              totalSavings: { increment: savingsAmount },
-              totalSpent: { increment: session.amount_total / 100 },
-            },
-          });
-        }
-      } catch (transErr) {
-        // Log but don't throw — purchase was already recorded
-        console.error("Error creating transaction record:", transErr.message);
       }
     }
-  }
 
-  if (event.type === "checkout.session.expired") {
-    const session = event.data.object;
-    if (session.metadata?.membershipId) {
-      await prisma.membership.update({
-        where: { id: session.metadata.membershipId },
-        data: { paymentStatus: "FAILED" },
-      });
+    if (event.type === "checkout.session.expired") {
+      const session = event.data.object;
+      console.log("[WEBHOOK] Session expired:", session.id);
+      if (session.metadata?.membershipId) {
+        await prisma.membership.update({
+          where: { id: session.metadata.membershipId },
+          data: { paymentStatus: "FAILED" },
+        });
+        console.log("[WEBHOOK] ✅ Membership marked as FAILED");
+      }
     }
-  }
 
-  return res.json({ received: true });
+    // Log all other events for visibility
+    console.log(
+      "[WEBHOOK] Event type:",
+      event.type,
+      "- No handler, but event received ✓",
+    );
+
+    return res.json({ received: true });
+  } catch (err) {
+    console.error("[WEBHOOK] ❌ Critical webhook error:", err.message);
+    console.error("[WEBHOOK] Stack:", err.stack);
+    return res.status(400).json({ error: "Webhook processing failed" });
+  }
 });
 
 // ── PayPal capture (called from frontend after approval) ──

@@ -1,6 +1,4 @@
 // Frontend/src/user/pages/Dashboard/MemberDashboardContent.jsx
-// PREMIUM REDESIGN — White background, editorial typography, refined card system
-
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import Icon from "../../components/ui/AppIcon";
@@ -19,6 +17,9 @@ import MemberStatsBlock from "../../components/ui/MemberStatsBlock";
 import MyCertificatesSection from "../../components/ui/MyCertificatesSection";
 import JoinAssociationModal from "../../components/ui/JoinAssociationModal";
 
+// ─── Premium UI Tokens ──────────────────────────────────────────────────────
+const HEADING_FONT = { fontFamily: "'Playfair Display', serif" };
+
 /* ─── Helpers ──────────────────────────────────────────────────────────────── */
 const toArray = (val, fallbackKeys = []) => {
   if (Array.isArray(val)) return val;
@@ -27,6 +28,7 @@ const toArray = (val, fallbackKeys = []) => {
   }
   return [];
 };
+
 const getCategoryLabel = (c) => {
   if (!c) return "";
   if (typeof c === "string") return c;
@@ -36,21 +38,24 @@ const getCategoryLabel = (c) => {
 /* ─── Sub-components ───────────────────────────────────────────────────────── */
 
 const SectionLabel = ({ eyebrow, title, action }) => (
-  <div className="flex items-end justify-between mb-7">
+  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
     <div>
-      <p className="m-0 mb-1 text-xs font-bold tracking-widest uppercase text-amber-600">
+      <p className="text-[10px] font-black tracking-widest uppercase text-[#1C4D8D] mb-2">
         {eyebrow}
       </p>
-      <h2 className="m-0 text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight leading-tight">
+      <h2
+        className="text-3xl font-bold text-slate-900 tracking-tight"
+        style={HEADING_FONT}
+      >
         {title}
       </h2>
     </div>
-    {action}
+    {action && <div>{action}</div>}
   </div>
 );
 
 const Hairline = () => (
-  <div className="h-px bg-gradient-to-r from-slate-200 to-transparent mb-11" />
+  <div className="h-px bg-gradient-to-r from-slate-200 via-slate-100 to-transparent mb-12 mt-4" />
 );
 
 /* ─── Join Association Widget ──────────────────────────────────────────────── */
@@ -86,57 +91,56 @@ const JoinAssociationWidget = () => {
   };
 
   return (
-    <div className="mb-8 border border-slate-200 rounded-[20px] bg-white overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+    <div className="mb-12 bg-white rounded-[2rem] border border-slate-200/60 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
       <button
         onClick={() => setOpen((p) => !p)}
-        className="w-full flex items-center justify-between px-6 py-[18px] bg-transparent border-none cursor-pointer transition-colors hover:bg-slate-50"
+        className="w-full flex items-center justify-between px-8 py-6 bg-transparent border-none cursor-pointer transition-colors hover:bg-slate-50/50 group"
       >
-        <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-3xl flex-shrink-0 bg-blue-50 border border-blue-200 flex items-center justify-center text-lg">
-            🔗
+        <div className="flex items-center gap-5">
+          <div className="w-14 h-14 rounded-2xl flex-shrink-0 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm group-hover:scale-105 transition-transform">
+            <Icon name="LinkIcon" size={24} />
           </div>
           <div className="text-left">
-            <p className="m-0 font-bold text-sm text-slate-900">
+            <p className="m-0 font-bold text-lg text-slate-900 tracking-tight">
               Join an Association
             </p>
-            <p className="m-0 mt-0.5 text-xs text-slate-500">
+            <p className="m-0 mt-1 text-sm font-medium text-slate-500">
               Have a join code? Enter it here to link your account
             </p>
           </div>
         </div>
-        <span
-          className={`text-slate-500 text-sm inline-block transition-transform ${open ? "rotate-180" : "rotate-0"}`}
+        <div
+          className={`w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 text-slate-400 transition-transform duration-300 ${open ? "bg-blue-50 text-[#1C4D8D]" : ""}`}
         >
-          ▾
-        </span>
+          <Icon name="ChevronDownIcon" size={20} />
+        </div>
       </button>
 
-      {open && (
-        <div className="px-6 pb-5.5 border-t border-slate-200">
-          <div className="pt-4.5">
+      <div
+        className={`transition-all duration-500 ease-in-out overflow-hidden ${open ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
+      >
+        <div className="px-8 pb-8 pt-2">
+          <div className="pt-6 border-t border-slate-100">
             {result ? (
               <div
-                className={`rounded-sm p-3.5 flex items-center gap-3 mb-2 ${
-                  result.success
-                    ? "bg-emerald-50 border border-emerald-200"
-                    : "bg-red-50 border border-red-200"
-                }`}
+                className={`rounded-2xl p-5 flex items-start gap-4 mb-2 ${result.success ? "bg-emerald-50/50 border border-emerald-200" : "bg-rose-50/50 border border-rose-200"}`}
               >
-                <span className="text-lg flex-shrink-0">
-                  {result.success ? "✓" : "⚠"}
-                </span>
-                <div className="flex-1">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm ${result.success ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"}`}
+                >
+                  <Icon
+                    name={result.success ? "CheckIcon" : "XMarkIcon"}
+                    size={20}
+                  />
+                </div>
+                <div className="flex-1 pt-0.5">
                   <p
-                    className={`m-0 font-bold text-sm ${
-                      result.success ? "text-emerald-800" : "text-red-800"
-                    }`}
+                    className={`m-0 font-bold text-base ${result.success ? "text-emerald-900" : "text-rose-900"}`}
                   >
-                    {result.success ? "Success!" : "Failed"}
+                    {result.success ? "Success!" : "Verification Failed"}
                   </p>
                   <p
-                    className={`m-0 mt-0.5 text-xs ${
-                      result.success ? "text-emerald-700" : "text-red-700"
-                    }`}
+                    className={`m-0 mt-1 text-sm font-medium ${result.success ? "text-emerald-700" : "text-rose-700"}`}
                   >
                     {result.message}
                   </p>
@@ -146,51 +150,57 @@ const JoinAssociationWidget = () => {
                     setResult(null);
                     if (result.success) setOpen(false);
                   }}
-                  className={`bg-transparent border-none cursor-pointer text-xs font-bold transition-colors ${
-                    result.success
-                      ? "text-emerald-600 hover:text-emerald-700"
-                      : "text-red-600 hover:text-red-700"
-                  }`}
+                  className="px-4 py-2 bg-white rounded-lg shadow-sm text-sm font-bold border border-slate-200 hover:bg-slate-50 transition-colors"
                 >
                   {result.success ? "Done" : "Try again"}
                 </button>
               </div>
             ) : (
               <>
-                <label className="block text-xs font-bold tracking-widest uppercase text-slate-500 mb-2">
+                <label className="block text-[10px] font-black tracking-widest uppercase text-slate-400 mb-3">
                   Association Join Code
                 </label>
-                <div className="flex gap-2.5">
-                  <input
-                    type="text"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value.toUpperCase())}
-                    onKeyDown={(e) => e.key === "Enter" && handleJoin()}
-                    placeholder="e.g. NURSES-CI-A3F2"
-                    maxLength={24}
-                    className="flex-1 px-4 py-3 border border-slate-200 rounded-3xl text-sm font-mono tracking-widest uppercase text-slate-900 bg-slate-50 outline-none focus:border-[#1C4D8D] transition-colors"
-                  />
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <Icon
+                      name="KeyIcon"
+                      size={20}
+                      className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                    <input
+                      type="text"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => e.key === "Enter" && handleJoin()}
+                      placeholder="e.g. NURSES-CI-A3F2"
+                      maxLength={24}
+                      className="w-full pl-12 pr-6 py-4 border border-slate-200 rounded-2xl text-base font-mono tracking-widest uppercase text-slate-900 bg-slate-50 outline-none focus:border-[#1C4D8D] focus:ring-2 focus:ring-[#1C4D8D]/20 focus:bg-white transition-all placeholder:font-sans placeholder:tracking-normal placeholder:font-medium placeholder:text-slate-400"
+                    />
+                  </div>
                   <button
                     onClick={handleJoin}
                     disabled={loading || !code.trim()}
-                    className="px-5 py-2.5 bg-[#1C4D8D] text-white rounded-lg font-bold text-sm hover:bg-blue-900 transition-all flex items-center gap-1.5 disabled:opacity-50"
+                    className="px-8 py-4 bg-gradient-to-r from-[#1C4D8D] to-[#153a6b] text-white rounded-2xl font-bold text-base hover:shadow-lg shadow-blue-900/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 sm:w-auto w-full"
                   >
                     {loading ? (
-                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full inline-block animate-spin" />
+                      <>
+                        <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full inline-block animate-spin" />{" "}
+                        Verifying...
+                      </>
                     ) : (
-                      "Join"
+                      "Join Association"
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">
-                  Ask your association admin for the join code to link your
-                  account.
+                <p className="text-sm font-medium text-slate-500 mt-4">
+                  Ask your association admin for the secure join code to link
+                  your account.
                 </p>
               </>
             )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
@@ -232,12 +242,12 @@ const MemberDashboardContent = () => {
       10 * 60 * 1000,
     );
     return () => clearInterval(t);
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (membershipActivated) {
       hasFetched.current = false;
-      const timer = setTimeout(() => setShowMembershipSuccess(false), 4000);
+      const timer = setTimeout(() => setShowMembershipSuccess(false), 5000);
       return () => clearTimeout(timer);
     }
   }, [membershipActivated]);
@@ -261,6 +271,7 @@ const MemberDashboardContent = () => {
         travelAPI.getAll({ limit: 3 }),
         certificateAPI.getMy(),
       ]);
+
       if (profileRes.status === "fulfilled" && profileRes.value) {
         const p = profileRes.value;
         setMemberProfile(p);
@@ -307,7 +318,7 @@ const MemberDashboardContent = () => {
     } finally {
       setInitialLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -345,22 +356,14 @@ const MemberDashboardContent = () => {
     return v.length > 300 ? v.slice(0, 300) : v;
   };
 
-  // First-letter avatar colour
-  const avatarBg = `linear-gradient(135deg, #1C4D8D 0%, #2A6BC8 100%)`;
-
   /* ── Loading ─────────────────────────────────────────────────────────── */
   if (initialLoading)
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4.5">
-          <div className="relative w-12 h-12">
-            <div className="absolute inset-0 rounded-full border-4 border-blue-200" />
-            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#1C4D8D] animate-spin" />
-          </div>
-          <p className="text-slate-400 text-sm font-semibold tracking-widest">
-            Loading your dashboard…
-          </p>
-        </div>
+      <div className="min-h-screen bg-slate-50/50 flex flex-col items-center justify-center gap-4 pt-20">
+        <div className="w-12 h-12 border-4 border-slate-200 border-t-[#1C4D8D] rounded-full animate-spin shadow-sm" />
+        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest animate-pulse">
+          Loading Dashboard...
+        </p>
       </div>
     );
 
@@ -368,50 +371,58 @@ const MemberDashboardContent = () => {
      RENDER
   ═══════════════════════════════════════════════════════════════════════ */
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-6xl mx-auto px-4 lg:px-10 py-6 lg:py-12">
+    <div className="min-h-screen bg-slate-50/50 selection:bg-[#1C4D8D]/20 relative overflow-hidden pt-5">
+      {/* Decorative Background Blobs */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden mix-blend-multiply opacity-60 z-0">
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-br from-blue-100/40 to-indigo-100/40 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-emerald-50/40 to-teal-50/40 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/3" />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-8 lg:pt-6 lg:pb-12">
         {/* ── Success Banner ─────────────────────────────────────────────── */}
         {showMembershipSuccess && (
-          <div className="mb-6 rounded-xl px-6 py-4 flex items-center gap-3 bg-emerald-50 border border-emerald-200 animate-in fade-in slide-in-from-top-2 duration-300">
-            <div className="w-9 h-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center flex-shrink-0">
-              <Icon
-                name="CheckCircleIcon"
-                size={18}
-                className="text-emerald-600"
-              />
+          <div className="mb-6 rounded-2xl px-6 py-5 flex items-center gap-4 bg-gradient-to-r from-emerald-50 to-teal-50/50 border border-emerald-200 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+              <Icon name="CheckIcon" size={24} />
             </div>
             <div className="flex-1">
-              <p className="m-0 font-bold text-sm text-emerald-800">
+              <p className="m-0 font-bold text-lg text-emerald-900 tracking-tight">
                 Membership Activated!
               </p>
-              <p className="m-0 mt-0.5 text-xs text-emerald-700">
-                Welcome to Discount Club Cayman — exclusive access is now
+              <p className="m-0 mt-0.5 text-sm font-medium text-emerald-700">
+                Welcome to Discount Club Cayman — your exclusive access is now
                 unlocked.
               </p>
             </div>
             <button
               onClick={() => setShowMembershipSuccess(false)}
-              className="bg-transparent border-none cursor-pointer text-slate-400 flex hover:text-slate-600 transition-colors"
+              className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 shadow-sm border border-slate-200 transition-colors"
             >
-              <Icon name="XMarkIcon" size={18} />
+              <Icon name="XMarkIcon" size={20} />
             </button>
           </div>
         )}
 
         {/* ── Inactive Warning ───────────────────────────────────────────── */}
         {!isMembershipActive && (
-          <div className="mb-6 rounded-xl px-6 py-4 flex items-center justify-between gap-3 bg-amber-50 border border-amber-200 flex-wrap">
-            <div>
-              <p className="m-0 font-bold text-sm text-amber-900">
-                Membership Inactive
-              </p>
-              <p className="m-0 mt-0.5 text-xs text-amber-800">
-                Activate your membership to access all features.
-              </p>
+          <div className="mb-6 rounded-2xl px-8 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-gradient-to-r from-amber-50 to-yellow-50/50 border border-amber-200 shadow-sm animate-in fade-in duration-500">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                <Icon name="ExclamationTriangleIcon" size={24} />
+              </div>
+              <div>
+                <p className="m-0 font-bold text-lg text-amber-900 tracking-tight">
+                  Membership Inactive
+                </p>
+                <p className="m-0 mt-0.5 text-sm font-medium text-amber-700/80">
+                  Activate your membership to access your digital card and
+                  exclusive deals.
+                </p>
+              </div>
             </div>
             <Link
               to="/membership"
-              className="px-4 py-2 bg-[#1C4D8D] text-white rounded-lg font-bold text-sm hover:bg-blue-900 transition-all whitespace-nowrap"
+              className="px-8 py-4 bg-amber-500 text-white rounded-xl font-bold text-sm hover:bg-amber-600 transition-all whitespace-nowrap shadow-md text-center"
             >
               Activate Membership
             </Link>
@@ -419,86 +430,76 @@ const MemberDashboardContent = () => {
         )}
 
         {/* ═══════════════════════════════════════════════════════════════
-            MEMBERSHIP IDENTITY CARD — redesigned from flat blue bar
+            MEMBERSHIP IDENTITY CARD (COMPACT HERO)
         ═══════════════════════════════════════════════════════════════ */}
-        <div className="mb-11">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-0 rounded-2xl border border-slate-200 overflow-hidden shadow-lg bg-white">
-            {/* Left — Identity */}
-            <div className="p-6 md:p-10 border-r border-slate-200">
-              {/* Eyebrow */}
-              <div className="flex items-center gap-2.5 mb-5.5">
-                <span className="text-xs font-bold tracking-widest uppercase text-slate-500">
+        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#0A1628] via-[#1C4D8D] to-[#4988C4] shadow-xl shadow-blue-900/10 mb-8 lg:mb-12">
+          {/* Background Elements */}
+          <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-black/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col lg:flex-row items-center">
+            {/* Left — Identity Info */}
+            <div className="p-6 md:p-8 lg:w-2/3 flex flex-col justify-center w-full border-b lg:border-b-0 lg:border-r border-white/10">
+              <div className="flex flex-wrap items-center gap-3 mb-5">
+                <span className="text-[10px] sm:text-xs font-black tracking-[0.2em] uppercase text-blue-200">
                   Discount Club Cayman
                 </span>
                 <span
-                  className={`px-2.5 py-0.5 rounded-full text-xs font-extrabold tracking-wider uppercase ${
+                  className={`px-2.5 py-1 rounded-md text-[9px] sm:text-[10px] font-black tracking-widest uppercase ${
                     isMembershipActive
-                      ? "bg-emerald-100 border border-emerald-300 text-emerald-700"
-                      : "bg-red-100 border border-red-300 text-red-700"
+                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                      : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
                   }`}
                 >
                   {membershipStatus}
                 </span>
               </div>
 
-              {/* Avatar + Name */}
-              <div className="flex items-center gap-4.5 mb-6">
-                <div
-                  className="w-16 h-16 rounded-full flex-shrink-0 flex items-center justify-center shadow-lg"
-                  style={{
-                    background: avatarBg,
-                    boxShadow:
-                      "0 0 0 4px #EEF4FF, 0 4px 16px rgba(28,77,141,0.22)",
-                  }}
-                >
+              <div className="flex items-center gap-5 mb-6">
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white text-[#1C4D8D] flex items-center justify-center flex-shrink-0 shadow-xl">
                   <span
-                    style={{
-                      fontSize: 26,
-                      fontWeight: 700,
-                      color: "#fff",
-                      lineHeight: 1,
-                      userSelect: "none",
-                    }}
+                    className="text-2xl md:text-3xl font-black"
+                    style={HEADING_FONT}
                   >
                     {displayName.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div>
                   <h1
-                    style={{
-                      margin: "0 0 4px",
-                      fontSize: "clamp(1.6rem, 3vw, 2.2rem)",
-                      fontWeight: 700,
-                      color: "#0D1117",
-                      letterSpacing: "-0.025em",
-                      lineHeight: 1.1,
-                    }}
+                    className="m-0 mb-1 text-2xl md:text-3xl lg:text-4xl font-bold text-white tracking-tight drop-shadow-md"
+                    style={HEADING_FONT}
                   >
                     {displayName}
                   </h1>
-                  <p className="m-0 text-sm font-semibold text-[#1C4D8D] tracking-widest">
+                  <p className="m-0 text-sm md:text-base font-medium text-blue-200">
                     {memberProfile?.membership?.tier || "Standard"} Member
                   </p>
                 </div>
               </div>
 
-              {/* Meta row */}
-              <div className="flex gap-6 flex-wrap">
-                {[
-                  {
-                    label: "Member Since",
-                    value: memberProfile?.membership?.startDate
+              <div className="grid grid-cols-2 gap-4 bg-white/5 rounded-xl p-4 border border-white/10 backdrop-blur-sm w-fit min-w-[280px]">
+                <div>
+                  <p className="m-0 mb-1 text-[9px] font-black tracking-widest uppercase text-blue-300/80">
+                    Member Since
+                  </p>
+                  <p className="m-0 text-sm md:text-base font-bold text-white">
+                    {memberProfile?.membership?.startDate
                       ? new Date(
                           memberProfile.membership.startDate,
                         ).toLocaleDateString("en-US", {
                           month: "short",
                           year: "numeric",
                         })
-                      : "–",
-                  },
-                  {
-                    label: "Expires",
-                    value: memberProfile?.membership?.expiryDate
+                      : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="m-0 mb-1 text-[9px] font-black tracking-widest uppercase text-blue-300/80">
+                    Expires
+                  </p>
+                  <p className="m-0 text-sm md:text-base font-bold text-white">
+                    {memberProfile?.membership?.expiryDate
                       ? new Date(
                           memberProfile.membership.expiryDate,
                         ).toLocaleDateString("en-US", {
@@ -506,440 +507,357 @@ const MemberDashboardContent = () => {
                           day: "numeric",
                           year: "numeric",
                         })
-                      : "–",
-                  },
-                ].map(({ label, value }) => (
-                  <div key={label}>
-                    <p className="m-0 mb-0.5 text-xs font-bold tracking-widest uppercase text-slate-500">
-                      {label}
-                    </p>
-                    <p className="m-0 text-base font-bold text-slate-900">
-                      {value}
-                    </p>
-                  </div>
-                ))}
+                      : "—"}
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Right — QR panel */}
-            <div className="p-6 md:p-10 flex flex-col items-center justify-center gap-3 bg-slate-50 min-w-40">
-              <p className="m-0 text-xs font-bold tracking-widest uppercase text-slate-500 text-center">
-                Member QR
-              </p>
-              <button
-                onClick={() => setShowQRModal(true)}
-                disabled={!isMembershipActive}
-                className={`w-20 h-20 rounded-2xl border-2 border-dashed flex items-center justify-center transition-all flex-shrink-0 ${
-                  isMembershipActive
-                    ? "border-[#1C4D8D] bg-blue-50 cursor-pointer hover:bg-blue-100"
-                    : "border-slate-200 bg-slate-100 cursor-not-allowed opacity-40"
-                }`}
-              >
-                <Icon
-                  name="QrCodeIcon"
-                  size={36}
-                  className={
-                    isMembershipActive ? "text-[#1C4D8D]" : "text-slate-500"
-                  }
-                />
-              </button>
-              <p className="m-0 text-xs text-slate-500 text-center max-w-24 leading-relaxed">
-                {isMembershipActive
-                  ? "Tap to show at checkout"
-                  : "Activate to unlock"}
-              </p>
+            {/* Right — QR Code */}
+            <div className="p-6 md:p-8 lg:w-1/3 flex flex-row lg:flex-col items-center justify-center gap-4 w-full">
+              <div className="flex flex-col items-center justify-center">
+                <p className="text-[10px] font-black tracking-widest uppercase text-blue-200 mb-3 text-center hidden lg:block">
+                  Digital ID
+                </p>
+                <button
+                  onClick={() => setShowQRModal(true)}
+                  disabled={!isMembershipActive}
+                  className={`relative group rounded-2xl p-3 transition-all duration-300 ${
+                    isMembershipActive
+                      ? "bg-white cursor-pointer hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.25)]"
+                      : "bg-white/20 cursor-not-allowed opacity-50"
+                  }`}
+                >
+                  {isMembershipActive ? (
+                    <QRCodeSVG
+                      value={getQrValue()}
+                      size={86}
+                      level="H"
+                      className="relative z-10"
+                    />
+                  ) : (
+                    <div className="w-[86px] h-[86px] flex items-center justify-center">
+                      <Icon
+                        name="LockClosedIcon"
+                        size={32}
+                        className="text-white/50"
+                      />
+                    </div>
+                  )}
+                  {isMembershipActive && (
+                    <div className="absolute inset-0 rounded-2xl bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
+                      <Icon
+                        name="ArrowsPointingOutIcon"
+                        size={24}
+                        className="text-white drop-shadow-md"
+                      />
+                    </div>
+                  )}
+                </button>
+              </div>
+              <div className="text-left lg:text-center flex-1 lg:flex-none">
+                <p className="m-0 text-xs sm:text-sm font-medium text-blue-200 max-w-[160px]">
+                  {isMembershipActive
+                    ? "Tap QR code to enlarge for scanning."
+                    : "Activate your membership to unlock."}
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════
-            STATS
+            STATS BLOCK
         ═══════════════════════════════════════════════════════════════ */}
-        <div className="mb-11">
+        <div className="mb-12">
           <MemberStatsBlock />
         </div>
-
-        <Hairline />
-
-        {/* ═══════════════════════════════════════════════════════════════
-            RECENT ACTIVITY
-        ═══════════════════════════════════════════════════════════════ */}
-        <div className="mb-16">
-          <SectionLabel
-            eyebrow="Your History"
-            title="Recent Activity"
-            action={
-              <Link
-                to="/browse-discounts"
-                className="px-4 py-2 bg-transparent border border-slate-200 rounded-full text-sm font-bold text-[#1C4D8D] hover:bg-slate-50 transition-all whitespace-nowrap"
-              >
-                View All →
-              </Link>
-            }
-          />
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-            {recentTransactions.length === 0 ? (
-              <div className="py-16 text-center">
-                <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center mx-auto mb-3.5">
-                  <Icon name="ClockIcon" size={26} className="text-slate-500" />
-                </div>
-                <p className="m-0 font-semibold text-sm text-slate-500">
-                  No transactions yet
-                </p>
-                <p className="m-0 mt-1 text-xs text-slate-500">
-                  Your savings will show up here once you start redeeming
-                  discounts.
-                </p>
-              </div>
-            ) : (
-              <ul className="list-none m-0 p-0">
-                {recentTransactions.map((tx, i) => (
-                  <li
-                    key={tx.id || i}
-                    className={`px-6 py-4 flex items-center gap-3.5 ${
-                      i < recentTransactions.length - 1
-                        ? "border-b border-slate-200"
-                        : ""
-                    }`}
-                  >
-                    <div className="w-11 h-11 rounded-3xl flex-shrink-0 bg-blue-50 border border-blue-200 flex items-center justify-center overflow-hidden">
-                      {tx.business?.logoUrl ? (
-                        <AppImage
-                          src={tx.business.logoUrl}
-                          alt={tx.business.name}
-                          className="w-full h-full object-contain"
-                        />
-                      ) : (
-                        <Icon
-                          name="BuildingStorefrontIcon"
-                          size={20}
-                          className="text-[#1C4D8D]"
-                        />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="m-0 font-bold text-sm text-slate-900 overflow-hidden text-ellipsis whitespace-nowrap">
-                        {tx.business?.name || "Business"}
-                      </p>
-                      <p className="m-0 mt-0.5 text-xs text-slate-500">
-                        {tx.offer?.title || tx.type || "Discount"} ·{" "}
-                        {new Date(
-                          tx.transactionDate || tx.createdAt,
-                        ).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="m-0 font-extrabold text-base text-emerald-600">
-                        −${(tx.savingsAmount || 0).toFixed(2)}
-                      </p>
-                      <p className="m-0 mt-0.5 text-xs text-slate-500">
-                        ${(tx.saleAmount || 0).toFixed(2)} spent
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════════
-            JOIN ASSOCIATION
-        ═══════════════════════════════════════════════════════════════ */}
-        <JoinAssociationWidget />
 
         {/* ═══════════════════════════════════════════════════════════════
             QUICK LINKS
         ═══════════════════════════════════════════════════════════════ */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-11">
-          {/* Certificates tile */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
+          {/* Certificates Tile (Special Toggle) */}
           <button
             onClick={() =>
               setActiveView(
                 activeView === "certificates" ? "dashboard" : "certificates",
               )
             }
-            className={`relative rounded-2xl border-2 p-6 text-left transition-all ${
+            className={`relative rounded-[2rem] p-8 text-left transition-all duration-300 border ${
               activeView === "certificates"
-                ? "border-[#1C4D8D] bg-blue-50 shadow-md"
-                : "border-slate-200 bg-white hover:shadow-md"
+                ? "border-[#1C4D8D] bg-blue-50 shadow-xl -translate-y-1"
+                : "border-slate-200/60 bg-white hover:border-blue-300 hover:shadow-xl hover:-translate-y-1"
             }`}
           >
-            <div
-              className={`absolute top-0 left-0 right-0 h-0.5 rounded-t-2xl transition-all ${
-                activeView === "certificates"
-                  ? "bg-gradient-to-r from-[#1C4D8D] to-blue-600"
-                  : "transparent"
-              }`}
-            />
-            <div className="relative inline-flex mb-3.5">
+            <div className="flex items-start justify-between mb-6">
               <div
-                className={`w-11 h-11 rounded-lg flex items-center justify-center transition-all ${
-                  activeView === "certificates"
-                    ? "bg-[#1C4D8D]"
-                    : "bg-slate-50 border border-slate-200"
-                }`}
+                className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${activeView === "certificates" ? "bg-[#1C4D8D] text-white shadow-md" : "bg-blue-50 text-blue-600"}`}
               >
-                <Icon
-                  name="TicketIcon"
-                  size={22}
-                  className={
-                    activeView === "certificates"
-                      ? "text-white"
-                      : "text-[#1C4D8D]"
-                  }
-                />
+                <Icon name="TicketIcon" size={28} />
               </div>
               {activeCertCount > 0 && (
-                <span
-                  className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-[#1C4D8D] text-white text-xs font-extrabold flex items-center justify-center shadow-md"
-                  style={{ boxShadow: "0 0 0 3px #fff" }}
-                >
-                  {activeCertCount}
+                <span className="px-3 py-1 bg-rose-500 text-white text-xs font-black rounded-full shadow-sm">
+                  {activeCertCount} Active
                 </span>
               )}
             </div>
-            <h3 className="m-0 mb-0.5 font-bold text-sm text-slate-900">
+            <h3
+              className="m-0 mb-2 font-bold text-xl text-slate-900 tracking-tight"
+              style={HEADING_FONT}
+            >
               My Certificates
             </h3>
-            <p className="m-0 text-xs text-slate-500">
+            <p className="m-0 text-sm font-medium text-slate-500 line-clamp-2">
               {activeView === "certificates"
-                ? "← Back to dashboard"
-                : "View & share codes"}
+                ? "Close certificates view"
+                : "View your purchased pre-paid vouchers"}
             </p>
           </button>
 
+          {/* Other Links */}
           {[
             {
               to: "/travel",
               icon: "GlobeAltIcon",
               title: "Travel Deals",
-              sub: "Hotels & flights",
+              sub: "Hotels, flights & rentals",
+              color: "text-emerald-600",
+              bg: "bg-emerald-50",
             },
             {
               to: "/browse-discounts",
               icon: "TagIcon",
-              title: "Discounts",
-              sub: "Local savings",
+              title: "Local Discounts",
+              sub: "Find savings nearby",
+              color: "text-indigo-600",
+              bg: "bg-indigo-50",
             },
             {
               to: "/certification",
               icon: "ShoppingCartIcon",
               title: "Buy Certificates",
-              sub: "High-value certs",
+              sub: "Pre-paid high value deals",
+              color: "text-purple-600",
+              bg: "bg-purple-50",
             },
-          ].map(({ to, icon, title, sub }) => (
+          ].map(({ to, icon, title, sub, color, bg }) => (
             <Link
               key={to}
               to={to}
-              className="relative rounded-2xl border border-slate-200 bg-white p-6 text-left transition-all hover:shadow-md hover:border-slate-300 text-decoration-none group"
+              className="relative rounded-[2rem] border border-slate-200/60 bg-white p-8 text-left transition-all duration-300 hover:border-slate-300 hover:shadow-xl hover:-translate-y-1 text-decoration-none group"
             >
-              <div className="absolute top-0 left-0 right-0 h-0.5 rounded-t-2xl bg-gradient-to-r from-[#1C4D8D] to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="w-11 h-11 rounded-lg mb-3.5 bg-slate-50 border border-slate-200 flex items-center justify-center transition-all group-hover:bg-slate-100">
-                <Icon name={icon} size={22} className="text-[#1C4D8D]" />
+              <div
+                className={`w-14 h-14 rounded-2xl mb-6 flex items-center justify-center transition-transform group-hover:scale-110 ${bg} ${color}`}
+              >
+                <Icon name={icon} size={28} />
               </div>
-              <h3 className="m-0 mb-0.5 font-bold text-sm text-slate-900">
+              <h3
+                className="m-0 mb-2 font-bold text-xl text-slate-900 tracking-tight group-hover:text-[#1C4D8D] transition-colors"
+                style={HEADING_FONT}
+              >
                 {title}
               </h3>
-              <p className="m-0 text-xs text-slate-500">{sub}</p>
+              <p className="m-0 text-sm font-medium text-slate-500 line-clamp-2">
+                {sub}
+              </p>
             </Link>
           ))}
         </div>
 
-        {/* Association banners */}
-        {!associationName && (
-          <div className="mb-7 rounded-2xl p-5 flex items-center justify-between gap-3.5 bg-blue-50 border border-blue-200 flex-wrap">
-            <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-3xl bg-blue-200 flex items-center justify-center text-xl flex-shrink-0">
-                🤝
+        {/* ═══════════════════════════════════════════════════════════════
+            ASSOCIATION BANNER & JOIN WIDGET
+        ═══════════════════════════════════════════════════════════════ */}
+        {!associationName ? (
+          <div className="mb-12 rounded-[2rem] p-8 bg-gradient-to-br from-indigo-50 to-blue-50 border border-blue-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-sm">
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-blue-600 flex-shrink-0">
+                <Icon name="UserGroupIcon" size={28} />
               </div>
               <div>
-                <p className="m-0 font-bold text-sm text-slate-900">
+                <p
+                  className="m-0 font-bold text-lg text-slate-900 tracking-tight"
+                  style={HEADING_FONT}
+                >
                   Have an association join code?
                 </p>
-                <p className="m-0 mt-0.5 text-xs text-slate-700">
-                  Link your account to access group benefits.
+                <p className="m-0 mt-1 text-sm font-medium text-slate-600">
+                  Link your account to access exclusive group benefits.
                 </p>
               </div>
             </div>
             <button
               onClick={() => setShowJoinModal(true)}
-              className="px-5 py-2.5 bg-[#1C4D8D] text-white rounded-lg font-bold text-sm hover:bg-blue-900 transition-all whitespace-nowrap"
+              className="px-8 py-4 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-[#1C4D8D] transition-all whitespace-nowrap shadow-md hover:-translate-y-0.5"
             >
               Enter Join Code
             </button>
           </div>
-        )}
-
-        {associationName && (
-          <div className="mb-7 rounded-2xl p-3.5 flex items-center gap-3 bg-emerald-50 border border-emerald-200">
-            <div className="w-8 h-8 rounded-2xl flex-shrink-0 bg-emerald-100 flex items-center justify-center text-emerald-600 font-black text-sm">
-              ✓
+        ) : (
+          <div className="mb-12 rounded-[2rem] p-6 flex items-center gap-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 shadow-sm">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+              <Icon name="CheckBadgeIcon" size={24} />
             </div>
             <div>
-              <p className="m-0 font-bold text-sm text-emerald-600">
+              <p
+                className="m-0 font-bold text-lg text-emerald-900 tracking-tight"
+                style={HEADING_FONT}
+              >
                 Linked to {associationName}
               </p>
-              <p className="m-0 mt-0.5 text-xs text-emerald-700">
-                You're receiving group benefits from your association.
+              <p className="m-0 mt-0.5 text-sm font-medium text-emerald-700">
+                You are actively receiving group benefits from your association.
               </p>
             </div>
           </div>
         )}
 
-        {/* ── Certificates View ──────────────────────────────────────────── */}
+        <JoinAssociationWidget />
+
+        {/* ═══════════════════════════════════════════════════════════════
+            DYNAMIC VIEWS
+        ═══════════════════════════════════════════════════════════════ */}
         {activeView === "certificates" && (
-          <div className="mb-20">
+          <div className="mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <MyCertificatesSection key={Date.now()} />
           </div>
         )}
 
-        {/* ── Dashboard View ─────────────────────────────────────────────── */}
         {activeView === "dashboard" && (
-          <>
+          <div className="animate-in fade-in duration-500">
             <Hairline />
 
-            {/* Travel Deals */}
-            <div className="mb-16">
+            {/* ── Recent Activity ── */}
+            <div className="mb-12">
               <SectionLabel
-                eyebrow="Exclusive Member Offers"
-                title="Featured Travel Deals"
+                eyebrow="Your History"
+                title="Recent Transactions"
                 action={
                   <Link
-                    to="/travel"
-                    className="px-4 py-2 bg-transparent border border-slate-200 rounded-full text-sm font-bold text-[#1C4D8D] hover:bg-slate-50 transition-all whitespace-nowrap"
+                    to="/browse-discounts"
+                    className="px-6 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-[#1C4D8D] transition-all whitespace-nowrap shadow-sm"
                   >
-                    View All →
+                    View All Offers
                   </Link>
                 }
               />
-              {travelDeals.length === 0 ? (
-                <div className="text-center py-16 text-slate-500">
-                  <div className="w-14 h-14 rounded-lg bg-slate-50 flex items-center justify-center mx-auto mb-3.5">
-                    <Icon
-                      name="GlobeAltIcon"
-                      size={28}
-                      className="text-slate-500"
-                    />
-                  </div>
-                  <p className="m-0 text-sm font-semibold text-slate-500">
-                    Travel deals will appear here once configured.
-                  </p>
-                  <Link
-                    to="/travel"
-                    className="text-[#1C4D8D] font-bold no-underline mt-1.5 inline-block text-sm hover:underline"
-                  >
-                    Browse travel →
-                  </Link>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {travelDeals.map((deal) => (
-                    <div
-                      key={deal.id || deal._id}
-                      className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      <div className="relative h-52 bg-slate-50 overflow-hidden">
-                        {(deal.image_url || deal.imageUrl || deal.image) && (
-                          <AppImage
-                            src={deal.image_url || deal.imageUrl || deal.image}
-                            alt={deal.title}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                          />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-                        <div className="absolute bottom-3.5 left-4 right-4">
-                          <h3
-                            style={{
-                              margin: 0,
-                              fontSize: 18,
-                              fontWeight: 700,
-                              color: "#fff",
-                              letterSpacing: "-0.01em",
-                              textShadow: "0 2px 8px rgba(0,0,0,0.4)",
-                            }}
-                          >
-                            {deal.title || deal.name}
-                          </h3>
-                        </div>
-                      </div>
-                      <div className="p-5 flex items-end justify-between">
-                        <div>
-                          <p className="m-0 mb-0.5 text-xs font-bold tracking-widest uppercase text-slate-500">
-                            Member Price
-                          </p>
-                          <span
-                            style={{
-                              fontSize: 26,
-                              fontWeight: 700,
-                              color: "#0D1117",
-                              letterSpacing: "-0.02em",
-                            }}
-                          >
-                            $
-                            {deal.member_price ||
-                              deal.memberPrice ||
-                              deal.price ||
-                              "–"}
-                          </span>
-                        </div>
-                        <Link
-                          to="/travel"
-                          className="px-4 py-2 bg-[#1C4D8D] text-white rounded-lg font-bold text-xs hover:bg-blue-900 transition-all no-underline"
-                        >
-                          View Deal
-                        </Link>
-                      </div>
+              <div className="bg-white border border-slate-200/60 rounded-[2rem] overflow-hidden shadow-sm p-2">
+                {recentTransactions.length === 0 ? (
+                  <div className="py-20 text-center">
+                    <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4 border border-slate-100 shadow-sm">
+                      <Icon
+                        name="ClockIcon"
+                        size={32}
+                        className="text-slate-400"
+                      />
                     </div>
-                  ))}
-                </div>
-              )}
+                    <p
+                      className="m-0 font-bold text-lg text-slate-900 mb-1 tracking-tight"
+                      style={HEADING_FONT}
+                    >
+                      No transactions yet
+                    </p>
+                    <p className="m-0 text-sm font-medium text-slate-500">
+                      Your savings history will appear here once you redeem
+                      offers.
+                    </p>
+                  </div>
+                ) : (
+                  <ul className="list-none m-0 p-0">
+                    {recentTransactions.map((tx, i) => (
+                      <li
+                        key={tx.id || i}
+                        className="px-6 py-5 flex items-center gap-5 hover:bg-slate-50/50 rounded-2xl transition-colors group"
+                      >
+                        <div className="w-14 h-14 rounded-[1rem] flex-shrink-0 bg-slate-50 border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm group-hover:border-slate-300 transition-colors p-2">
+                          {tx.business?.logoUrl ? (
+                            <AppImage
+                              src={tx.business.logoUrl}
+                              alt={tx.business.name}
+                              className="w-full h-full object-contain"
+                            />
+                          ) : (
+                            <Icon
+                              name="BuildingStorefrontIcon"
+                              size={24}
+                              className="text-slate-400"
+                            />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="m-0 font-bold text-base text-slate-900 truncate group-hover:text-[#1C4D8D] transition-colors">
+                            {tx.business?.name || "Business"}
+                          </p>
+                          <p className="m-0 mt-1 text-xs font-medium text-slate-500">
+                            {tx.offer?.title || tx.type || "Discount"}{" "}
+                            <span className="mx-1 opacity-50">•</span>
+                            {new Date(
+                              tx.transactionDate || tx.createdAt,
+                            ).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </p>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p className="m-0 font-black text-lg text-emerald-600">
+                            −${(tx.savingsAmount || 0).toFixed(2)}
+                          </p>
+                          <p className="m-0 mt-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            ${(tx.saleAmount || 0).toFixed(2)} Spent
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
 
             <Hairline />
 
-            {/* New Discounts */}
-            <div className="mb-16">
+            {/* ── New Discounts ── */}
+            <div className="mb-12">
               <SectionLabel
                 eyebrow="Save Big Locally"
-                title="New Local Discounts"
+                title="Fresh Local Deals"
                 action={
                   <Link
                     to="/discounts"
-                    className="px-4 py-2 bg-transparent border border-slate-200 rounded-full text-sm font-bold text-[#1C4D8D] hover:bg-slate-50 transition-all whitespace-nowrap"
+                    className="px-6 py-3 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-[#1C4D8D] transition-all whitespace-nowrap shadow-md"
                   >
-                    View All →
+                    Explore All Deals
                   </Link>
                 }
               />
               {newDiscounts.length === 0 ? (
-                <div className="text-center py-16 text-slate-500">
-                  <div className="w-14 h-14 rounded-lg bg-slate-50 flex items-center justify-center mx-auto mb-3.5">
-                    <Icon name="TagIcon" size={28} className="text-slate-500" />
+                <div className="text-center py-20 bg-white border border-slate-200/60 rounded-[2rem] shadow-sm">
+                  <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4 border border-slate-100 shadow-sm">
+                    <Icon name="TagIcon" size={32} className="text-slate-400" />
                   </div>
-                  <p className="m-0 text-sm text-slate-500">
-                    No discounts yet.{" "}
-                    <Link
-                      to="/browse-discounts"
-                      className="text-[#1C4D8D] font-bold no-underline hover:underline"
-                    >
-                      Browse →
-                    </Link>
+                  <p
+                    className="m-0 font-bold text-lg text-slate-900 mb-1 tracking-tight"
+                    style={HEADING_FONT}
+                  >
+                    No new discounts
                   </p>
+                  <Link
+                    to="/browse-discounts"
+                    className="text-[#1C4D8D] font-bold text-sm hover:underline"
+                  >
+                    Browse directory →
+                  </Link>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4.5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {newDiscounts.map((discount) => (
                     <div
                       key={discount.id || discount._id}
-                      className="bg-white border border-slate-200 rounded-xl p-5.5 shadow-sm hover:shadow-md transition-shadow"
+                      className="bg-white border border-slate-200/60 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full group"
                     >
-                      <div className="flex items-start gap-3.5 mb-4.5">
-                        <div className="w-14 h-14 rounded-3xl flex-shrink-0 overflow-hidden bg-slate-50 border border-slate-200 flex items-center justify-center p-1.5 transition-colors hover:border-slate-300">
+                      <div className="flex items-start gap-4 mb-6">
+                        <div className="w-16 h-16 rounded-2xl flex-shrink-0 bg-slate-50 border border-slate-200 flex items-center justify-center p-2 shadow-sm group-hover:border-blue-300 transition-colors overflow-hidden">
                           {discount.business?.logoUrl ? (
                             <AppImage
                               src={discount.business.logoUrl}
@@ -949,16 +867,16 @@ const MemberDashboardContent = () => {
                           ) : (
                             <Icon
                               name="BuildingStorefrontIcon"
-                              size={24}
-                              className="text-slate-500"
+                              size={28}
+                              className="text-slate-400 group-hover:text-blue-500 transition-colors"
                             />
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="m-0 mb-1 font-bold text-sm text-slate-900 leading-tight tracking-tight">
+                        <div className="flex-1 min-w-0 pt-1">
+                          <h3 className="m-0 mb-1.5 font-bold text-lg text-slate-900 leading-tight tracking-tight truncate group-hover:text-[#1C4D8D] transition-colors">
                             {discount.business?.name || "Business"}
                           </h3>
-                          <span className="inline-block px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-full text-xs font-semibold text-slate-700">
+                          <span className="inline-block px-2.5 py-1 bg-slate-100 rounded-md text-[10px] font-black uppercase tracking-wider text-slate-500">
                             {getCategoryLabel(discount.category) ||
                               getCategoryLabel(discount.business?.category) ||
                               "General"}
@@ -966,10 +884,12 @@ const MemberDashboardContent = () => {
                         </div>
                       </div>
 
-                      {/* Discount amount — editorial style */}
-                      <div className="rounded-2xl p-4.5 mb-4 text-center bg-slate-50 border border-slate-200 relative overflow-hidden">
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-3/4 w-0.5 bg-[#1C4D8D] rounded-full" />
-                        <p className="m-0 text-2xl font-bold text-slate-900 tracking-tight">
+                      <div className="rounded-2xl p-5 mb-6 text-center bg-gradient-to-br from-blue-50 to-indigo-50/50 border border-blue-100/60 relative overflow-hidden mt-auto group-hover:bg-blue-50 transition-colors">
+                        <div className="absolute top-0 right-0 w-20 h-20 bg-white/40 rounded-full blur-xl -mr-10 -mt-10 pointer-events-none" />
+                        <p
+                          className="m-0 text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#1C4D8D] to-indigo-600 tracking-tight relative z-10"
+                          style={HEADING_FONT}
+                        >
                           {(discount.type || "DISCOUNT") === "DISCOUNT"
                             ? `${discount.discountValue || 0}% off`
                             : `$${discount.discountValue || 0} off`}
@@ -978,7 +898,7 @@ const MemberDashboardContent = () => {
 
                       <Link
                         to={`/business-profile/${discount.business?.id || discount.businessId}`}
-                        className="px-4 py-2.5 inline-block font-bold text-sm text-[#1C4D8D] hover:text-blue-900 transition-colors no-underline border-b border-[#1C4D8D] hover:border-blue-900"
+                        className="w-full py-3.5 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-900 hover:text-white transition-all text-center block"
                       >
                         View Details
                       </Link>
@@ -988,53 +908,145 @@ const MemberDashboardContent = () => {
               )}
             </div>
 
-            {/* Provider Directory */}
-            {providerDirectory.length > 0 && (
-              <>
-                <Hairline />
-                <div className="mb-16">
-                  <SectionLabel
-                    eyebrow="Partner Network"
-                    title="Discount Provider Directory"
-                  />
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-2">
-                    {providerDirectory.map((business) => (
-                      <Link
-                        key={business.id || business._id}
-                        to={`/business-profile/${business.id || business._id}`}
-                        className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col items-center text-center no-underline hover:shadow-md transition-shadow"
-                      >
-                        <div className="w-14 h-14 rounded-full mb-2.5 bg-slate-50 border border-slate-200 flex items-center justify-center overflow-hidden p-1 transition-colors hover:border-slate-300">
-                          {business.logoUrl ? (
-                            <AppImage
-                              src={business.logoUrl}
-                              alt={business.name}
-                              className="w-full h-full object-contain rounded-full"
-                            />
-                          ) : (
-                            <Icon
-                              name="BuildingStorefrontIcon"
-                              size={24}
-                              className="text-slate-500"
-                            />
-                          )}
-                        </div>
-                        <h3 className="m-0 mb-0.5 font-bold text-xs text-slate-900 overflow-hidden text-ellipsis whitespace-nowrap w-full">
-                          {business.name}
-                        </h3>
-                        <p className="m-0 mb-0.5 text-xs text-slate-500 overflow-hidden text-ellipsis whitespace-nowrap w-full">
-                          {getCategoryLabel(business.category) || "General"}
-                        </p>
-                        <p className="m-0 text-xs text-slate-500 font-semibold tracking-widest uppercase">
-                          {business.district || "Cayman Islands"}
-                        </p>
-                      </Link>
-                    ))}
+            <Hairline />
+
+            {/* ── Travel Deals ── */}
+            <div className="mb-12">
+              <SectionLabel
+                eyebrow="Exclusive Member Offers"
+                title="Featured Travel Deals"
+                action={
+                  <Link
+                    to="/travel"
+                    className="px-6 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-[#1C4D8D] transition-all whitespace-nowrap shadow-sm"
+                  >
+                    View All Destinations
+                  </Link>
+                }
+              />
+              {travelDeals.length === 0 ? (
+                <div className="text-center py-20 bg-white border border-slate-200/60 rounded-[2rem] shadow-sm">
+                  <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4 border border-slate-100 shadow-sm">
+                    <Icon
+                      name="GlobeAltIcon"
+                      size={32}
+                      className="text-slate-400"
+                    />
                   </div>
+                  <p
+                    className="m-0 font-bold text-lg text-slate-900 mb-1 tracking-tight"
+                    style={HEADING_FONT}
+                  >
+                    Checking for deals...
+                  </p>
+                  <p className="text-sm font-medium text-slate-500 mb-4">
+                    Travel deals will appear here once configured.
+                  </p>
+                  <Link
+                    to="/travel"
+                    className="text-[#1C4D8D] font-bold text-sm hover:underline"
+                  >
+                    Go to Travel Portal →
+                  </Link>
                 </div>
-              </>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {travelDeals.map((deal) => (
+                    <Link
+                      key={deal.id || deal._id}
+                      to="/travel"
+                      className="bg-white border border-slate-200/60 rounded-[2rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 group block text-decoration-none"
+                    >
+                      <div className="relative h-56 bg-slate-100 overflow-hidden">
+                        {(deal.image_url || deal.imageUrl || deal.image) && (
+                          <AppImage
+                            src={deal.image_url || deal.imageUrl || deal.image}
+                            alt={deal.title}
+                            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-80" />
+                        <div className="absolute bottom-5 left-6 right-6">
+                          <h3
+                            className="m-0 text-xl font-bold text-white tracking-tight drop-shadow-md line-clamp-2"
+                            style={HEADING_FONT}
+                          >
+                            {deal.title || deal.name}
+                          </h3>
+                        </div>
+                      </div>
+                      <div className="p-6 flex items-center justify-between bg-white">
+                        <div>
+                          <p className="m-0 mb-1 text-[10px] font-black tracking-widest uppercase text-slate-400">
+                            Member Price
+                          </p>
+                          <span
+                            className="text-2xl font-black text-slate-900 tracking-tight"
+                            style={HEADING_FONT}
+                          >
+                            $
+                            {deal.member_price ||
+                              deal.memberPrice ||
+                              deal.price ||
+                              "–"}
+                          </span>
+                        </div>
+                        <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-[#1C4D8D] group-hover:text-white transition-colors">
+                          <Icon name="ArrowRightIcon" size={18} />
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <Hairline />
+
+            {/* ── Provider Directory ── */}
+            {providerDirectory.length > 0 && (
+              <div className="mb-12">
+                <SectionLabel
+                  eyebrow="Partner Network"
+                  title="Featured Businesses"
+                />
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {providerDirectory.map((business) => (
+                    <Link
+                      key={business.id || business._id}
+                      to={`/business-profile/${business.id || business._id}`}
+                      className="bg-white border border-slate-200/60 rounded-[1.5rem] p-5 flex flex-col items-center text-center no-underline hover:shadow-lg hover:border-slate-300 hover:-translate-y-1 transition-all duration-300 group"
+                    >
+                      <div className="w-16 h-16 rounded-2xl mb-4 bg-slate-50 border border-slate-200 flex items-center justify-center overflow-hidden p-1 shadow-sm group-hover:border-blue-200 transition-colors">
+                        {business.logoUrl ? (
+                          <AppImage
+                            src={business.logoUrl}
+                            alt={business.name}
+                            className="w-full h-full object-contain rounded-xl"
+                          />
+                        ) : (
+                          <Icon
+                            name="BuildingStorefrontIcon"
+                            size={28}
+                            className="text-slate-400 group-hover:text-blue-500 transition-colors"
+                          />
+                        )}
+                      </div>
+                      <h3 className="m-0 mb-1 font-bold text-sm text-slate-900 truncate w-full group-hover:text-[#1C4D8D] transition-colors">
+                        {business.name}
+                      </h3>
+                      <p className="m-0 mb-2 text-xs font-medium text-slate-500 truncate w-full">
+                        {getCategoryLabel(business.category) || "General"}
+                      </p>
+                      <span className="mt-auto px-2.5 py-1 bg-slate-100 rounded-md text-[9px] font-black tracking-widest uppercase text-slate-500 truncate w-full">
+                        {business.district || "Cayman Islands"}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             )}
-          </>
+          </div>
         )}
       </div>
 
@@ -1052,61 +1064,55 @@ const MemberDashboardContent = () => {
       {showQRModal && (
         <div
           onClick={() => setShowQRModal(false)}
-          className="fixed inset-0 z-50 bg-black/55 backdrop-blur-lg flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300 animate-in fade-in"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="max-w-sm w-full bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden"
+            className="max-w-sm w-full bg-white rounded-[2rem] border border-slate-200 shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300"
           >
-            {/* Header */}
-            <div className="px-7 pt-5.5 flex items-center justify-between">
+            <div className="px-8 pt-8 pb-6 flex items-start justify-between bg-slate-50/50 border-b border-slate-100">
               <div>
-                <p className="m-0 text-xs font-bold tracking-widest uppercase text-slate-500 mb-0.5">
+                <p className="m-0 text-[10px] font-black tracking-widest uppercase text-blue-600 mb-1.5">
                   Discount Club Cayman
                 </p>
                 <h3
-                  style={{
-                    margin: 0,
-                    fontSize: 20,
-                    fontWeight: 700,
-                    color: "#0D1117",
-                  }}
+                  className="m-0 text-2xl font-bold text-slate-900 tracking-tight"
+                  style={HEADING_FONT}
                 >
                   Member ID
                 </h3>
               </div>
               <button
                 onClick={() => setShowQRModal(false)}
-                className="w-8 h-8 rounded-full bg-slate-50 border border-slate-200 cursor-pointer flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors"
+                className="w-10 h-10 rounded-xl bg-white border border-slate-200 cursor-pointer flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors shadow-sm"
               >
-                <Icon name="XMarkIcon" size={16} />
+                <Icon name="XMarkIcon" size={20} />
               </button>
             </div>
 
-            {/* QR area */}
-            <div className="p-7">
-              <div className="rounded-2xl px-5.5 py-5.5 bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center">
+            <div className="p-8 flex flex-col items-center bg-white">
+              <div className="rounded-[2rem] p-6 bg-white border-2 border-dashed border-slate-200 shadow-sm relative group overflow-hidden">
+                <div className="absolute inset-0 bg-blue-50/50 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <QRCodeSVG
                   value={getQrValue()}
-                  size={196}
+                  size={220}
                   level="H"
-                  className="mb-3.5"
+                  className="relative z-10"
                 />
-                <p className="m-0 font-mono text-xs font-black text-slate-900 tracking-widest">
-                  {(user?.id || user?._id || "UNKNOWN")
-                    .toString()
-                    .substring(0, 8)
-                    .toUpperCase()}
-                </p>
               </div>
+              <p className="m-0 mt-6 font-mono text-sm font-black tracking-[0.2em] text-slate-800 bg-slate-100 px-4 py-2 rounded-lg border border-slate-200">
+                {(user?.id || user?._id || "UNKNOWN")
+                  .toString()
+                  .substring(0, 8)
+                  .toUpperCase()}
+              </p>
             </div>
 
-            {/* Footer */}
-            <div className="px-7 pb-6.5 text-center">
-              <p className="m-0 mb-1 text-sm font-bold text-slate-900">
-                Show this code to redeem discounts
+            <div className="px-8 pb-8 text-center bg-white">
+              <p className="m-0 mb-1.5 text-base font-bold text-slate-900">
+                Show this code at checkout
               </p>
-              <p className="m-0 text-xs text-slate-500">
+              <p className="m-0 text-xs font-medium text-slate-500">
                 Refreshes every 10 minutes for security.
               </p>
             </div>

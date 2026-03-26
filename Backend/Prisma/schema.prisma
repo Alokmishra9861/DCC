@@ -67,9 +67,11 @@ enum PaymentProvider {
 }
 
 enum AdStatus {
+  PENDING
   ACTIVE
   INACTIVE
   SCHEDULED
+  REJECTED
 }
 
 // ── Employee invite/status lifecycle ─────────────────────────────────────────
@@ -625,17 +627,25 @@ model Advertisement {
   business      Business  @relation(fields: [businessId], references: [id])
 
   title         String
-  imageUrl      String
-  linkUrl       String?
-  placement     String
+  image         String
+  link          String?
+  position      String    // top, middle, bottom
+  placement     String    @default("default") // legacy field
   width         Int       @default(728)
   height        Int       @default(200)
-  status        AdStatus  @default(ACTIVE)
+  status        AdStatus  @default(ACTIVE) // PENDING, ACTIVE, INACTIVE, SCHEDULED
   startDate     DateTime?
   endDate       DateTime?
+  duration      String?   // daily, weekly, monthly
 
   impressions   Int @default(0)
   clicks        Int @default(0)
+
+  // Banner purchase fields
+  paymentStatus String?        // PENDING, COMPLETED, FAILED
+  stripeSessionId String?      @unique
+  stripePaymentId String?
+  pricePaid     Float?
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
