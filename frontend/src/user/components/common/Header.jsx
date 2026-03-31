@@ -141,7 +141,7 @@ const Header = () => {
             <AppImage
               src="/logo.png"
               alt="Discount Club Cayman Logo"
-              className="h-full w-auto max-h-none object-fit scale-180 ml-5"
+              className="h-full w-auto max-h-none object-fit scale-200 lg:scale-180 ml-15 mt-5"
             />
           </Link>
 

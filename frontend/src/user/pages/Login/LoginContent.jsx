@@ -121,8 +121,12 @@ const LoginContent = () => {
       <div className="max-w-md w-full relative z-10">
         {/* Logo + title */}
         <div className="text-center mb-8 animate-fade-up">
-          <div className="w-16 h-16 bg-[#1C4D8D] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-900/20">
-            <img src="/public/logo2.png" alt="DCC Logo" className="scale-120" />
+          <div className="flex items-center justify-center mx-auto mb-6">
+            <img
+              src="/logo-rmbg.png"
+              alt="DCC Logo"
+              className="h-28 w-auto object-contain rounded-xl"
+            />
           </div>
           <h1 className="font-heading text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">
             Welcome Back
