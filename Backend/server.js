@@ -7,6 +7,8 @@ const { connectDB } = require("./config/db");
 const { errorHandler } = require("./middlewares/errorhandler");
 const { generalLimiter } = require("./middlewares/ratelimiter");
 
+const { allowAdminOrMaster } = require("./middlewares/masterAdminMiddleware");
+
 dotenv.config();
 connectDB();
 
@@ -42,7 +44,7 @@ const corsOptions = {
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-master-admin-secret"],
 };
 
 app.use(cors(corsOptions));
@@ -71,7 +73,7 @@ app.use("/api/advertisements", require("./routes/advertisement.routes"));
 app.use("/api/analytics", require("./routes/analytics.routes"));
 app.use("/api/b2b", require("./routes/b2b.routes"));
 app.use("/api/upload", require("./routes/upload.routes"));
-app.use("/api/admin", require("./routes/admin.routes"));
+app.use("/api/admin", allowAdminOrMaster, require("./routes/admin.routes"));
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get("/", (req, res) => {
