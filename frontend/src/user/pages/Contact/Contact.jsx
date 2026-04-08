@@ -55,8 +55,8 @@ const Contact = () => {
       id: "info_2",
       icon: "EnvelopeIcon",
       title: "Email",
-      value: "info@discountclubcayman.ky",
-      link: "mailto:info@discountclubcayman.ky",
+      value: "info@cayeats.com",
+      link: "mailto:info@cayeats.com",
       color: "bg-green-100 text-green-700",
     },
     {

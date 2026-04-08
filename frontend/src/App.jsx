@@ -16,6 +16,7 @@ import NotFoundPage from "./user/pages/NotFoundPage";
 import AboutContent from "./user/pages/About/AboutContent";
 import Contact from "./user/pages/Contact/Contact";
 import BrowseDiscountsContent from "./user/pages/BrowseDiscounts/BrowseDiscountsContent";
+import BrowseDiscountsPublic from "./user/pages/BrowseDiscounts/BrowseDiscountsPublic";
 import AdvertiseContent from "./user/pages/Advertise/AdvertiseContent";
 import BusinessProfileContent from "./user/pages/Businessprofile/BusinessProfileContent";
 import BusinessDashboardContent from "./user/pages/BusinessDashboard/BusinessDashboardContent";
@@ -33,6 +34,7 @@ import SignupContent from "./user/pages/SignUp/SignupContent";
 import MemberShipFormContent from "./user/pages/Membership/MemberShipFormContent";
 import VerifyEmailPage from "./user/pages/VerifyEmail/VerifyEmailPage";
 import CertificationContent from "./user/pages/Certificates/CertificationContent";
+import CertificatesPage from "./user/pages/Certificates/CertificatesPage";
 import MemberDashboardContent from "./user/pages/MemberDashboard/MemberDashboardContent";
 import TravelContent from "./user/pages/Travel/TravelContent";
 import CategoriesDetailsPage from "./user/pages/Categories/CategoriesDetailsPage";
@@ -52,6 +54,10 @@ import AssociationBusinessDashboard from "./user/pages/AssociationDashboard/Asso
 import AcceptAssociationMemberInvite from "./user/pages/Association/AcceptAssociationMemberInvite";
 import AcceptAssociationBusinessInvite from "./user/pages/Association/AcceptAssociationBusinessInvite";
 import B2BDiscountsContent from "./user/pages/B2Bdiscounts/B2BDiscountsContent";
+import HowItWorks from "./user/pages/HowItWorks/HowItWorks";
+import FAQ from "./user/pages/FAQ/FAQ";
+import Terms from "./user/pages/Terms/Terms";
+import Privacy from "./user/pages/Privacy/Privacy";
 
 import { getAssociationType, associationAPI } from "./services/api";
 
@@ -139,7 +145,12 @@ const UserLayout = () => (
           path="/categoriespage/:category"
           element={<CategoriesDetailsPage />}
         />
-        <Route path="/browse-discounts" element={<BrowseDiscountsContent />} />
+        <Route path="/browse-discounts" element={<BrowseDiscountsPublic />} />
+        <Route path="/certificates" element={<CertificatesPage />} />
+        <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
 
         {/* Public invite acceptance — employee has no account yet */}
         <Route path="/accept-invite/:token" element={<AcceptInvite />} />

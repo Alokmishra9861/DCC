@@ -28,13 +28,16 @@ router.get("/pending", ctrl.getPendingApprovals);
 
 // ── Memberships ───────────────────────────────────────────────────────────────
 router.get("/memberships/pending", ctrl.getPendingMemberships);
+router.get("/memberships", ctrl.getAllMemberships);
 router.patch("/memberships/:id/approve", ctrl.approveMembership);
 
 // ── Employers ─────────────────────────────────────────────────────────────────
+router.get("/employers", ctrl.getAllEmployers);
 router.patch("/employers/:id/approve", ctrl.approveEmployer);
 router.patch("/employers/:id/reject", ctrl.rejectEmployer);
 
 // ── Associations ──────────────────────────────────────────────────────────────
+router.get("/associations", ctrl.getAllAssociations);
 router.patch("/associations/:id/approve", ctrl.approveAssociation);
 
 // ── Businesses ────────────────────────────────────────────────────────────────

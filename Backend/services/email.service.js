@@ -122,6 +122,39 @@ const emailTemplates = {
       </a>
     `,
   }),
+
+  // 9. Contact form submission (to admin)
+  contactSubmission: ({ name, email, phone, subject, message }) => ({
+    subject: `New Contact Form Submission — ${subject}`,
+    html: `
+      <h2>📧 New Contact Inquiry</h2>
+      <p><strong>From:</strong> ${name}</p>
+      <p><strong>Email:</strong> ${email}</p>
+      ${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ""}
+      <p><strong>Subject:</strong> ${subject}</p>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;">
+      <h3>Message:</h3>
+      <p style="white-space:pre-wrap;background:#f3f4f6;padding:15px;border-radius:6px;border-left:4px solid #1C4D8D;">
+        ${message}
+      </p>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;">
+      <p style="font-size:12px;color:#666;">
+        Reply to: <a href="mailto:${email}">${email}</a>
+      </p>
+    `,
+  }),
+
+  // 10. Contact form confirmation (to user)
+  contactConfirmation: ({ name }) => ({
+    subject: "We received your message — Discount Club Cayman",
+    html: `
+      <h2>Thank you for contacting us, ${name}!</h2>
+      <p>We have received your message and will get back to you within 24 hours.</p>
+      <p>Our team is committed to providing you with the best support possible.</p>
+      <p style="margin-top:20px;"><strong>Discount Club Cayman</strong><br/>
+      Making savings accessible to every Caymanian</p>
+    `,
+  }),
 };
 
 // ── Exported helpers ──────────────────────────────────
@@ -173,6 +206,17 @@ const sendMembershipExpiryWarning = async (to, data) => {
   await sendEmail({ to, subject, html });
 };
 
+const sendContactSubmissionEmail = async (data) => {
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_FROM;
+  const { subject, html } = emailTemplates.contactSubmission(data);
+  await sendEmail({ to: adminEmail, subject, html });
+};
+
+const sendContactConfirmationEmail = async (to, data) => {
+  const { subject, html } = emailTemplates.contactConfirmation(data);
+  await sendEmail({ to, subject, html });
+};
+
 module.exports = {
   sendEmail,
   sendVerificationEmail,
@@ -184,4 +228,6 @@ module.exports = {
   sendAssociationWelcomeEmail,
   sendCertificatePurchaseEmail,
   sendMembershipExpiryWarning,
+  sendContactSubmissionEmail,
+  sendContactConfirmationEmail,
 };

@@ -146,22 +146,22 @@ const Header = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-6">
+          <nav className="hidden lg:flex items-center gap-8">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
-                className={`text-sm font-semibold transition-colors relative group py-2 ${
+                className={`text-sm font-bold tracking-wide transition-all duration-300 relative group py-2 ${
                   isActive(link.href)
                     ? "text-[#1C4D8D]"
-                    : "text-slate-600 hover:text-[#1C4D8D]"
+                    : "text-slate-700 hover:text-[#1C4D8D]"
                 }`}
               >
                 {link.label}
                 {isActive(link.href) && (
-                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#1C4D8D] rounded-full" />
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1C4D8D] rounded-full shadow-md" />
                 )}
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#1C4D8D] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-center" />
+                <span className="absolute bottom-0 left-0 w-full h-1 bg-linear-to-r from-[#1C4D8D] to-[#2563eb] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-center rounded-full" />
               </Link>
             ))}
           </nav>
@@ -221,16 +221,16 @@ const Header = () => {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="lg:hidden py-4 border-t border-slate-200 max-h-[calc(100vh-90px)] overflow-y-auto">
-            <nav className="flex flex-col gap-1">
+            <nav className="flex flex-col gap-2">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   to={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`px-4 py-3 rounded-lg text-base font-semibold transition-colors ${
+                  className={`px-4 py-3 rounded-lg text-base font-bold tracking-wide transition-all duration-300 ${
                     isActive(link.href)
-                      ? "text-white bg-[#1C4D8D]"
-                      : "text-slate-700 hover:bg-slate-100"
+                      ? "text-white bg-linear-to-r from-[#1C4D8D] to-[#2563eb] shadow-md"
+                      : "text-slate-700 hover:bg-blue-50 hover:text-[#1C4D8D]"
                   }`}
                 >
                   {link.label}
@@ -241,7 +241,7 @@ const Header = () => {
                 {currentUser ? (
                   <div className="px-2 flex flex-col gap-3">
                     <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl">
-                      <div className="w-9 h-9 bg-[#1C4D8D] rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-9 h-9 bg-[#1C4D8D] rounded-full flex items-center justify-center shrink-0">
                         <span className="text-white text-sm font-bold">
                           {displayName.charAt(0).toUpperCase()}
                         </span>
