@@ -805,3 +805,165 @@ exports.getB2BPartners = asyncHandler(async (req, res) => {
 
   return ApiResponse.success(res, partners);
 });
+
+// ── Get all memberships (admin) ───────────────────────────────────────────────
+exports.getAllMemberships = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = getPagination(req.query);
+  const { status } = req.query;
+
+  const where = {
+    ...(status && { status: status.toUpperCase() }),
+  };
+
+  const [membershipsRaw, total] = await Promise.all([
+    prisma.membership.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        memberId: true,
+        status: true,
+        type: true,
+        startDate: true,
+        expiryDate: true,
+        priceUSD: true,
+        paymentStatus: true,
+        paymentId: true,
+        createdAt: true,
+        member: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            district: true,
+            userId: true,
+          },
+        },
+      },
+    }),
+    prisma.membership.count({ where }),
+  ]);
+
+  const userIds = membershipsRaw.map((m) => m.member?.userId).filter(Boolean);
+
+  const users = await prisma.user.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, email: true, isActive: true },
+  });
+  const userById = new Map(users.map((u) => [u.id, u]));
+
+  const memberships = membershipsRaw.map((m) => ({
+    ...m,
+    member: m.member
+      ? { ...m.member, user: userById.get(m.member.userId) || null }
+      : null,
+  }));
+
+  return ApiResponse.paginated(
+    res,
+    memberships,
+    buildPaginationMeta(total, page, limit),
+  );
+});
+
+// ── Get all employers (admin) ─────────────────────────────────────────────────
+exports.getAllEmployers = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = getPagination(req.query);
+  const { search, status } = req.query;
+
+  const where = {
+    ...(status === "approved" && { isApproved: true }),
+    ...(status === "pending" && { isApproved: false }),
+    ...(search && {
+      companyName: { contains: search, mode: "insensitive" },
+    }),
+  };
+
+  const [employersRaw, total] = await Promise.all([
+    prisma.employer.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        userId: true,
+        companyName: true,
+        isApproved: true,
+        status: true,
+        rejectionReason: true,
+        createdAt: true,
+      },
+    }),
+    prisma.employer.count({ where }),
+  ]);
+
+  const userIds = employersRaw.map((e) => e.userId).filter(Boolean);
+  const users = await prisma.user.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, email: true, isActive: true, createdAt: true },
+  });
+  const userById = new Map(users.map((u) => [u.id, u]));
+
+  const employers = employersRaw.map((e) => ({
+    ...e,
+    user: userById.get(e.userId) || null,
+  }));
+
+  return ApiResponse.paginated(
+    res,
+    employers,
+    buildPaginationMeta(total, page, limit),
+  );
+});
+
+// ── Get all associations (admin) ──────────────────────────────────────────────
+exports.getAllAssociations = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = getPagination(req.query);
+  const { search, status } = req.query;
+
+  const where = {
+    ...(status === "approved" && { isApproved: true }),
+    ...(status === "pending" && { isApproved: false }),
+    ...(search && {
+      name: { contains: search, mode: "insensitive" },
+    }),
+  };
+
+  const [associationsRaw, total] = await Promise.all([
+    prisma.association.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        userId: true,
+        name: true,
+        isApproved: true,
+        createdAt: true,
+      },
+    }),
+    prisma.association.count({ where }),
+  ]);
+
+  const userIds = associationsRaw.map((a) => a.userId).filter(Boolean);
+  const users = await prisma.user.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, email: true, isActive: true, createdAt: true },
+  });
+  const userById = new Map(users.map((u) => [u.id, u]));
+
+  const associations = associationsRaw.map((a) => ({
+    ...a,
+    user: userById.get(a.userId) || null,
+  }));
+
+  return ApiResponse.paginated(
+    res,
+    associations,
+    buildPaginationMeta(total, page, limit),
+  );
+});

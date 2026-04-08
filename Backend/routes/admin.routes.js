@@ -27,8 +27,8 @@ router.delete("/members/:id", ctrl.deleteMember);
 router.get("/pending", ctrl.getPendingApprovals);
 
 // ── Memberships ───────────────────────────────────────────────────────────────
-router.get("/memberships/pending", ctrl.getPendingMemberships);
 router.get("/memberships", ctrl.getAllMemberships);
+router.get("/memberships/pending", ctrl.getPendingMemberships);
 router.patch("/memberships/:id/approve", ctrl.approveMembership);
 
 // ── Employers ─────────────────────────────────────────────────────────────────
