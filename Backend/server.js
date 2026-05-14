@@ -33,6 +33,8 @@ const corsOptions = {
       "http://127.0.0.1:3000",
       "https://dcc-frontend-ce9z.onrender.com", // Production frontend on Render
       "https://dcc-frontend-production.vercel.app", // Alternative Vercel deployment
+      "https://discountclubcayman.com",
+      "https://www.discountclubcayman.com",
     ];
 
     // Allow requests with no origin (like mobile apps or Postman)
