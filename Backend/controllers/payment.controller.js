@@ -374,15 +374,9 @@ exports.capturePayPal = asyncHandler(async (req, res) => {
   throw ApiError.badRequest("PayPal payment not completed");
 });
 
-// ── Verify Stripe session from success page ───────────
 exports.verifyStripeSession = asyncHandler(async (req, res) => {
   const sessionId = req.query.session_id;
   if (!sessionId) throw ApiError.badRequest("Missing session_id");
-
-  const member = await prisma.member.findUnique({
-    where: { userId: req.user.id },
-  });
-  if (!member) throw ApiError.notFound("Member not found");
 
   const session = await getStripeSession(sessionId);
   if (!session || session.payment_status !== "paid") {
@@ -393,12 +387,14 @@ exports.verifyStripeSession = asyncHandler(async (req, res) => {
     throw ApiError.badRequest("Invalid session type");
   }
 
-  if (
-    session.metadata?.memberId &&
-    session.metadata.memberId !== String(member.id)
-  ) {
-    throw ApiError.forbidden("Session does not belong to this member");
-  }
+  const memberId = session.metadata?.memberId;
+  if (!memberId) throw ApiError.badRequest("Missing memberId in session metadata");
+
+  const member = await prisma.member.findUnique({
+    where: { id: memberId },
+    include: { user: true },
+  });
+  if (!member || !member.user) throw ApiError.notFound("Member profile not found");
 
   const membershipId = session.metadata?.membershipId;
   if (!membershipId) throw ApiError.badRequest("Missing membershipId");
@@ -410,9 +406,50 @@ exports.verifyStripeSession = asyncHandler(async (req, res) => {
     await activateMembership(membershipId, session.payment_intent, "STRIPE");
   }
 
+  // ── Generate JWT Tokens for seamless auto-login ───────────────────────────
+  const jwt = require("jsonwebtoken");
+  const generateToken = (id, secret, expiresIn) =>
+    jwt.sign({ id }, secret, { expiresIn });
+
+  const accessToken = generateToken(
+    member.user.id,
+    process.env.JWT_SECRET,
+    process.env.JWT_EXPIRES_IN || "7d",
+  );
+  const refreshToken = generateToken(
+    member.user.id,
+    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+    process.env.JWT_REFRESH_EXPIRES_IN || "30d",
+  );
+
+  const { buildAuthResponse } = require("../utils/auth.redirect");
+
+  // Fetch full user with role includes to match buildAuthResponse structure
+  const fullUser = await prisma.user.findUnique({
+    where: { id: member.user.id },
+    include: {
+      member: { include: { membership: true } },
+      employer: true,
+      association: true,
+      business: true,
+      b2bPartner: true,
+    },
+  });
+
+  const authData = buildAuthResponse(
+    { accessToken, refreshToken },
+    fullUser,
+    fullUser.association,
+    fullUser.member?.membership
+  );
+
   return ApiResponse.success(
     res,
-    { type: "membership", activated: true },
-    "Membership verified",
+    {
+      ...authData,
+      type: "membership",
+      activated: true,
+    },
+    "Membership verified and user authenticated successfully",
   );
 });

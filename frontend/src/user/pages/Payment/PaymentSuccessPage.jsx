@@ -9,7 +9,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { memberAPI, paymentAPI } from "../../../services/api";
+import { memberAPI, paymentAPI, saveAuthData } from "../../../services/api";
 
 const PaymentSuccessPage = () => {
   const [searchParams] = useSearchParams();
@@ -52,13 +52,19 @@ const PaymentSuccessPage = () => {
           setStatus("success");
         } else if (isCertificatePayment) {
           // Certificate payment — verify via paymentAPI.verifyCertificateSession
-          await paymentAPI.verifyCertificateSession(sessionId);
+          const data = await paymentAPI.verifyCertificateSession(sessionId);
+          if (data && (data.accessToken || data.token)) {
+            saveAuthData(data);
+          }
           setRedirectPath("/member-dashboard/certificates");
           if (cancelled) return;
           setStatus("success");
         } else {
           // Membership payment — use memberAPI.verifyPayment
-          await memberAPI.verifyPayment(sessionId);
+          const data = await memberAPI.verifyPayment(sessionId);
+          if (data && (data.accessToken || data.token)) {
+            saveAuthData(data);
+          }
           setRedirectPath("/member-dashboard");
           if (cancelled) return;
           setStatus("success");

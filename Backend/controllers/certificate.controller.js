@@ -586,10 +586,18 @@ exports.verifyCertificateSession = asyncHandler(async (req, res) => {
   const { session_id } = req.query;
   if (!session_id) throw ApiError.badRequest("session_id is required");
 
+  // Fetch the Stripe session first to resolve the memberId securely from metadata
+  const stripeSession = await getStripeSession(session_id);
+  if (!stripeSession) throw ApiError.notFound("Stripe session not found");
+
+  const memberId = stripeSession.metadata?.memberId;
+  if (!memberId) throw ApiError.badRequest("Missing memberId in Stripe session metadata");
+
   const member = await prisma.member.findUnique({
-    where: { userId: req.user.id },
+    where: { id: memberId },
+    include: { user: true },
   });
-  if (!member) throw ApiError.notFound("Member profile not found");
+  if (!member || !member.user) throw ApiError.notFound("Member profile not found");
 
   // Poll for webhook-created record (up to ~8 seconds)
   let purchase = null;
@@ -607,8 +615,6 @@ exports.verifyCertificateSession = asyncHandler(async (req, res) => {
   // If webhook hasn't fired, create record from Stripe session data
   if (!purchase) {
     try {
-      const stripeSession = await getStripeSession(session_id);
-
       // Verify payment was successful
       if (stripeSession.payment_status !== "paid") {
         return res.status(202).json({
@@ -621,7 +627,6 @@ exports.verifyCertificateSession = asyncHandler(async (req, res) => {
       // Extract metadata
       const {
         type,
-        memberId,
         certificateId,
         offerType,
         faceValue,
@@ -630,13 +635,6 @@ exports.verifyCertificateSession = asyncHandler(async (req, res) => {
         businessName,
         title,
       } = stripeSession.metadata;
-
-      // Verify this belongs to the current user
-      if (memberId !== member.id) {
-        throw ApiError.forbidden(
-          "This certificate purchase does not belong to you",
-        );
-      }
 
       // Generate unique code
       const generateUniqueCode = () => {
@@ -752,9 +750,47 @@ exports.verifyCertificateSession = asyncHandler(async (req, res) => {
     }
   }
 
+  // ── Generate JWT Tokens for seamless auto-login ───────────────────────────
+  const jwt = require("jsonwebtoken");
+  const generateToken = (id, secret, expiresIn) =>
+    jwt.sign({ id }, secret, { expiresIn });
+
+  const accessToken = generateToken(
+    member.user.id,
+    process.env.JWT_SECRET,
+    process.env.JWT_EXPIRES_IN || "7d",
+  );
+  const refreshToken = generateToken(
+    member.user.id,
+    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+    process.env.JWT_REFRESH_EXPIRES_IN || "30d",
+  );
+
+  const { buildAuthResponse } = require("../utils/auth.redirect");
+
+  // Fetch full user with role includes to match buildAuthResponse structure
+  const fullUser = await prisma.user.findUnique({
+    where: { id: member.user.id },
+    include: {
+      member: { include: { membership: true } },
+      employer: true,
+      association: true,
+      business: true,
+      b2bPartner: true,
+    },
+  });
+
+  const authData = buildAuthResponse(
+    { accessToken, refreshToken },
+    fullUser,
+    fullUser.association,
+    fullUser.member?.membership
+  );
+
   return res.status(200).json({
     success: true,
     certificate: purchase,
+    ...authData,
   });
 });
 

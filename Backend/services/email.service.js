@@ -4,7 +4,14 @@ const FROM = `"${process.env.EMAIL_FROM_NAME || "Discount Club Cayman"}" <${proc
 
 // ── Generic send ──────────────────────────────────────
 const sendEmail = async ({ to, subject, html }) => {
-  await transporter.sendMail({ from: FROM, to, subject, html });
+  try {
+    console.log(`[Email Service] Attempting to send email to ${to}...`);
+    await transporter.sendMail({ from: FROM, to, subject, html });
+    console.log(`[Email Service] Email successfully sent to ${to}`);
+  } catch (error) {
+    console.error(`[Email Service Error] Failed to send email to ${to}:`, error.message);
+    // Do NOT throw error — email failure must be non-fatal and must not crash the transaction!
+  }
 };
 
 // ── Templates ─────────────────────────────────────────

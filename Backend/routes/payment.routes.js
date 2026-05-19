@@ -23,6 +23,13 @@ router.post(
   stripeWebhook,
 );
 
+// ── Stripe & Certificate Public Verification (auto-login enabled) ─────────────
+// Both GET verify routes are public so Stripe mobile redirects don't crash on 401.
+// They verify with Stripe securely via checkout session ID, then return the JWT token.
+router.get("/verify-session", verifyStripeSession);
+router.get("/stripe/verify", verifyStripeSession);
+router.get("/verify-certificate-session", verifyCertificateSession);
+
 // ── All routes below require a valid JWT ──────────────────────────────────────
 router.use(protect);
 
@@ -49,37 +56,6 @@ router.post(
 
 // POST /api/payments/paypal/capture
 router.post("/paypal/capture", authorize("MEMBER", "EMPLOYER"), capturePayPal);
-
-// GET /api/payments/verify-session          ← legacy alias (kept for compatibility)
-// GET /api/payments/stripe/verify           ← new path (used by memberAPI.verifyPayment)
-// Both hit the same controller — verifyStripeSession activates membership if needed
-// and returns { type: "membership", activated: true }
-router.get(
-  "/verify-session",
-  authorize("MEMBER", "EMPLOYER", "BUSINESS"),
-  verifyStripeSession,
-);
-
-// ✅ NEW alias — matches memberAPI.verifyPayment in api.js:
-//    request(`/payments/stripe/verify?session_id=${encodeURIComponent(sessionId)}`)
-router.get(
-  "/stripe/verify",
-  authorize("MEMBER", "EMPLOYER", "BUSINESS"),
-  verifyStripeSession,
-);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// CERTIFICATE PAYMENTS
-// ─────────────────────────────────────────────────────────────────────────────
-
-// GET /api/payments/verify-certificate-session?session_id=xxx
-// Called by stripeService.verifyPaymentSession() in the certificate purchase flow.
-// ✅ FIX: removed the duplicate registration that existed before.
-router.get(
-  "/verify-certificate-session",
-  authorize("MEMBER"),
-  verifyCertificateSession,
-);
 
 // POST /api/payments/redeem
 // Member marks a VALUE_ADDED certificate as redeemed.
