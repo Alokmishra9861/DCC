@@ -1,110 +1,301 @@
 @import "tailwindcss";
 
+@theme {
+  /* Centralized Theme Tokens mapping to standard Tailwind properties */
+  --color-primary: #D4A62A;
+  --color-primary-foreground: #0D1328;
+  
+  --color-secondary: #E0B53A;
+  --color-secondary-foreground: #0D1328;
+  
+  --color-accent: #D4A62A;
+  --color-accent-foreground: #0D1328;
+
+  --color-background: #0D1328;
+  --color-foreground: #FFFFFF;
+
+  --color-card: #111936;
+  --color-card-foreground: #FFFFFF;
+
+  --color-muted: #161F3D;
+  --color-muted-foreground: #B8C0D4;
+
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-input: #111936;
+  --color-ring: #D4A62A;
+
+  /* Custom Color Palette variables */
+  --color-gold-accent: #D4A62A;
+  --color-gold-light: #E0B53A;
+  --color-bg-deep: #0D1328;
+  --color-bg-navy: #111936;
+  --color-bg-light: #161F3D;
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #B8C0D4;
+  --color-text-muted: #8D95A8;
+  --color-border-premium: rgba(255, 255, 255, 0.08);
+  --color-hover-glow: rgba(212, 166, 42, 0.25);
+  
+  /* Typography and animations */
+  --font-heading: 'Playfair Display', serif;
+  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  
+  --animate-fade-up: fadeUp 0.6s ease-out forwards;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 @layer base {
-  :root {
-    /* Primary Colors - Vibrant Coral */
-    --color-primary: 239 68 68;
-    --color-primary-foreground: 255 255 255;
+  body {
+    background-color: #0D1328;
+    color: #FFFFFF;
+    font-family: var(--font-sans);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    overflow-x: hidden;
+  }
 
-    /* Secondary Colors - Teal */
-    --color-secondary: 20 184 166;
-    --color-secondary-foreground: 255 255 255;
+  h1, h2, h3, h4, h5, h6 {
+    color: #FFFFFF;
+    letter-spacing: -0.02em;
+  }
 
-    /* Accent Colors - Purple */
-    --color-accent: 168 85 247;
-    --color-accent-foreground: 255 255 255;
+  ::selection {
+    background-color: rgba(212, 166, 42, 0.3);
+    color: #FFFFFF;
+  }
 
-    /* Background Colors - White */
-    --color-background: 255 255 255;
-    --color-foreground: 31 41 55;
-
-    /* Muted Colors */
-    --color-muted: 248 250 252;
-    --color-muted-foreground: 100 116 139;
-
-    /* Border & Input */
-    --color-border: 226 232 240;
-    --color-input: 226 232 240;
-    --color-ring: 239 68 68;
-
-    /* Card */
-    --color-card: 255 255 255;
-    --color-card-foreground: 31 41 55;
-
-    /* Popover */
-    --color-popover: 255 255 255;
-    --color-popover-foreground: 31 41 55;
-
-    /* Status Colors */
-    --color-success: 22 163 74;
-    --color-success-foreground: 255 255 255;
-
-    --color-warning: 234 179 8;
-    --color-warning-foreground: 31 41 55;
-
-    --color-error: 220 38 38;
-    --color-error-foreground: 255 255 255;
-
-    --color-destructive: 220 38 38;
-    --color-destructive-foreground: 255 255 255;
+  /* Custom Premium Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #0D1328;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #161F3D;
+    border-radius: 4px;
+    border: 2px solid #0D1328;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #D4A62A;
   }
 }
 
 @layer utilities {
-  @keyframes fadeUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  /* Centralized Redesign Components */
+  
+  /* 1. Buttons */
+  .btn-premium-gold {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #D4A62A;
+    color: #0D1328;
+    font-weight: 700;
+    border-radius: 9999px;
+    padding: 0.75rem 1.75rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 14px 0 rgba(212, 166, 42, 0.2);
+    cursor: pointer;
   }
 
-  .animate-fade-up {
-    animation: fadeUp 0.6s ease-out forwards;
+  .btn-premium-gold:hover {
+    background-color: #E0B53A;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(212, 166, 42, 0.4);
   }
 
-  .animation-delay-100 {
-    animation-delay: 0.1s;
+  .btn-premium-gold:active {
+    transform: translateY(0);
   }
 
-  .animation-delay-200 {
-    animation-delay: 0.2s;
+  .btn-premium-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    color: #FFFFFF;
+    border: 1px solid rgba(212, 166, 42, 0.6);
+    font-weight: 600;
+    border-radius: 9999px;
+    padding: 0.75rem 1.75rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
   }
 
-  .animation-delay-300 {
-    animation-delay: 0.3s;
+  .btn-premium-outline:hover {
+    background-color: rgba(212, 166, 42, 0.08);
+    border-color: #E0B53A;
+    color: #FFFFFF;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 166, 42, 0.15);
   }
 
-  .transition-smooth {
+  .btn-premium-outline:active {
+    transform: translateY(0);
+  }
+
+  /* 2. Glassmorphism Panels */
+  .glass-panel {
+    background: rgba(17, 25, 54, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .glass-card {
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+  .glass-panel-hover:hover {
+    transform: translateY(-4px);
+    border-color: rgba(212, 166, 42, 0.2);
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.4), 0 0 20px rgba(212, 166, 42, 0.05);
   }
 
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  /* 3. Gold Text Accent Glimmer */
+  .gold-glow-text {
+    background: linear-gradient(135deg, #FFFFFF 0%, #F5E0A5 50%, #D4A62A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgb(var(--color-muted));
+  /* 4. Form Inputs */
+  .input-premium {
+    background-color: rgba(13, 19, 40, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
+    border-radius: 0.75rem;
+    padding: 0.875rem 1.25rem;
+    outline: none;
+    transition: all 0.3s ease;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgb(var(--color-muted-foreground));
-    border-radius: 4px;
+  .input-premium:focus {
+    border-color: #D4A62A;
+    box-shadow: 0 0 0 2px rgba(212, 166, 42, 0.15);
+    background-color: rgba(13, 19, 40, 0.9);
+  }
+  
+  .input-premium::placeholder {
+    color: #8D95A8;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgb(var(--color-primary));
+  /* 5. Custom Tables styling */
+  .table-premium {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    color: #B8C0D4;
+  }
+
+  .table-premium th {
+    background-color: #111936;
+    color: #FFFFFF;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .table-premium td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    background-color: rgba(17, 25, 54, 0.3);
+    transition: background-color 0.2s ease;
+  }
+
+  .table-premium tr:hover td {
+    background-color: rgba(212, 166, 42, 0.03);
+    color: #FFFFFF;
+  }
+
+  /* 6. Glowing backgrounds */
+  .glow-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.15;
+  }
+
+  /* Subtle background grid pattern overlay */
+  .grid-background {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+
+
+  /* Forms & Input Elements overrides */
+  input,
+  select,
+  textarea {
+    background-color: rgba(13, 19, 40, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #FFFFFF !important;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: #D4A62A !important;
+    box-shadow: 0 0 0 2px rgba(212, 166, 42, 0.15) !important;
+    background-color: rgba(13, 19, 40, 0.9) !important;
+  }
+
+  /* Tables reset */
+  table {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  table th {
+    background-color: #161F3D !important;
+    color: #FFFFFF !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  table td {
+    background-color: rgba(17, 25, 54, 0.3) !important;
+    color: #B8C0D4 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+  }
+
+  table tr:hover td {
+    background-color: rgba(212, 166, 42, 0.04) !important;
+    color: #FFFFFF !important;
+  }
+
+  /* Chart Tooltips */
+  .recharts-default-tooltip,
+  div.bg-white\/95 {
+    background-color: rgba(17, 25, 54, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 0.75rem !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  /* Modal background overlay backdrop */
+  .bg-slate-900\/40,
+  .bg-slate-900\/60 {
+    background-color: rgba(13, 19, 40, 0.8) !important;
+    backdrop-filter: blur(8px) !important;
   }
 }

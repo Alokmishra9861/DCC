@@ -36,14 +36,12 @@ const Header = () => {
 
   const isActive = (path) => location.pathname === path;
 
-  // ── Nav link definitions per role ────────────────────────────────────────────
   const publicNavLinks = [
     { href: "/", label: "Home" },
-    { href: "/for-individuals", label: "For Individuals" },
+    { href: "/members", label: "For Members" },
     { href: "/for-employers", label: "For Employers" },
     { href: "/for-businesses", label: "For Businesses" },
     { href: "/for-associations", label: "For Associations" },
-    { href: "/categories", label: "Categories" },
     { href: "/about", label: "About Us" },
     { href: "/contact", label: "Contact Us" },
   ];
@@ -130,8 +128,8 @@ const Header = () => {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? "bg-white/90 backdrop-blur-md shadow-sm border-b border-slate-200"
-          : "bg-white/80 backdrop-blur-sm"
+          ? "bg-[#0D1328]/95 backdrop-blur-md shadow-2xl border-b border-white/8"
+          : "bg-[#0D1328]/70 backdrop-blur-sm border-b border-white/4"
       }`}
     >
       <div className="max-w-8xl mx-auto px-4">
@@ -141,7 +139,7 @@ const Header = () => {
             <AppImage
               src="/logo.png"
               alt="Discount Club Cayman Logo"
-              className="h-full w-auto max-h-none object-fit scale-200 lg:scale-180 ml-15 mt-5"
+              className="h-full w-auto max-h-none object-fit scale-[2.4] lg:scale-[2.1] ml-15 mt-5 filter brightness-110"
             />
           </Link>
 
@@ -153,15 +151,15 @@ const Header = () => {
                 to={link.href}
                 className={`text-sm font-bold tracking-wide transition-all duration-300 relative group py-2 ${
                   isActive(link.href)
-                    ? "text-[#1C4D8D]"
-                    : "text-slate-700 hover:text-[#1C4D8D]"
+                    ? "text-[#D4A62A]"
+                    : "text-[#B8C0D4] hover:text-[#D4A62A]"
                 }`}
               >
                 {link.label}
                 {isActive(link.href) && (
-                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1C4D8D] rounded-full shadow-md" />
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#D4A62A] rounded-full shadow-[0_0_8px_#D4A62A]" />
                 )}
-                <span className="absolute bottom-0 left-0 w-full h-1 bg-linear-to-r from-[#1C4D8D] to-[#2563eb] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-center rounded-full" />
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-[#D4A62A] to-[#E0B53A] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-center rounded-full" />
               </Link>
             ))}
           </nav>
@@ -170,19 +168,19 @@ const Header = () => {
           <div className="hidden lg:flex items-center gap-4">
             {currentUser ? (
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 rounded-full">
-                  <div className="w-7 h-7 bg-[#1C4D8D] rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">
+                <div className="flex items-center gap-2 px-4 py-2 bg-[#111936] border border-white/8 rounded-full shadow-inner">
+                  <div className="w-7 h-7 bg-[#D4A62A] text-[#0D1328] rounded-full flex items-center justify-center shadow-md">
+                    <span className="text-xs font-bold">
                       {displayName.charAt(0).toUpperCase()}
                     </span>
                   </div>
-                  <span className="text-sm font-semibold text-slate-700">
+                  <span className="text-sm font-semibold text-[#FFFFFF]">
                     {displayName}
                   </span>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="px-4 py-2 text-sm font-semibold text-red-600 border-2 border-red-100 rounded-full hover:bg-red-50 hover:border-red-300 transition-all"
+                  className="px-4 py-2 text-sm font-semibold text-rose-400 border border-rose-500/20 rounded-full hover:bg-rose-500/10 hover:border-rose-500/40 transition-all cursor-pointer"
                 >
                   Logout
                 </button>
@@ -191,13 +189,13 @@ const Header = () => {
               <>
                 <Link
                   to="/login"
-                  className="text-sm font-semibold text-slate-700 hover:text-[#1C4D8D] transition-colors"
+                  className="text-sm font-semibold text-[#B8C0D4] hover:text-[#D4A62A] transition-colors"
                 >
                   Login
                 </Link>
                 <Link
-                  to="/membership"
-                  className="px-5 py-2.5 bg-[#1C4D8D] text-white rounded-full text-sm font-bold hover:bg-[#1C4D8D]/90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                  to="/sign-up"
+                  className="btn-premium-gold scale-95 py-2 px-6"
                 >
                   Join Now
                 </Link>
@@ -208,7 +206,7 @@ const Header = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden p-2 text-slate-800 focus:outline-none"
+            className="lg:hidden p-2 text-[#B8C0D4] hover:text-[#D4A62A] focus:outline-none"
             aria-label="Toggle menu"
           >
             <Icon
@@ -220,44 +218,44 @@ const Header = () => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-slate-200 max-h-[calc(100vh-90px)] overflow-y-auto">
+          <div className="lg:hidden py-4 border-t border-white/8 max-h-[calc(100vh-90px)] overflow-y-auto bg-[#0D1328]/95 backdrop-blur-lg">
             <nav className="flex flex-col gap-2">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   to={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`px-4 py-3 rounded-lg text-base font-bold tracking-wide transition-all duration-300 ${
+                  className={`px-4 py-3 rounded-xl text-base font-bold tracking-wide transition-all duration-300 ${
                     isActive(link.href)
-                      ? "text-white bg-linear-to-r from-[#1C4D8D] to-[#2563eb] shadow-md"
-                      : "text-slate-700 hover:bg-blue-50 hover:text-[#1C4D8D]"
+                      ? "text-[#0D1328] bg-gradient-to-r from-[#D4A62A] to-[#E0B53A] shadow-lg"
+                      : "text-[#B8C0D4] hover:bg-[#111936] hover:text-[#D4A62A]"
                   }`}
                 >
                   {link.label}
                 </Link>
               ))}
 
-              <div className="flex flex-col gap-4 pt-4 mt-2 border-t border-slate-200">
+              <div className="flex flex-col gap-4 pt-4 mt-2 border-t border-white/8">
                 {currentUser ? (
                   <div className="px-2 flex flex-col gap-3">
-                    <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl">
-                      <div className="w-9 h-9 bg-[#1C4D8D] rounded-full flex items-center justify-center shrink-0">
-                        <span className="text-white text-sm font-bold">
+                    <div className="flex items-center gap-3 px-4 py-3 bg-[#111936] border border-white/8 rounded-xl shadow-inner">
+                      <div className="w-9 h-9 bg-[#D4A62A] text-[#0D1328] rounded-full flex items-center justify-center shrink-0 shadow-md">
+                        <span className="text-sm font-bold">
                           {displayName.charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-slate-800">
+                        <p className="text-sm font-bold text-white">
                           {currentUser.name}
                         </p>
-                        <p className="text-xs text-slate-500 capitalize">
+                        <p className="text-xs text-[#8D95A8] capitalize">
                           {currentUser.role?.toLowerCase()}
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={handleLogout}
-                      className="w-full px-6 py-3 border-2 border-red-200 text-red-600 rounded-lg text-base font-semibold hover:bg-red-50 transition-all text-center"
+                      className="w-full px-6 py-3 border border-rose-500/30 text-rose-400 rounded-xl text-base font-semibold hover:bg-rose-500/10 transition-all text-center cursor-pointer"
                     >
                       Logout
                     </button>
@@ -267,14 +265,14 @@ const Header = () => {
                     <Link
                       to="/login"
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="w-full px-6 py-3 border-2 border-slate-200 rounded-lg text-base font-semibold hover:border-[#1C4D8D] hover:text-[#1C4D8D] transition-all text-center"
+                      className="w-full px-6 py-3 border border-white/10 text-white rounded-xl text-base font-semibold hover:border-[#D4A62A] hover:text-[#D4A62A] transition-all text-center"
                     >
                       Login
                     </Link>
                     <Link
-                      to="/membership"
+                      to="/sign-up"
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="w-full px-6 py-3 bg-[#1C4D8D] text-white rounded-lg text-base font-semibold hover:bg-[#1C4D8D]/90 transition-all shadow-md text-center"
+                      className="w-full px-6 py-3 bg-[#D4A62A] text-[#0D1328] rounded-xl text-base font-bold hover:bg-[#E0B53A] transition-all shadow-lg text-center"
                     >
                       Join Now
                     </Link>

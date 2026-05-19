@@ -9,7 +9,7 @@ const HowItWorks = () => {
       description:
         "Create your account and choose between individual or family membership plans with flexible monthly or annual billing options.",
       icon: "UserPlusIcon",
-      color: "bg-blue-100 text-blue-700",
+      color: "bg-blue-100 text-[#D4AF37]",
     },
     {
       number: "2",
@@ -94,11 +94,11 @@ const HowItWorks = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-slate-50 to-blue-100 py-24 md:py-32 overflow-hidden">
+      <div className="relative bg-transparent py-24 md:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyaWJhKDMwLCA1OCwgMTM5LCAwLjA4KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-50"></div>
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center max-w-3xl mx-auto animate-fade-up">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1 text-sm font-semibold text-[#1C4D8D]">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#D4AF37]/10 px-4 py-1 text-sm font-semibold text-[#D4AF37]">
               <Icon name="SparklesIcon" size={16} />
               Easy to Use Platform
             </div>
@@ -116,7 +116,7 @@ const HowItWorks = () => {
 
       {/* For Members Section */}
       <div className="py-24 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#4988C4]/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/10 rounded-full blur-3xl"></div>
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center mb-16">
             <h2 className="font-heading text-4xl md:text-5xl font-bold text-foreground mb-4">
@@ -153,7 +153,7 @@ const HowItWorks = () => {
       </div>
 
       {/* For Businesses Section */}
-      <div className="py-24 bg-slate-50 relative overflow-hidden">
+      <div className="py-24 bg-transparent relative overflow-hidden">
         <div className="absolute top-0 left-0 w-96 h-96 bg-purple-200/10 rounded-full blur-3xl"></div>
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center mb-16">
@@ -169,9 +169,9 @@ const HowItWorks = () => {
             {businessSteps.map((step, index) => (
               <div
                 key={index}
-                className="bg-white rounded-xl p-8 border border-slate-200 hover:border-[#1C4D8D] hover:shadow-lg transition-all duration-300"
+                className="bg-white/5 backdrop-blur-md rounded-xl p-8 border border-white/10 hover:border-[#D4AF37] hover:shadow-lg transition-all duration-300"
               >
-                <div className="w-14 h-14 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center mb-6 text-2xl">
+                <div className="w-14 h-14 rounded-lg bg-blue-100 text-[#D4AF37] flex items-center justify-center mb-6 text-2xl">
                   <Icon name={step.icon} size={28} />
                 </div>
                 <h3 className="font-heading text-lg font-bold text-foreground mb-3">
@@ -204,7 +204,7 @@ const HowItWorks = () => {
             {employerSteps.map((step, index) => (
               <div
                 key={index}
-                className="bg-white rounded-xl p-8 border border-slate-200 hover:border-[#1C4D8D] hover:shadow-lg transition-all duration-300"
+                className="bg-white/5 backdrop-blur-md rounded-xl p-8 border border-white/10 hover:border-[#D4AF37] hover:shadow-lg transition-all duration-300"
               >
                 <div className="w-14 h-14 rounded-lg bg-green-100 text-green-700 flex items-center justify-center mb-6 text-2xl">
                   <Icon name={step.icon} size={28} />
@@ -222,7 +222,7 @@ const HowItWorks = () => {
       </div>
 
       {/* FAQ Quick Section */}
-      <div className="py-24 bg-slate-50 relative overflow-hidden">
+      <div className="py-24 bg-transparent relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center mb-12">
             <h2 className="font-heading text-4xl md:text-5xl font-bold text-foreground mb-4">
@@ -234,7 +234,7 @@ const HowItWorks = () => {
             </p>
             <a
               href="/faq"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-[#1C4D8D] text-white rounded-lg font-semibold hover:bg-[#0F2854] transition-colors duration-200"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-[#D4AF37] text-white rounded-lg font-semibold hover:bg-[#b5952f] transition-colors duration-200"
             >
               <span>Browse FAQ</span>
               <Icon name="ArrowRightIcon" size={20} />

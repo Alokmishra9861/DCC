@@ -93,11 +93,11 @@ const Terms = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-slate-50 to-blue-100 py-24 md:py-32 overflow-hidden">
+      <div className="relative bg-transparent py-24 md:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyaWJhKDMwLCA1OCwgMTM5LCAwLjA4KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-50"></div>
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center max-w-3xl mx-auto animate-fade-up">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1 text-sm font-semibold text-[#1C4D8D]">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#D4AF37]/10 px-4 py-1 text-sm font-semibold text-[#D4AF37]">
               <Icon name="DocumentTextIcon" size={16} />
               Legal Terms
             </div>
@@ -117,13 +117,13 @@ const Terms = () => {
 
       {/* Terms Content */}
       <div className="py-24 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#4988C4]/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/10 rounded-full blur-3xl"></div>
         <div className="max-w-4xl mx-auto px-6 relative z-10">
           <div className="space-y-12">
             {sections.map((section, index) => (
               <div
                 key={index}
-                className="bg-white rounded-xl p-8 border border-slate-200 hover:border-[#1C4D8D]/20 transition-all duration-300"
+                className="bg-white/5 backdrop-blur-md rounded-xl p-8 border border-white/10 hover:border-[#D4AF37]/20 transition-all duration-300"
               >
                 <h2 className="font-heading text-2xl font-bold text-foreground mb-4">
                   {section.title}
@@ -136,13 +136,13 @@ const Terms = () => {
           </div>
 
           {/* Footer Note */}
-          <div className="mt-16 p-8 bg-blue-50 rounded-xl border border-blue-200">
+          <div className="mt-16 p-8 bg-[#D4AF37]/10 rounded-xl border border-[#D4AF37]/20">
             <div className="flex gap-4">
               <div className="flex-shrink-0 mt-1">
                 <Icon
                   name="InformationCircleIcon"
                   size={24}
-                  className="text-blue-700"
+                  className="text-[#D4AF37]"
                 />
               </div>
               <div>
@@ -155,7 +155,7 @@ const Terms = () => {
                 </p>
                 <a
                   href="/contact"
-                  className="inline-flex items-center gap-2 text-[#1C4D8D] font-semibold hover:text-[#0F2854] transition-colors"
+                  className="inline-flex items-center gap-2 text-[#D4AF37] font-semibold hover:text-white transition-colors"
                 >
                   <span>Contact Us</span>
                   <Icon name="ArrowRightIcon" size={18} />

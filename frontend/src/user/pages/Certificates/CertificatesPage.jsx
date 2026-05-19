@@ -20,7 +20,7 @@ const CertificatesPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white text-slate-900">
       {/* Hero Section */}
       <div className="relative bg-linear-to-br from-slate-50 to-blue-100 py-24 md:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyaWJhKDMwLCA1OCwgMTM5LCAwLjA4KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-50"></div>
@@ -35,10 +35,10 @@ const CertificatesPage = () => {
               <Icon name="TicketIcon" size={18} />
               Exclusive Member Benefits
             </div>
-            <h1 className="font-heading text-5xl md:text-6xl lg:text-5xl font-bold text-foreground mb-6 leading-tight">
+            <h1 className="font-heading text-5xl md:text-6xl lg:text-5xl font-bold text-slate-900 mb-6 leading-tight">
               Unlock Exclusive Certificates & Deals
             </h1>
-            <p className="text-xl md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+            <p className="text-xl md:text-xl text-slate-600 max-w-2xl mx-auto mb-8">
               Get access to prepaid gift certificates and value-added deals from
               your favorite local businesses. Save up to 50% on everything you
               love.
@@ -63,7 +63,7 @@ const CertificatesPage = () => {
             </div>
 
             {/* Trust Badges */}
-            <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-muted-foreground">
+            <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-slate-600">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
                   <Icon name="CheckIcon" size={16} className="text-green-700" />
@@ -95,10 +95,10 @@ const CertificatesPage = () => {
       <div className="py-24 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center mb-16">
-            <h2 className="font-heading text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h2 className="font-heading text-4xl md:text-5xl font-bold text-slate-900 mb-4">
               Why Purchase Certificates?
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
               Get amazing deals on popular businesses and experiences
             </p>
           </div>
@@ -157,10 +157,10 @@ const CertificatesPage = () => {
                 >
                   <Icon name={feature.icon} size={28} />
                 </div>
-                <h3 className="font-heading text-xl font-bold text-foreground mb-3">
+                <h3 className="font-heading text-xl font-bold text-slate-900 mb-3">
                   {feature.title}
                 </h3>
-                <p className="text-muted-foreground leading-relaxed">
+                <p className="text-slate-600 leading-relaxed">
                   {feature.description}
                 </p>
               </div>
@@ -173,10 +173,10 @@ const CertificatesPage = () => {
       <div className="py-24 bg-slate-50 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center mb-16">
-            <h2 className="font-heading text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h2 className="font-heading text-4xl md:text-5xl font-bold text-slate-900 mb-4">
               Categories Available
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
               Certificates available across all these popular categories
             </p>
           </div>
@@ -198,7 +198,7 @@ const CertificatesPage = () => {
                 key={index}
                 className="bg-white rounded-xl p-6 text-center border border-slate-200 hover:border-[#1C4D8D] hover:shadow-md transition-all duration-300"
               >
-                <p className="font-semibold text-foreground text-lg">
+                <p className="font-semibold text-slate-900 text-lg">
                   {category}
                 </p>
               </div>
@@ -252,7 +252,7 @@ const CertificatesPage = () => {
       <div className="py-24 relative overflow-hidden">
         <div className="max-w-4xl mx-auto px-6 relative z-10">
           <div className="text-center mb-16">
-            <h2 className="font-heading text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h2 className="font-heading text-4xl md:text-5xl font-bold text-slate-900 mb-4">
               Frequently Asked Questions
             </h2>
           </div>
@@ -280,10 +280,10 @@ const CertificatesPage = () => {
                 key={index}
                 className="bg-white rounded-lg border border-slate-200 p-6 hover:border-[#1C4D8D]/30 transition-all duration-300"
               >
-                <h3 className="font-heading font-bold text-foreground mb-3">
+                <h3 className="font-heading font-bold text-slate-900 mb-3">
                   {item.q}
                 </h3>
-                <p className="text-muted-foreground leading-relaxed">
+                <p className="text-slate-600 leading-relaxed">
                   {item.a}
                 </p>
               </div>
@@ -291,7 +291,7 @@ const CertificatesPage = () => {
           </div>
 
           <div className="mt-12 p-8 bg-blue-50 rounded-xl border border-blue-200 text-center">
-            <p className="text-muted-foreground mb-4">
+            <p className="text-slate-600 mb-4">
               Have more questions? Check our full FAQ or contact us.
             </p>
             <a

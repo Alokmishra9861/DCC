@@ -708,7 +708,7 @@ const BusinessDashboardContent = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50/50 selection:bg-[#1C4D8D]/20">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-[#1C4D8D]/20">
       {loading && (
         <div className="fixed inset-0 flex flex-col items-center justify-center bg-slate-50/80 backdrop-blur-md z-50 gap-4">
           <div className="w-12 h-12 border-4 border-slate-200 border-t-[#1C4D8D] rounded-full animate-spin shadow-sm" />

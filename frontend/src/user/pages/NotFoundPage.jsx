@@ -17,7 +17,7 @@ const NotFoundPage = () => {
             <div className="text-center max-w-md">
                 <div className="flex justify-center mb-6">
                     <div className="relative">
-                        <h1 className="text-9xl font-bold text-[#1C4D8D] opacity-20">404</h1>
+                        <h1 className="text-9xl font-bold text-[#D4AF37] opacity-20">404</h1>
                     </div>
                 </div>
                 <h2 className="text-2xl font-medium text-onBackground mb-2">Page Not Found</h2>
@@ -28,7 +28,7 @@ const NotFoundPage = () => {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <button
                         onClick={handleGoBack}
-                        className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-[#1C4D8D]/90 transition-colors duration-200"
+                        className="inline-flex items-center justify-center gap-2 bg-[#D4AF37] text-white border border-[#D4AF37]/50 px-6 py-3 rounded-lg font-medium hover:bg-[#b5952f] transition-colors duration-200"
                     >
                         <Icon name="ArrowLeftIcon" size={16} />
                         Go Back
@@ -36,7 +36,7 @@ const NotFoundPage = () => {
 
                     <button
                         onClick={handleGoHome}
-                        className="inline-flex items-center justify-center gap-2 border border-border bg-background text-foreground px-6 py-3 rounded-lg font-medium hover:bg-accent hover:text-accent-foreground transition-colors duration-200"
+                        className="inline-flex items-center justify-center gap-2 border bg-white/5 border-white/10 backdrop-blur-md text-slate-300 px-6 py-3 rounded-lg font-medium hover:bg-white/5 hover:border-white/20 hover:text-white transition-colors duration-200"
                     >
                         <Icon name="HomeIcon" size={16} />
                         Back to Home

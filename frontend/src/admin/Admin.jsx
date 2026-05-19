@@ -37,7 +37,7 @@ const Admin = () => {
 
   return (
     <div
-      className="flex flex-col min-h-screen bg-slate-50"
+      className="flex flex-col min-h-screen bg-white text-slate-900"
       style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
     >
       <style>{ADMIN_FONTS}</style>

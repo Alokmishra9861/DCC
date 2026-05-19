@@ -412,7 +412,7 @@ const BusinessProfileContent = () => {
       className="min-h-screen text-slate-900"
       style={{
         background:
-          "radial-gradient(circle at 10% 10%, rgba(34, 74, 128, 0.15), transparent 50%), radial-gradient(circle at 90% 0%, rgba(16, 185, 129, 0.12), transparent 45%), #f8fafc",
+          "radial-gradient(circle at 10% 10%, rgba(34, 74, 128, 0.15), transparent 50%), radial-gradient(circle at 90% 0%, rgba(16, 185, 129, 0.12), transparent 45%), #ffffff",
         fontFamily: '"Outfit", "Space Grotesk", system-ui, sans-serif',
         "--ink": "#0f172a",
         "--accent": "#1c4d8d",

@@ -181,7 +181,7 @@ const B2BDiscountsContent = ({ embedded = false }) => {
   });
 
   return (
-    <div className={embedded ? "" : "min-h-screen bg-slate-50/60"}>
+    <div className={embedded ? "" : "min-h-screen bg-white text-slate-900"}>
       <div className={embedded ? "px-5 py-6" : "max-w-7xl mx-auto px-5 py-10"}>
         {/* Header */}
         <div className="mb-7">

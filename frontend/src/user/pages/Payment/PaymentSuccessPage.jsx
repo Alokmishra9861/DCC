@@ -171,7 +171,7 @@ const PaymentSuccessPage = () => {
 
   // ── Success / Already active ──────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/30 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-white text-slate-900 flex items-center justify-center px-4">
       <div className="bg-white rounded-3xl p-10 max-w-lg w-full shadow-xl border border-slate-100 text-center">
         {/* Animated checkmark */}
         <div className="relative w-20 h-20 mx-auto mb-6">

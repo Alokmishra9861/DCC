@@ -62,7 +62,7 @@ const MemberShipFormContent = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0D1328] flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-[#1C4D8D] border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -72,24 +72,24 @@ const MemberShipFormContent = () => {
 
   if (isActive) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-slate-600">Redirecting to your dashboard...</div>
+      <div className="min-h-screen bg-[#0D1328] flex items-center justify-center">
+        <div className="text-slate-300">Redirecting to your dashboard...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-16 px-6">
+    <div className="min-h-screen bg-[#0D1328] py-16 px-6">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-full text-[#1C4D8D] font-semibold text-sm mb-6 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-md/80 backdrop-blur-sm border border-white/10 rounded-full text-[#D4AF37] font-semibold text-sm mb-6 shadow-sm">
             <Icon name="CreditCardIcon" size={16} />
             Membership Payment
           </div>
-          <h1 className="font-heading text-4xl md:text-5xl font-bold text-slate-900 mb-3">
+          <h1 className="font-heading text-4xl md:text-5xl font-bold text-white mb-3">
             Activate Your Membership
           </h1>
-          <p className="text-slate-600 text-lg">
+          <p className="text-slate-300 text-lg">
             Complete payment to unlock your member dashboard and QR access.
           </p>
         </div>
@@ -115,33 +115,33 @@ const MemberShipFormContent = () => {
         )}
 
         <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 bg-white rounded-3xl p-8 md:p-10 border border-slate-100 shadow-xl">
-            <h2 className="font-heading text-2xl font-bold text-slate-900 mb-6">
+          <div className="lg:col-span-2 bg-white/5 backdrop-blur-md rounded-3xl p-8 md:p-10 border border-white/10 shadow-xl">
+            <h2 className="font-heading text-2xl font-bold text-white mb-6">
               Membership Plan
             </h2>
 
             {plans.length === 0 ? (
-              <p className="text-slate-500">Plans are unavailable right now.</p>
+              <p className="text-slate-300">Plans are unavailable right now.</p>
             ) : (
               <div className="space-y-4">
                 {plans.map((plan) => (
                   <div
                     key={plan.id}
-                    className="p-5 border border-slate-100 rounded-2xl flex items-center justify-between"
+                    className="p-5 border border-white/10 rounded-2xl flex items-center justify-between"
                   >
                     <div>
-                      <p className="font-semibold text-slate-900">
+                      <p className="font-semibold text-white">
                         {plan.name}
                       </p>
-                      <p className="text-sm text-slate-500">
+                      <p className="text-sm text-slate-300">
                         {plan.description}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xl font-bold text-slate-900">
+                      <p className="text-xl font-bold text-white">
                         ${plan.price}
                       </p>
-                      <p className="text-xs text-slate-500 capitalize">
+                      <p className="text-xs text-slate-300 capitalize">
                         {plan.billingCycle}
                       </p>
                     </div>
@@ -167,7 +167,7 @@ const MemberShipFormContent = () => {
                 type="button"
                 onClick={handleCheckout}
                 disabled={paying || isActive}
-                className="flex-1 px-6 py-4 bg-[#1C4D8D] text-white rounded-xl font-bold hover:bg-[#1C4D8D]/90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                className="flex-1 px-6 py-4 bg-[#D4AF37] text-white rounded-xl font-bold hover:bg-[#D4AF37]/90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
               >
                 {isActive
                   ? "Membership Active"
@@ -179,20 +179,20 @@ const MemberShipFormContent = () => {
                 type="button"
                 onClick={() => navigate("/member-dashboard")}
                 disabled={!isActive}
-                className="flex-1 px-6 py-4 border-2 border-slate-200 rounded-xl font-semibold hover:border-[#1C4D8D] hover:text-[#1C4D8D] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                className="flex-1 px-6 py-4 border-2 border-white/10 rounded-xl font-semibold hover:border-[#1C4D8D] hover:text-[#D4AF37] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 Go to Dashboard
               </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-lg">
-            <h3 className="font-heading text-xl font-bold text-slate-900 mb-4">
+          <div className="bg-white/5 backdrop-blur-md rounded-3xl p-8 border border-white/10 shadow-lg">
+            <h3 className="font-heading text-xl font-bold text-white mb-4">
               Membership Status
             </h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Status</span>
+                <span className="text-slate-300">Status</span>
                 <span
                   className={`text-sm font-semibold px-3 py-1 rounded-full ${
                     isActive
@@ -204,16 +204,16 @@ const MemberShipFormContent = () => {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Start</span>
-                <span className="text-slate-700 text-sm">
+                <span className="text-slate-300">Start</span>
+                <span className="text-slate-300 text-sm">
                   {membership?.startDate
                     ? new Date(membership.startDate).toLocaleDateString("en-US")
                     : "-"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Expires</span>
-                <span className="text-slate-700 text-sm">
+                <span className="text-slate-300">Expires</span>
+                <span className="text-slate-300 text-sm">
                   {membership?.expiryDate
                     ? new Date(membership.expiryDate).toLocaleDateString(
                         "en-US",
@@ -223,9 +223,9 @@ const MemberShipFormContent = () => {
               </div>
             </div>
 
-            <div className="mt-8 text-sm text-slate-500">
+            <div className="mt-8 text-sm text-slate-300">
               Need help?{" "}
-              <Link to="/contact" className="text-[#1C4D8D] hover:underline">
+              <Link to="/contact" className="text-[#D4AF37] hover:underline">
                 Contact support
               </Link>
               .

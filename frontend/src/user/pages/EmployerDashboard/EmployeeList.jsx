@@ -90,7 +90,7 @@ const EmployeeList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-indigo-50/10 py-10 px-4">
+    <div className="min-h-screen bg-white text-slate-900 py-10 px-4">
       <div className="max-w-5xl mx-auto">
         {/* Toast */}
         {toast && (

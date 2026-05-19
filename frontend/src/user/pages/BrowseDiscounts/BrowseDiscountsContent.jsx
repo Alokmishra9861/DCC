@@ -144,7 +144,7 @@ const BrowseDiscountsContent = () => {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50/50 selection:bg-[#1C4D8D]/20 pt-20 md:pt-24">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-[#1C4D8D]/20 pt-20 md:pt-24">
       {/* Employer Read-Only Notice */}
       {user && String(user.role || "").toUpperCase() === "EMPLOYER" && (
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 py-3 relative overflow-hidden">

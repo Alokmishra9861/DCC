@@ -30,28 +30,28 @@ const MembershipModal = ({ onClose }) => (
     onClick={onClose}
   >
     <div
-      className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl"
+      className="bg-white/5 backdrop-blur-md rounded-3xl p-8 max-w-sm w-full shadow-2xl"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
         <span className="text-3xl">✈️</span>
       </div>
-      <h3 className="text-xl font-bold text-slate-900 text-center mb-2">
+      <h3 className="text-xl font-bold text-white text-center mb-2">
         Membership Required
       </h3>
-      <p className="text-slate-500 text-sm text-center mb-6">
+      <p className="text-slate-300 text-sm text-center mb-6">
         An active DCC membership unlocks exclusive travel deals and lets you
         book directly on our platform.
       </p>
       <Link
         to="/membership"
-        className="w-full block text-center py-3 bg-[#1C4D8D] text-white font-bold rounded-xl hover:bg-[#0F2854] transition-colors mb-3"
+        className="w-full block text-center py-3 bg-[#D4AF37] text-white font-bold rounded-xl hover:bg-[#b5952f] transition-colors mb-3"
       >
         Get Membership
       </Link>
       <button
         onClick={onClose}
-        className="w-full py-3 text-slate-500 text-sm hover:text-slate-800 transition-colors"
+        className="w-full py-3 text-slate-300 text-sm hover:text-white transition-colors"
       >
         Browse deals first
       </button>
@@ -92,30 +92,30 @@ const LocationInput = ({ placeholder, value, onChange, onSelect }) => {
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
-        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1C4D8D]/20 focus:border-[#1C4D8D] transition-all text-sm"
+        className="w-full px-4 py-3 bg-[#0D1328] border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1C4D8D]/20 focus:border-[#1C4D8D] transition-all text-sm"
       />
       {open && suggestions.length > 0 && (
-        <ul className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-slate-100 rounded-xl shadow-xl overflow-hidden">
+        <ul className="absolute z-20 top-full left-0 right-0 mt-1 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-xl overflow-hidden">
           {suggestions.map((s) => (
             <li
               key={s.id}
-              className="px-4 py-3 hover:bg-slate-50 cursor-pointer text-sm flex items-center gap-3 border-b border-slate-50 last:border-0"
+              className="px-4 py-3 hover:bg-[#0D1328] cursor-pointer text-sm flex items-center gap-3 border-b border-slate-50 last:border-0"
               onMouseDown={() => {
                 onSelect(s);
                 onChange(s.label || s.name);
                 setOpen(false);
               }}
             >
-              <span className="text-slate-400">
+              <span className="text-slate-300">
                 {s.type === "AIRPORT" ? "✈" : "🏙"}
               </span>
               <div>
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold text-white">
                   {s.iataCode}
                 </span>
-                <span className="text-slate-500 ml-2">{s.name}</span>
+                <span className="text-slate-300 ml-2">{s.name}</span>
                 {s.cityName && (
-                  <span className="text-slate-400 ml-1">· {s.cityName}</span>
+                  <span className="text-slate-300 ml-1">· {s.cityName}</span>
                 )}
               </div>
             </li>
@@ -128,13 +128,13 @@ const LocationInput = ({ placeholder, value, onChange, onSelect }) => {
 
 // ── Hotel card ────────────────────────────────────────────────────────────────
 const HotelCard = ({ hotel, canBook, onBook }) => (
-  <div className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden">
+  <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden">
     <div className="h-40 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
       <span className="text-5xl">🏨</span>
     </div>
     <div className="p-5">
       <div className="flex items-start justify-between gap-2 mb-2">
-        <h3 className="font-bold text-slate-900 text-base leading-tight">
+        <h3 className="font-bold text-white text-base leading-tight">
           {hotel.title}
         </h3>
         {hotel.starRating && (
@@ -144,26 +144,26 @@ const HotelCard = ({ hotel, canBook, onBook }) => (
         )}
       </div>
       {hotel.address && (
-        <p className="text-xs text-slate-400 mb-3 flex items-center gap-1">
+        <p className="text-xs text-slate-300 mb-3 flex items-center gap-1">
           <span>📍</span>
           {hotel.address}
         </p>
       )}
       {hotel.roomType && (
-        <p className="text-xs text-slate-500 mb-3">{hotel.roomType}</p>
+        <p className="text-xs text-slate-300 mb-3">{hotel.roomType}</p>
       )}
       <div className="flex items-end justify-between mt-4">
         <div>
-          <p className="text-xs text-slate-400">From</p>
-          <p className="text-2xl font-bold text-[#1C4D8D]">
+          <p className="text-xs text-slate-300">From</p>
+          <p className="text-2xl font-bold text-[#D4AF37]">
             {fmtPrice(hotel.discountedPrice, hotel.currency)}
           </p>
-          <p className="text-xs text-slate-400">per night</p>
+          <p className="text-xs text-slate-300">per night</p>
         </div>
         {canBook ? (
           <button
             onClick={() => onBook(hotel)}
-            className="px-4 py-2.5 bg-[#1C4D8D] text-white rounded-xl font-semibold text-sm hover:bg-[#0F2854] transition-colors"
+            className="px-4 py-2.5 bg-[#D4AF37] text-white rounded-xl font-semibold text-sm hover:bg-[#b5952f] transition-colors"
           >
             Book Now
           </button>
@@ -182,21 +182,21 @@ const HotelCard = ({ hotel, canBook, onBook }) => (
 
 // ── Flight card ───────────────────────────────────────────────────────────────
 const FlightCard = ({ flight, canBook, onBook }) => (
-  <div className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-200 p-5">
+  <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 shadow-sm hover:shadow-lg transition-all duration-200 p-5">
     <div className="flex items-center gap-3 mb-4">
       <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-xl">
         ✈️
       </div>
       <div>
-        <p className="font-bold text-slate-900 text-sm">
+        <p className="font-bold text-white text-sm">
           {flight.airline || flight.airlineCode}
         </p>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-300">
           {flight.flightNumber} · {flight.cabinClass}
         </p>
       </div>
       <span
-        className={`ml-auto text-xs font-semibold px-2 py-1 rounded-full ${flight.stops === 0 ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}
+        className={`ml-auto text-xs font-semibold px-2 py-1 rounded-full ${flight.stops === 0 ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-300"}`}
       >
         {flight.stopsLabel}
       </span>
@@ -204,8 +204,8 @@ const FlightCard = ({ flight, canBook, onBook }) => (
 
     <div className="flex items-center justify-between mb-4">
       <div className="text-center">
-        <p className="text-2xl font-bold text-slate-900">{flight.origin}</p>
-        <p className="text-xs text-slate-400">
+        <p className="text-2xl font-bold text-white">{flight.origin}</p>
+        <p className="text-xs text-slate-300">
           {flight.departureTime
             ? new Date(flight.departureTime).toLocaleTimeString("en-US", {
                 hour: "2-digit",
@@ -215,19 +215,19 @@ const FlightCard = ({ flight, canBook, onBook }) => (
         </p>
       </div>
       <div className="flex-1 flex flex-col items-center px-4">
-        <p className="text-xs text-slate-400 mb-1">
+        <p className="text-xs text-slate-300 mb-1">
           {fmtDuration(flight.duration)}
         </p>
         <div className="w-full h-px bg-slate-200 relative">
           <div className="absolute inset-y-0 left-0 w-2 h-2 bg-slate-400 rounded-full -translate-y-1/2" />
-          <div className="absolute inset-y-0 right-0 w-2 h-2 bg-[#1C4D8D] rounded-full -translate-y-1/2" />
+          <div className="absolute inset-y-0 right-0 w-2 h-2 bg-[#D4AF37] rounded-full -translate-y-1/2" />
         </div>
       </div>
       <div className="text-center">
-        <p className="text-2xl font-bold text-slate-900">
+        <p className="text-2xl font-bold text-white">
           {flight.destination}
         </p>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-300">
           {flight.arrivalTime
             ? new Date(flight.arrivalTime).toLocaleTimeString("en-US", {
                 hour: "2-digit",
@@ -240,15 +240,15 @@ const FlightCard = ({ flight, canBook, onBook }) => (
 
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-xl font-bold text-[#1C4D8D]">
+        <p className="text-xl font-bold text-[#D4AF37]">
           {fmtPrice(flight.totalPrice, flight.currency)}
         </p>
-        <p className="text-xs text-slate-400">{flight.seats} seats left</p>
+        <p className="text-xs text-slate-300">{flight.seats} seats left</p>
       </div>
       {canBook ? (
         <button
           onClick={() => onBook(flight)}
-          className="px-4 py-2.5 bg-[#1C4D8D] text-white rounded-xl font-semibold text-sm hover:bg-[#0F2854] transition-colors"
+          className="px-4 py-2.5 bg-[#D4AF37] text-white rounded-xl font-semibold text-sm hover:bg-[#b5952f] transition-colors"
         >
           Book Now
         </button>
@@ -268,8 +268,8 @@ const FlightCard = ({ flight, canBook, onBook }) => (
 const PlaceholderSection = ({ icon, title, message }) => (
   <div className="col-span-full flex flex-col items-center py-20 text-center">
     <div className="text-6xl mb-4">{icon}</div>
-    <h3 className="text-xl font-bold text-slate-900 mb-2">{title}</h3>
-    <p className="text-slate-400 text-sm max-w-md">{message}</p>
+    <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+    <p className="text-slate-300 text-sm max-w-md">{message}</p>
   </div>
 );
 
@@ -428,7 +428,7 @@ const TravelContent = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#0D1328]">
       {showMembershipModal && (
         <MembershipModal onClose={() => setShowMembershipModal(false)} />
       )}
@@ -458,15 +458,15 @@ const TravelContent = () => {
 
         {/* Tab bar */}
         <div className="max-w-5xl mx-auto px-6">
-          <div className="flex gap-1 bg-white/10 backdrop-blur-sm rounded-t-2xl p-1.5 w-fit mx-auto">
+          <div className="flex gap-1 bg-white/5 backdrop-blur-md/10 backdrop-blur-sm rounded-t-2xl p-1.5 w-fit mx-auto">
             {tabs.map((t) => (
               <button
                 key={t.key}
                 onClick={() => switchTab(t.key)}
                 className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
                   activeTab === t.key
-                    ? "bg-white text-[#1C4D8D] shadow-md"
-                    : "text-white/80 hover:text-white hover:bg-white/10"
+                    ? "bg-white/5 backdrop-blur-md text-[#D4AF37] shadow-md"
+                    : "text-white/80 hover:text-white hover:bg-white/5 backdrop-blur-md/10"
                 }`}
               >
                 <span>{t.icon}</span>
@@ -478,7 +478,7 @@ const TravelContent = () => {
       </div>
 
       {/* ── Search forms ──────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-slate-100 shadow-sm">
+      <div className="bg-white/5 backdrop-blur-md border-b border-white/10 shadow-sm">
         <div className="max-w-5xl mx-auto px-6 py-6">
           {/* Hotel search form */}
           {activeTab === "hotels" && (
@@ -487,7 +487,7 @@ const TravelContent = () => {
               className="grid grid-cols-1 md:grid-cols-5 gap-3"
             >
               <div className="md:col-span-2">
-                <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wide">
                   Destination City
                 </label>
                 <LocationInput
@@ -506,7 +506,7 @@ const TravelContent = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wide">
                   Check-in
                 </label>
                 <input
@@ -516,11 +516,11 @@ const TravelContent = () => {
                   onChange={(e) =>
                     setHotelForm((p) => ({ ...p, checkIn: e.target.value }))
                   }
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#1C4D8D]"
+                  className="w-full px-4 py-3 bg-[#0D1328] border border-white/10 rounded-xl text-sm focus:outline-none focus:border-[#1C4D8D]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wide">
                   Check-out
                 </label>
                 <input
@@ -530,11 +530,11 @@ const TravelContent = () => {
                   onChange={(e) =>
                     setHotelForm((p) => ({ ...p, checkOut: e.target.value }))
                   }
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#1C4D8D]"
+                  className="w-full px-4 py-3 bg-[#0D1328] border border-white/10 rounded-xl text-sm focus:outline-none focus:border-[#1C4D8D]"
                 />
               </div>
               <div className="flex flex-col justify-end">
-                <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wide">
                   Guests
                 </label>
                 <div className="flex gap-2">
@@ -546,7 +546,7 @@ const TravelContent = () => {
                         adults: parseInt(e.target.value),
                       }))
                     }
-                    className="flex-1 px-3 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#1C4D8D]"
+                    className="flex-1 px-3 py-3 bg-[#0D1328] border border-white/10 rounded-xl text-sm focus:outline-none focus:border-[#1C4D8D]"
                   >
                     {[1, 2, 3, 4].map((n) => (
                       <option key={n} value={n}>
@@ -557,7 +557,7 @@ const TravelContent = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-5 py-3 bg-[#1C4D8D] text-white rounded-xl font-bold text-sm hover:bg-[#0F2854] transition-colors disabled:opacity-60 whitespace-nowrap"
+                    className="px-5 py-3 bg-[#D4AF37] text-white rounded-xl font-bold text-sm hover:bg-[#b5952f] transition-colors disabled:opacity-60 whitespace-nowrap"
                   >
                     {loading ? "..." : "Search"}
                   </button>
@@ -577,7 +577,7 @@ const TravelContent = () => {
                     onClick={() =>
                       setFlightForm((p) => ({ ...p, tripType: t }))
                     }
-                    className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${flightForm.tripType === t ? "bg-[#1C4D8D] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                    className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${flightForm.tripType === t ? "bg-[#D4AF37] text-white" : "bg-slate-100 text-slate-300 hover:bg-slate-200"}`}
                   >
                     {t === "roundtrip" ? "Round Trip" : "One Way"}
                   </button>
@@ -585,7 +585,7 @@ const TravelContent = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wide">
                     From
                   </label>
                   <LocationInput
@@ -608,7 +608,7 @@ const TravelContent = () => {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wide">
                     To
                   </label>
                   <LocationInput
@@ -631,7 +631,7 @@ const TravelContent = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wide">
                     Depart
                   </label>
                   <input
@@ -644,12 +644,12 @@ const TravelContent = () => {
                         departureDate: e.target.value,
                       }))
                     }
-                    className="w-full px-3 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#1C4D8D]"
+                    className="w-full px-3 py-3 bg-[#0D1328] border border-white/10 rounded-xl text-sm focus:outline-none focus:border-[#1C4D8D]"
                   />
                 </div>
                 {flightForm.tripType === "roundtrip" && (
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">
+                    <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wide">
                       Return
                     </label>
                     <input
@@ -662,14 +662,14 @@ const TravelContent = () => {
                           returnDate: e.target.value,
                         }))
                       }
-                      className="w-full px-3 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#1C4D8D]"
+                      className="w-full px-3 py-3 bg-[#0D1328] border border-white/10 rounded-xl text-sm focus:outline-none focus:border-[#1C4D8D]"
                     />
                   </div>
                 )}
               </div>
               <div className="flex gap-3 items-end">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wide">
                     Passengers
                   </label>
                   <select
@@ -680,7 +680,7 @@ const TravelContent = () => {
                         adults: parseInt(e.target.value),
                       }))
                     }
-                    className="px-3 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#1C4D8D]"
+                    className="px-3 py-3 bg-[#0D1328] border border-white/10 rounded-xl text-sm focus:outline-none focus:border-[#1C4D8D]"
                   >
                     {[1, 2, 3, 4, 5, 6].map((n) => (
                       <option key={n} value={n}>
@@ -690,7 +690,7 @@ const TravelContent = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wide">
                     Class
                   </label>
                   <select
@@ -701,7 +701,7 @@ const TravelContent = () => {
                         travelClass: e.target.value,
                       }))
                     }
-                    className="px-3 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#1C4D8D]"
+                    className="px-3 py-3 bg-[#0D1328] border border-white/10 rounded-xl text-sm focus:outline-none focus:border-[#1C4D8D]"
                   >
                     <option value="ECONOMY">Economy</option>
                     <option value="PREMIUM_ECONOMY">Premium Economy</option>
@@ -712,7 +712,7 @@ const TravelContent = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-6 py-3 bg-[#1C4D8D] text-white rounded-xl font-bold text-sm hover:bg-[#0F2854] transition-colors disabled:opacity-60"
+                  className="px-6 py-3 bg-[#D4AF37] text-white rounded-xl font-bold text-sm hover:bg-[#b5952f] transition-colors disabled:opacity-60"
                 >
                   {loading ? "Searching…" : "Search Flights"}
                 </button>
@@ -721,7 +721,7 @@ const TravelContent = () => {
           )}
 
           {(activeTab === "packages" || activeTab === "cruises") && (
-            <div className="text-center py-4 text-slate-400 text-sm">
+            <div className="text-center py-4 text-slate-300 text-sm">
               {activeTab === "packages"
                 ? "🌴 Vacation packages coming soon"
                 : "🛳️ Cruise deals coming soon"}
@@ -741,7 +741,7 @@ const TravelContent = () => {
         {loading && (
           <div className="flex flex-col items-center py-20">
             <div className="w-12 h-12 border-4 border-[#1C4D8D] border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-slate-500 text-sm">
+            <p className="text-slate-300 text-sm">
               Searching for the best deals…
             </p>
           </div>
@@ -798,10 +798,10 @@ const TravelContent = () => {
               activeTab !== "cruises" && (
                 <div className="text-center py-20">
                   <div className="text-5xl mb-4">🔍</div>
-                  <p className="text-slate-900 font-bold text-lg mb-2">
+                  <p className="text-white font-bold text-lg mb-2">
                     No results found
                   </p>
-                  <p className="text-slate-400 text-sm">
+                  <p className="text-slate-300 text-sm">
                     Try adjusting your search — different dates or destination
                     may show more options.
                   </p>
@@ -811,12 +811,12 @@ const TravelContent = () => {
             {results.length > 0 && (
               <>
                 <div className="flex items-center justify-between mb-6">
-                  <p className="font-bold text-slate-900">
+                  <p className="font-bold text-white">
                     {results.length}{" "}
                     {activeTab === "hotels" ? "hotels" : "flights"} found
                   </p>
                   {bookingLoading && (
-                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <div className="flex items-center gap-2 text-sm text-slate-300">
                       <div className="w-4 h-4 border-2 border-[#1C4D8D] border-t-transparent rounded-full animate-spin" />
                       Preparing booking…
                     </div>
@@ -858,7 +858,7 @@ const TravelContent = () => {
                     ? "🌴"
                     : "🛳️"}
             </div>
-            <p className="text-slate-900 font-bold text-xl mb-2">
+            <p className="text-white font-bold text-xl mb-2">
               {activeTab === "hotels"
                 ? "Find your perfect hotel"
                 : activeTab === "flights"
@@ -867,7 +867,7 @@ const TravelContent = () => {
                     ? "Vacation packages"
                     : "Cruise deals"}
             </p>
-            <p className="text-slate-400 text-sm">
+            <p className="text-slate-300 text-sm">
               {activeTab === "hotels" || activeTab === "flights"
                 ? "Use the search form above to find available deals."
                 : "Coming soon — check back later."}

@@ -1484,7 +1484,7 @@ const B2BDashboardContent = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-[#1C4D8D]/20">
       {/* Decorative background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-blue-200/30 to-indigo-100/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />

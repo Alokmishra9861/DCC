@@ -88,7 +88,7 @@ const BrowseDiscountsPublic = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pt-20 md:pt-24">
+    <div className="min-h-screen bg-white text-slate-900 pt-20 md:pt-24">
       {/* Login Prompt Modal */}
       {showLoginPrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -147,10 +147,10 @@ const BrowseDiscountsPublic = () => {
 
               {/* Message */}
               <div className="mb-8">
-                <h3 className="font-heading text-xl font-bold text-foreground mb-2">
+                <h3 className="font-heading text-xl font-bold text-slate-900 mb-2">
                   See Full Details
                 </h3>
-                <p className="text-muted-foreground leading-relaxed">
+                <p className="text-slate-600 leading-relaxed">
                   Log in to your account or join Discount Club Cayman to view
                   full details, terms, redemption options, and access exclusive
                   member-only offers.

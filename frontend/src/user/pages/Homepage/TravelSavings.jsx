@@ -1,19 +1,18 @@
 import React from "react";
-import AppImage from "../../components/ui/AppImage";
 import Icon from "../../components/ui/AppIcon";
 import { Link } from "react-router-dom";
+
+const HEADING_FONT = { fontFamily: "'Playfair Display', serif" };
 
 const TravelSavings = () => {
   const hotelCards = [
     {
       id: "hotel_1",
       image: "/assets/hotel.jpeg",
-      alt: "Arc de Triomphe in Paris, France - iconic monument and landmark",
-      hotelName: "Hotel",
-      location: "Paris area",
-      stars: 4,
+      alt: "Iconic hotel near Eiffel Tower",
+      hotelName: "████████ Hotel",
       landmark: "Near Eiffel Tower",
-      amenity: "Free Internet",
+      stars: 4,
       reviewScore: "8.8",
       reviewText: "Excellent",
       publicPrices: [
@@ -22,18 +21,16 @@ const TravelSavings = () => {
         { site: "priceline.com", price: "US$697" },
       ],
       memberPrice: "US$348",
-      savingsAmount: "US$275/night",
-      savingsPercent: "44%",
+      savingsAmount: "US$275",
+      savingsPercent: "Save 44%",
     },
     {
       id: "hotel_2",
       image: "/assets/boutique.jpeg",
-      alt: "Eiffel Tower in Paris with Seine river and bridge in foreground - iconic French landmark",
-      hotelName: " Boutique",
-      location: "Paris area",
-      stars: 5,
+      alt: "Boutique hotel near Louvre Museum",
+      hotelName: "██████ Boutique",
       landmark: "Near Louvre Museum",
-      amenity: "Free Internet",
+      stars: 5,
       reviewScore: "9.4",
       reviewText: "Superb",
       publicPrices: [
@@ -42,156 +39,176 @@ const TravelSavings = () => {
         { site: "priceline.com", price: "US$334" },
       ],
       memberPrice: "US$248",
-      savingsAmount: "US$86/night",
-      savingsPercent: "26%",
+      savingsAmount: "US$86",
+      savingsPercent: "Save 26%",
     },
   ];
-  return (
-    <section className="relative py-24 overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyaWJhKDMwLCA1OCwgMTM5LCAwLjA4KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-50"></div>
 
-      <div className="max-w-7xl mx-auto px-6">
+  return (
+    <section className="relative py-24 bg-[#F9FAFB] text-[#111827] border-t border-slate-200/60 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-16 animate-fade-up">
-          <h2 className="font-heading text-5xl md:text-6xl font-bold text-foreground mb-6 tracking-tight">
-            Great Travel Savings Like This
+        <div className="mb-16">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="w-1.5 h-8 bg-[#D4A62A] rounded-full inline-block shrink-0" />
+            <span className="text-[10px] sm:text-xs font-black tracking-[0.2em] uppercase text-[#D4A62A]">
+              Travel Savings
+            </span>
+          </div>
+          <h2
+            className="text-4xl md:text-5xl font-extrabold text-[#111827] mb-4 tracking-tight"
+            style={HEADING_FONT}
+          >
+            Member-Only Hotel Rates
           </h2>
-          <p className="text-lg text-muted-foreground max-w-4xl mx-auto">
-            Examples show real public pricing compared to member-only rates.
-            Hotel names blurred for partner protection.
+          <p className="text-base sm:text-lg text-slate-500 font-semibold max-w-3xl">
+            Real public pricing compared to member-only rates. Hotel names
+            blurred for partner protection.
           </p>
         </div>
 
         {/* Hotel Cards Grid */}
-        <div className="grid lg:grid-cols-2 gap-8 mb-16 animate-fade-up animation-delay-100">
-          {hotelCards?.map((hotel) => (
+        <div className="grid lg:grid-cols-2 gap-8 mb-16">
+          {hotelCards.map((hotel) => (
             <div
-              key={hotel?.id}
-              className="bg-white/60 backdrop-blur-md border border-white/50 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
+              key={hotel.id}
+              className="bg-white border border-slate-200/60 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group"
             >
               {/* Hotel Image */}
-              <div className="relative h-64 lg:h-96 overflow-hidden rounded-t-3xl">
-                <img
-                  src={hotel?.image}
-                  alt={hotel?.alt}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+              <div className="relative h-64 overflow-hidden bg-slate-100 border-b border-slate-100 flex items-center justify-center">
+                {/* Fallback background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-200 to-slate-100 flex items-center justify-center z-0">
+                  <Icon name="GlobeAltIcon" size={48} className="text-slate-300" />
+                </div>
+                {/* Actual image */}
+                <img 
+                  src={hotel.image} 
+                  alt={hotel.alt} 
+                  className="absolute inset-0 w-full h-full object-cover z-10"
                 />
+                <div className="absolute top-5 left-6 z-20 px-4 py-1.5 bg-[#10B981] text-white rounded-full text-xs font-black uppercase tracking-wider shadow-sm">
+                  {hotel.savingsPercent}
+                </div>
               </div>
 
               {/* Hotel Info */}
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="font-heading font-bold text-2xl text-foreground mb-1">
-                      {hotel?.hotelName}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {hotel?.location}
-                    </p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <div className="flex">
-                        {[...Array(hotel?.stars)]?.map((_, i) => (
-                          <Icon
-                            key={i}
-                            name="StarIcon"
-                            size={16}
-                            className="text-yellow-500 fill-yellow-500"
-                          />
-                        ))}
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        • {hotel?.landmark}
-                      </span>
-                    </div>
-                    <p className="text-xs text-green-600 mt-1 font-medium">
-                      {hotel?.amenity}
-                    </p>
-                  </div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-teal-400 to-cyan-500 text-white rounded-full text-sm font-semibold shadow-md">
-                    <span className="font-bold">{hotel?.reviewScore}</span>
-                    <span>{hotel?.reviewText}</span>
-                  </div>
-                </div>
-
-                <div className="bg-slate-50/80 rounded-xl p-4 border border-slate-200/80">
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Public Prices */}
+              <div className="p-6 md:p-8 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-start gap-4 mb-4">
                     <div>
-                      <p className="text-xs font-semibold text-muted-foreground mb-2">
-                        Public Pricing:
-                      </p>
-                      <div className="space-y-1">
-                        {hotel?.publicPrices?.map((price, idx) => (
-                          <div
-                            key={idx}
-                            className="flex justify-between text-sm"
-                          >
-                            <span className="text-muted-foreground">
-                              {price?.site}
-                            </span>
-                            <span className="text-foreground font-medium line-through">
-                              {price?.price}
-                            </span>
-                          </div>
-                        ))}
+                      <h3
+                        className="font-bold text-2xl text-slate-900 mb-1 tracking-tight"
+                        style={HEADING_FONT}
+                      >
+                        {hotel.hotelName}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="flex">
+                          {[...Array(hotel.stars)].map((_, i) => (
+                            <Icon
+                              key={i}
+                              name="StarIcon"
+                              size={14}
+                              className="text-[#D4A62A] fill-[#D4A62A]"
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs font-bold text-slate-400">
+                          • {hotel.landmark}
+                        </span>
                       </div>
                     </div>
-                    {/* Member Price */}
-                    <div className="text-right border-l border-slate-200 pl-4">
-                      <p className="text-xs font-semibold text-[#1C4D8D] mb-2">
-                        Member Price:
-                      </p>
-                      <p className="text-3xl font-bold text-[#1C4D8D]">
-                        {hotel?.memberPrice}
-                      </p>
-                      <p className="text-xs text-muted-foreground">per night</p>
+
+                    <div className="px-3.5 py-1 bg-[#10B981]/10 text-[#10B981] rounded-full text-xs font-extrabold flex items-center gap-1.5 border border-[#10B981]/20">
+                      <span className="font-black">{hotel.reviewScore}</span>
+                      <span>{hotel.reviewText}</span>
+                    </div>
+                  </div>
+
+                  {/* Pricing Comparison Container */}
+                  <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-5 mb-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Public Prices */}
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5">
+                          Public Pricing:
+                        </p>
+                        <div className="space-y-1.5">
+                          {hotel.publicPrices.map((price, idx) => (
+                            <div
+                              key={idx}
+                              className="flex justify-between text-xs font-bold"
+                            >
+                              <span className="text-slate-500">
+                                {price.site}
+                              </span>
+                              <span className="text-slate-400 line-through">
+                                {price.price}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Member Price */}
+                      <div className="text-right border-l border-slate-200 pl-5">
+                        <p className="text-[10px] font-black text-[#D4A62A] uppercase tracking-widest mb-2.5">
+                          Member Price:
+                        </p>
+                        <p
+                          className="text-3xl font-black text-[#D4A62A] leading-none mb-1.5"
+                          style={HEADING_FONT}
+                        >
+                          {hotel.memberPrice}
+                        </p>
+                        <p className="text-[10px] font-bold text-slate-400">
+                          per night
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-4 bg-green-100 border border-green-200 rounded-lg p-3 text-center">
-                  <p className="text-green-800 font-bold text-lg">
-                    You save {hotel?.savingsAmount} ({hotel?.savingsPercent})
-                  </p>
+                <div className="w-full py-4 bg-[#10B981] text-white rounded-xl font-black text-base shadow-sm text-center block">
+                  Save {hotel.savingsAmount}/night
                 </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Real Trip Examples */}
-        <div className="relative bg-slate-900 rounded-3xl p-10 md:p-12 mb-12 animate-fade-up animation-delay-200 shadow-2xl">
-          <div className="absolute -top-12 -right-12 w-48 h-48 bg-primary/10 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-secondary/10 rounded-full blur-3xl"></div>
-          <h3 className="font-heading text-3xl font-bold text-white mb-8 text-center relative z-10">
+        {/* Real Trip Examples Card */}
+        <div className="bg-white border border-slate-200/60 rounded-[2rem] p-8 md:p-12 mb-12 shadow-sm">
+          <h3
+            className="text-2xl font-bold text-slate-900 mb-8 text-center"
+            style={HEADING_FONT}
+          >
             What That Means on a Real Trip
           </h3>
-          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto relative z-10">
-            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 flex items-center gap-5 border border-white/10">
-              <div className="w-14 h-14 bg-primary/20 text-white rounded-lg flex items-center justify-center flex-shrink-0">
-                <Icon name="CalendarDaysIcon" size={28} />
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 flex items-center gap-5">
+              <div className="w-12 h-12 bg-[#D4A62A]/10 text-[#D4A62A] rounded-xl flex items-center justify-center shrink-0">
+                <Icon name="CalendarDaysIcon" size={24} />
               </div>
               <div>
-                <p className="font-semibold text-white text-lg">7-night stay</p>
-                <p className="text-sm text-slate-300">
+                <p className="font-bold text-slate-900 text-lg">7-night stay</p>
+                <p className="text-sm font-semibold text-slate-500">
                   Save{" "}
-                  <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cyan-400">
+                  <span className="font-black text-[#10B981]">
                     US$600 – US$1,900+
                   </span>
                 </p>
               </div>
             </div>
-            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 flex items-center gap-5 border border-white/10">
-              <div className="w-14 h-14 bg-primary/20 text-white rounded-lg flex items-center justify-center flex-shrink-0">
-                <Icon name="CalendarDaysIcon" size={28} />
+            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 flex items-center gap-5">
+              <div className="w-12 h-12 bg-[#D4A62A]/10 text-[#D4A62A] rounded-xl flex items-center justify-center shrink-0">
+                <Icon name="CalendarDaysIcon" size={24} />
               </div>
               <div>
-                <p className="font-semibold text-white text-lg">
-                  10-night stay
-                </p>
-                <p className="text-sm text-slate-300">
+                <p className="font-bold text-slate-900 text-lg">10-night stay</p>
+                <p className="text-sm font-semibold text-slate-500">
                   Save{" "}
-                  <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cyan-400">
+                  <span className="font-black text-[#10B981]">
                     US$900 – US$2,700+
                   </span>
                 </p>
@@ -200,17 +217,17 @@ const TravelSavings = () => {
           </div>
         </div>
 
-        {/* Microcopy & CTA */}
-        <div className="text-center animate-fade-up animation-delay-300">
-          <p className="text-muted-foreground mb-4">
+        {/* Footer Link */}
+        <div className="text-center">
+          <p className="text-xs font-bold text-slate-400 mb-4">
             Exact hotel names and availability visible after sign-in.
           </p>
           <Link
             to="/travel"
-            className="inline-flex items-center gap-2 text-[#1C4D8D] font-semibold hover:gap-3 transition-all"
+            className="inline-flex items-center gap-2 text-[#D4A62A] font-extrabold text-sm hover:underline"
           >
-            See full travel deals on the inside
-            <Icon name="ArrowRightIcon" size={20} />
+            View full travel deals
+            <Icon name="ArrowRightIcon" size={16} />
           </Link>
         </div>
       </div>

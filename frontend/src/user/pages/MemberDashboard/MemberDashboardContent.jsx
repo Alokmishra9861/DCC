@@ -40,11 +40,11 @@ const getCategoryLabel = (c) => {
 const SectionLabel = ({ eyebrow, title, action }) => (
   <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
     <div>
-      <p className="text-[10px] font-black tracking-widest uppercase text-[#1C4D8D] mb-2">
+      <p className="text-[10px] font-black tracking-widest uppercase text-[#D4A62A] mb-2">
         {eyebrow}
       </p>
       <h2
-        className="text-3xl font-bold text-slate-900 tracking-tight"
+        className="text-3xl font-extrabold text-white tracking-tight"
         style={HEADING_FONT}
       >
         {title}
@@ -55,7 +55,7 @@ const SectionLabel = ({ eyebrow, title, action }) => (
 );
 
 const Hairline = () => (
-  <div className="h-px bg-gradient-to-r from-slate-200 via-slate-100 to-transparent mb-12 mt-4" />
+  <div className="h-px bg-gradient-to-r from-white/8 via-white/4 to-transparent mb-12 mt-4" />
 );
 
 /* ─── Join Association Widget ──────────────────────────────────────────────── */
@@ -91,26 +91,26 @@ const JoinAssociationWidget = () => {
   };
 
   return (
-    <div className="mb-12 bg-white rounded-[2rem] border border-slate-200/60 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
+    <div className="mb-12 bg-[#111936]/80 rounded-[2rem] border border-white/8 shadow-2xl hover:shadow-[#D4A62A]/5 transition-all duration-300 overflow-hidden">
       <button
         onClick={() => setOpen((p) => !p)}
-        className="w-full flex items-center justify-between px-8 py-6 bg-transparent border-none cursor-pointer transition-colors hover:bg-slate-50/50 group"
+        className="w-full flex items-center justify-between px-8 py-6 bg-transparent border-none cursor-pointer transition-colors hover:bg-[#161F3D]/40 group"
       >
         <div className="flex items-center gap-5">
-          <div className="w-14 h-14 rounded-2xl flex-shrink-0 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm group-hover:scale-105 transition-transform">
+          <div className="w-14 h-14 rounded-2xl flex-shrink-0 bg-[#161F3D] border border-white/8 flex items-center justify-center text-[#D4A62A] shadow-inner group-hover:scale-105 transition-transform">
             <Icon name="LinkIcon" size={24} />
           </div>
           <div className="text-left">
-            <p className="m-0 font-bold text-lg text-slate-900 tracking-tight">
+            <p className="m-0 font-extrabold text-lg text-white tracking-tight">
               Join an Association
             </p>
-            <p className="m-0 mt-1 text-sm font-medium text-slate-500">
+            <p className="m-0 mt-1 text-sm font-medium text-[#B8C0D4]">
               Have a join code? Enter it here to link your account
             </p>
           </div>
         </div>
         <div
-          className={`w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 text-slate-400 transition-transform duration-300 ${open ? "bg-blue-50 text-[#1C4D8D]" : ""}`}
+          className={`w-10 h-10 rounded-full flex items-center justify-center bg-[#161F3D] text-[#8D95A8] transition-transform duration-300 ${open ? "bg-[#D4A62A]/10 text-[#D4A62A]" : ""}`}
         >
           <Icon name="ChevronDownIcon" size={20} />
         </div>
@@ -120,13 +120,13 @@ const JoinAssociationWidget = () => {
         className={`transition-all duration-500 ease-in-out overflow-hidden ${open ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
       >
         <div className="px-8 pb-8 pt-2">
-          <div className="pt-6 border-t border-slate-100">
+          <div className="pt-6 border-t border-white/8">
             {result ? (
               <div
-                className={`rounded-2xl p-5 flex items-start gap-4 mb-2 ${result.success ? "bg-emerald-50/50 border border-emerald-200" : "bg-rose-50/50 border border-rose-200"}`}
+                className={`rounded-2xl p-5 flex items-start gap-4 mb-2 ${result.success ? "bg-emerald-500/10 border border-emerald-500/20" : "bg-rose-500/10 border border-rose-500/20"}`}
               >
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm ${result.success ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"}`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm ${result.success ? "bg-emerald-500 text-[#0D1328]" : "bg-rose-500 text-white"}`}
                 >
                   <Icon
                     name={result.success ? "CheckIcon" : "XMarkIcon"}
@@ -135,12 +135,12 @@ const JoinAssociationWidget = () => {
                 </div>
                 <div className="flex-1 pt-0.5">
                   <p
-                    className={`m-0 font-bold text-base ${result.success ? "text-emerald-900" : "text-rose-900"}`}
+                    className={`m-0 font-bold text-base ${result.success ? "text-emerald-400" : "text-rose-400"}`}
                   >
                     {result.success ? "Success!" : "Verification Failed"}
                   </p>
                   <p
-                    className={`m-0 mt-1 text-sm font-medium ${result.success ? "text-emerald-700" : "text-rose-700"}`}
+                    className={`m-0 mt-1 text-sm font-semibold ${result.success ? "text-[#B8C0D4]" : "text-rose-300"}`}
                   >
                     {result.message}
                   </p>
@@ -150,14 +150,14 @@ const JoinAssociationWidget = () => {
                     setResult(null);
                     if (result.success) setOpen(false);
                   }}
-                  className="px-4 py-2 bg-white rounded-lg shadow-sm text-sm font-bold border border-slate-200 hover:bg-slate-50 transition-colors"
+                  className="px-4 py-2 bg-[#161F3D] text-[#B8C0D4] rounded-lg shadow-sm text-sm font-bold border border-white/8 hover:text-white transition-colors cursor-pointer"
                 >
                   {result.success ? "Done" : "Try again"}
                 </button>
               </div>
             ) : (
               <>
-                <label className="block text-[10px] font-black tracking-widest uppercase text-slate-400 mb-3">
+                <label className="block text-[10px] font-black tracking-widest uppercase text-[#8D95A8] mb-3">
                   Association Join Code
                 </label>
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -165,7 +165,7 @@ const JoinAssociationWidget = () => {
                     <Icon
                       name="KeyIcon"
                       size={20}
-                      className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"
+                      className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8D95A8]"
                     />
                     <input
                       type="text"
@@ -174,17 +174,17 @@ const JoinAssociationWidget = () => {
                       onKeyDown={(e) => e.key === "Enter" && handleJoin()}
                       placeholder="e.g. NURSES-CI-A3F2"
                       maxLength={24}
-                      className="w-full pl-12 pr-6 py-4 border border-slate-200 rounded-2xl text-base font-mono tracking-widest uppercase text-slate-900 bg-slate-50 outline-none focus:border-[#1C4D8D] focus:ring-2 focus:ring-[#1C4D8D]/20 focus:bg-white transition-all placeholder:font-sans placeholder:tracking-normal placeholder:font-medium placeholder:text-slate-400"
+                      className="w-full pl-12 pr-6 py-4 border border-white/8 rounded-2xl text-base font-mono tracking-widest uppercase text-white bg-[#0D1328]/60 outline-none focus:border-[#D4A62A] focus:ring-2 focus:ring-[#D4A62A]/10 focus:bg-[#0D1328] transition-all placeholder:font-sans placeholder:tracking-normal placeholder:font-medium placeholder:text-[#8D95A8]"
                     />
                   </div>
                   <button
                     onClick={handleJoin}
                     disabled={loading || !code.trim()}
-                    className="px-8 py-4 bg-gradient-to-r from-[#1C4D8D] to-[#153a6b] text-white rounded-2xl font-bold text-base hover:shadow-lg shadow-blue-900/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 sm:w-auto w-full"
+                    className="btn-premium-gold px-8 py-4 text-base disabled:opacity-50 sm:w-auto w-full"
                   >
                     {loading ? (
                       <>
-                        <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full inline-block animate-spin" />{" "}
+                        <span className="w-5 h-5 border-2 border-[#0D1328]/30 border-t-[#0D1328] rounded-full inline-block animate-spin" />{" "}
                         Verifying...
                       </>
                     ) : (
@@ -192,7 +192,7 @@ const JoinAssociationWidget = () => {
                     )}
                   </button>
                 </div>
-                <p className="text-sm font-medium text-slate-500 mt-4">
+                <p className="text-sm font-semibold text-[#8D95A8] mt-4">
                   Ask your association admin for the secure join code to link
                   your account.
                 </p>
@@ -207,7 +207,7 @@ const JoinAssociationWidget = () => {
 
 /* ═══════════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
-═══════════════════════════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════════════════════════ */
 const MemberDashboardContent = () => {
   const userRef = useRef(getUser());
   const user = userRef.current;
@@ -359,9 +359,9 @@ const MemberDashboardContent = () => {
   /* ── Loading ─────────────────────────────────────────────────────────── */
   if (initialLoading)
     return (
-      <div className="min-h-screen bg-slate-50/50 flex flex-col items-center justify-center gap-4 pt-20">
-        <div className="w-12 h-12 border-4 border-slate-200 border-t-[#1C4D8D] rounded-full animate-spin shadow-sm" />
-        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest animate-pulse">
+      <div className="min-h-screen bg-[#0D1328] flex flex-col items-center justify-center gap-4 pt-20">
+        <div className="w-12 h-12 border-4 border-white/10 border-t-[#D4A62A] rounded-full animate-spin shadow-md" />
+        <p className="text-sm font-bold text-[#8D95A8] uppercase tracking-widest animate-pulse">
           Loading Dashboard...
         </p>
       </div>
@@ -371,32 +371,32 @@ const MemberDashboardContent = () => {
      RENDER
   ═══════════════════════════════════════════════════════════════════════ */
   return (
-    <div className="min-h-screen bg-slate-50/50 selection:bg-[#1C4D8D]/20 relative overflow-hidden pt-5">
+    <div className="min-h-screen bg-[#0D1328] selection:bg-[#D4A62A]/20 relative overflow-hidden pt-5">
       {/* Decorative Background Blobs */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden mix-blend-multiply opacity-60 z-0">
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-br from-blue-100/40 to-indigo-100/40 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-emerald-50/40 to-teal-50/40 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/3" />
+      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-60 z-0">
+        <div className="glow-orb w-[700px] h-[700px] bg-[#D4A62A]/5 top-0 right-0" />
+        <div className="glow-orb w-[600px] h-[600px] bg-[#E0B53A]/5 bottom-0 left-0" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-8 lg:pt-6 lg:pb-12">
         {/* ── Success Banner ─────────────────────────────────────────────── */}
         {showMembershipSuccess && (
-          <div className="mb-6 rounded-2xl px-6 py-5 flex items-center gap-4 bg-gradient-to-r from-emerald-50 to-teal-50/50 border border-emerald-200 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+          <div className="mb-6 rounded-2xl px-6 py-5 flex items-center gap-4 bg-emerald-500/10 border border-emerald-500/20 shadow-md animate-in fade-in duration-500">
+            <div className="w-12 h-12 rounded-full bg-emerald-500 text-[#0D1328] flex items-center justify-center flex-shrink-0 shadow-md">
               <Icon name="CheckIcon" size={24} />
             </div>
             <div className="flex-1">
-              <p className="m-0 font-bold text-lg text-emerald-900 tracking-tight">
+              <p className="m-0 font-bold text-lg text-emerald-400 tracking-tight">
                 Membership Activated!
               </p>
-              <p className="m-0 mt-0.5 text-sm font-medium text-emerald-700">
+              <p className="m-0 mt-0.5 text-sm font-medium text-[#B8C0D4]">
                 Welcome to Discount Club Cayman — your exclusive access is now
                 unlocked.
               </p>
             </div>
             <button
               onClick={() => setShowMembershipSuccess(false)}
-              className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 shadow-sm border border-slate-200 transition-colors"
+              className="w-10 h-10 bg-[#111936] rounded-full flex items-center justify-center text-[#8D95A8] hover:text-white shadow-sm border border-white/8 transition-colors cursor-pointer"
             >
               <Icon name="XMarkIcon" size={20} />
             </button>
@@ -405,16 +405,16 @@ const MemberDashboardContent = () => {
 
         {/* ── Inactive Warning ───────────────────────────────────────────── */}
         {!isMembershipActive && (
-          <div className="mb-6 rounded-2xl px-8 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-gradient-to-r from-amber-50 to-yellow-50/50 border border-amber-200 shadow-sm animate-in fade-in duration-500">
+          <div className="mb-6 rounded-2xl px-8 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-[#D4A62A]/10 border border-[#D4A62A]/20 shadow-lg animate-in fade-in duration-500">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+              <div className="w-12 h-12 rounded-full bg-[#D4A62A]/15 text-[#D4A62A] flex items-center justify-center flex-shrink-0 border border-[#D4A62A]/20 shadow-inner">
                 <Icon name="ExclamationTriangleIcon" size={24} />
               </div>
               <div>
-                <p className="m-0 font-bold text-lg text-amber-900 tracking-tight">
+                <p className="m-0 font-bold text-lg text-white tracking-tight">
                   Membership Inactive
                 </p>
-                <p className="m-0 mt-0.5 text-sm font-medium text-amber-700/80">
+                <p className="m-0 mt-0.5 text-sm font-medium text-[#B8C0D4]">
                   Activate your membership to access your digital card and
                   exclusive deals.
                 </p>
@@ -422,7 +422,7 @@ const MemberDashboardContent = () => {
             </div>
             <Link
               to="/membership"
-              className="px-8 py-4 bg-amber-500 text-white rounded-xl font-bold text-sm hover:bg-amber-600 transition-all whitespace-nowrap shadow-md text-center"
+              className="btn-premium-gold px-8 py-4 text-sm font-bold whitespace-nowrap text-center block shadow-[#D4A62A]/10"
             >
               Activate Membership
             </Link>
@@ -432,24 +432,23 @@ const MemberDashboardContent = () => {
         {/* ═══════════════════════════════════════════════════════════════
             MEMBERSHIP IDENTITY CARD (COMPACT HERO)
         ═══════════════════════════════════════════════════════════════ */}
-        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#0A1628] via-[#1C4D8D] to-[#4988C4] shadow-xl shadow-blue-900/10 mb-8 lg:mb-12">
-          {/* Background Elements */}
-          <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none" />
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-black/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#111936] via-[#161F3D] to-[#0D1328] border border-white/8 shadow-2xl mb-8 lg:mb-12">
+          {/* Ambient Glows */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4A62A]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-black/40 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
 
           <div className="relative z-10 flex flex-col lg:flex-row items-center">
             {/* Left — Identity Info */}
-            <div className="p-6 md:p-8 lg:w-2/3 flex flex-col justify-center w-full border-b lg:border-b-0 lg:border-r border-white/10">
+            <div className="p-6 md:p-8 lg:w-2/3 flex flex-col justify-center w-full border-b lg:border-b-0 lg:border-r border-white/8">
               <div className="flex flex-wrap items-center gap-3 mb-5">
-                <span className="text-[10px] sm:text-xs font-black tracking-[0.2em] uppercase text-blue-200">
+                <span className="text-[10px] sm:text-xs font-extrabold tracking-[0.2em] uppercase text-[#D4A62A]">
                   Discount Club Cayman
                 </span>
                 <span
                   className={`px-2.5 py-1 rounded-md text-[9px] sm:text-[10px] font-black tracking-widest uppercase ${
                     isMembershipActive
-                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                      : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                      : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
                   }`}
                 >
                   {membershipStatus}
@@ -457,7 +456,7 @@ const MemberDashboardContent = () => {
               </div>
 
               <div className="flex items-center gap-5 mb-6">
-                <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white text-[#1C4D8D] flex items-center justify-center flex-shrink-0 shadow-xl">
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-[#D4A62A] to-[#E0B53A] text-[#0D1328] flex items-center justify-center flex-shrink-0 shadow-lg shadow-[#D4A62A]/10 border border-white/10">
                   <span
                     className="text-2xl md:text-3xl font-black"
                     style={HEADING_FONT}
@@ -467,23 +466,23 @@ const MemberDashboardContent = () => {
                 </div>
                 <div>
                   <h1
-                    className="m-0 mb-1 text-2xl md:text-3xl lg:text-4xl font-bold text-white tracking-tight drop-shadow-md"
+                    className="m-0 mb-1 text-2xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight drop-shadow-md"
                     style={HEADING_FONT}
                   >
                     {displayName}
                   </h1>
-                  <p className="m-0 text-sm md:text-base font-medium text-blue-200">
+                  <p className="m-0 text-sm md:text-base font-bold text-[#B8C0D4]">
                     {memberProfile?.membership?.tier || "Standard"} Member
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 bg-white/5 rounded-xl p-4 border border-white/10 backdrop-blur-sm w-fit min-w-[280px]">
+              <div className="grid grid-cols-2 gap-4 bg-[#0D1328]/50 rounded-xl p-4 border border-white/8 backdrop-blur-sm w-fit min-w-[280px]">
                 <div>
-                  <p className="m-0 mb-1 text-[9px] font-black tracking-widest uppercase text-blue-300/80">
+                  <p className="m-0 mb-1 text-[9px] font-black tracking-widest uppercase text-[#8D95A8]">
                     Member Since
                   </p>
-                  <p className="m-0 text-sm md:text-base font-bold text-white">
+                  <p className="m-0 text-sm md:text-base font-extrabold text-white">
                     {memberProfile?.membership?.startDate
                       ? new Date(
                           memberProfile.membership.startDate,
@@ -495,10 +494,10 @@ const MemberDashboardContent = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="m-0 mb-1 text-[9px] font-black tracking-widest uppercase text-blue-300/80">
+                  <p className="m-0 mb-1 text-[9px] font-black tracking-widest uppercase text-[#8D95A8]">
                     Expires
                   </p>
-                  <p className="m-0 text-sm md:text-base font-bold text-white">
+                  <p className="m-0 text-sm md:text-base font-extrabold text-white">
                     {memberProfile?.membership?.expiryDate
                       ? new Date(
                           memberProfile.membership.expiryDate,
@@ -516,7 +515,7 @@ const MemberDashboardContent = () => {
             {/* Right — QR Code */}
             <div className="p-6 md:p-8 lg:w-1/3 flex flex-row lg:flex-col items-center justify-center gap-4 w-full">
               <div className="flex flex-col items-center justify-center">
-                <p className="text-[10px] font-black tracking-widest uppercase text-blue-200 mb-3 text-center hidden lg:block">
+                <p className="text-[10px] font-black tracking-widest uppercase text-[#B8C0D4] mb-3 text-center hidden lg:block">
                   Digital ID
                 </p>
                 <button
@@ -524,7 +523,7 @@ const MemberDashboardContent = () => {
                   disabled={!isMembershipActive}
                   className={`relative group rounded-2xl p-3 transition-all duration-300 ${
                     isMembershipActive
-                      ? "bg-white cursor-pointer hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.25)]"
+                      ? "bg-white cursor-pointer hover:scale-105 hover:shadow-[0_0_30px_rgba(212,166,42,0.25)]"
                       : "bg-white/20 cursor-not-allowed opacity-50"
                   }`}
                 >
@@ -556,7 +555,7 @@ const MemberDashboardContent = () => {
                 </button>
               </div>
               <div className="text-left lg:text-center flex-1 lg:flex-none">
-                <p className="m-0 text-xs sm:text-sm font-medium text-blue-200 max-w-[160px]">
+                <p className="m-0 text-xs sm:text-sm font-semibold text-[#B8C0D4] max-w-[160px]">
                   {isMembershipActive
                     ? "Tap QR code to enlarge for scanning."
                     : "Activate your membership to unlock."}
@@ -584,31 +583,31 @@ const MemberDashboardContent = () => {
                 activeView === "certificates" ? "dashboard" : "certificates",
               )
             }
-            className={`relative rounded-[2rem] p-8 text-left transition-all duration-300 border ${
+            className={`relative rounded-[2rem] p-8 text-left transition-all duration-300 border cursor-pointer ${
               activeView === "certificates"
-                ? "border-[#1C4D8D] bg-blue-50 shadow-xl -translate-y-1"
-                : "border-slate-200/60 bg-white hover:border-blue-300 hover:shadow-xl hover:-translate-y-1"
+                ? "border-[#D4A62A] bg-[#D4A62A]/5 shadow-2xl -translate-y-1 shadow-[#D4A62A]/5"
+                : "border-white/8 bg-[#111936]/80 hover:border-[#D4A62A]/30 hover:shadow-2xl hover:-translate-y-1"
             }`}
           >
             <div className="flex items-start justify-between mb-6">
               <div
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${activeView === "certificates" ? "bg-[#1C4D8D] text-white shadow-md" : "bg-blue-50 text-blue-600"}`}
+                className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${activeView === "certificates" ? "bg-[#D4A62A] text-[#0D1328] shadow-md font-bold" : "bg-[#161F3D] text-[#D4A62A] border border-white/8"}`}
               >
                 <Icon name="TicketIcon" size={28} />
               </div>
               {activeCertCount > 0 && (
-                <span className="px-3 py-1 bg-rose-500 text-white text-xs font-black rounded-full shadow-sm">
+                <span className="px-3 py-1 bg-rose-500 text-white text-xs font-black rounded-full shadow-md animate-pulse">
                   {activeCertCount} Active
                 </span>
               )}
             </div>
             <h3
-              className="m-0 mb-2 font-bold text-xl text-slate-900 tracking-tight"
+              className="m-0 mb-2 font-bold text-xl text-white tracking-tight"
               style={HEADING_FONT}
             >
               My Certificates
             </h3>
-            <p className="m-0 text-sm font-medium text-slate-500 line-clamp-2">
+            <p className="m-0 text-sm font-semibold text-[#8D95A8] line-clamp-2">
               {activeView === "certificates"
                 ? "Close certificates view"
                 : "View your purchased pre-paid vouchers"}
@@ -622,30 +621,30 @@ const MemberDashboardContent = () => {
               icon: "GlobeAltIcon",
               title: "Travel Deals",
               sub: "Hotels, flights & rentals",
-              color: "text-emerald-600",
-              bg: "bg-emerald-50",
+              color: "text-emerald-400",
+              bg: "bg-emerald-500/10 border border-emerald-500/20",
             },
             {
               to: "/browse-discounts",
               icon: "TagIcon",
               title: "Local Discounts",
               sub: "Find savings nearby",
-              color: "text-indigo-600",
-              bg: "bg-indigo-50",
+              color: "text-indigo-400",
+              bg: "bg-indigo-500/10 border border-indigo-500/20",
             },
             {
               to: "/certification",
               icon: "ShoppingCartIcon",
               title: "Buy Certificates",
               sub: "Pre-paid high value deals",
-              color: "text-purple-600",
-              bg: "bg-purple-50",
+              color: "text-purple-400",
+              bg: "bg-purple-500/10 border border-purple-500/20",
             },
           ].map(({ to, icon, title, sub, color, bg }) => (
             <Link
               key={to}
               to={to}
-              className="relative rounded-[2rem] border border-slate-200/60 bg-white p-8 text-left transition-all duration-300 hover:border-slate-300 hover:shadow-xl hover:-translate-y-1 text-decoration-none group"
+              className="relative rounded-[2rem] border border-white/8 bg-[#111936]/80 p-8 text-left transition-all duration-300 hover:border-[#D4A62A]/30 hover:shadow-2xl hover:-translate-y-1 text-decoration-none group"
             >
               <div
                 className={`w-14 h-14 rounded-2xl mb-6 flex items-center justify-center transition-transform group-hover:scale-110 ${bg} ${color}`}
@@ -653,12 +652,12 @@ const MemberDashboardContent = () => {
                 <Icon name={icon} size={28} />
               </div>
               <h3
-                className="m-0 mb-2 font-bold text-xl text-slate-900 tracking-tight group-hover:text-[#1C4D8D] transition-colors"
+                className="m-0 mb-2 font-bold text-xl text-white tracking-tight group-hover:text-[#D4A62A] transition-colors"
                 style={HEADING_FONT}
               >
                 {title}
               </h3>
-              <p className="m-0 text-sm font-medium text-slate-500 line-clamp-2">
+              <p className="m-0 text-sm font-semibold text-[#8D95A8] line-clamp-2">
                 {sub}
               </p>
             </Link>
@@ -669,43 +668,43 @@ const MemberDashboardContent = () => {
             ASSOCIATION BANNER & JOIN WIDGET
         ═══════════════════════════════════════════════════════════════ */}
         {!associationName ? (
-          <div className="mb-12 rounded-[2rem] p-8 bg-gradient-to-br from-indigo-50 to-blue-50 border border-blue-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-sm">
+          <div className="mb-12 rounded-[2rem] p-8 bg-gradient-to-br from-[#111936] to-[#161F3D] border border-white/8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-2xl">
             <div className="flex items-center gap-5">
-              <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-blue-600 flex-shrink-0">
+              <div className="w-14 h-14 rounded-2xl bg-[#0D1328] border border-white/8 shadow-inner flex items-center justify-center text-[#D4A62A] flex-shrink-0">
                 <Icon name="UserGroupIcon" size={28} />
               </div>
               <div>
                 <p
-                  className="m-0 font-bold text-lg text-slate-900 tracking-tight"
+                  className="m-0 font-extrabold text-lg text-white tracking-tight"
                   style={HEADING_FONT}
                 >
                   Have an association join code?
                 </p>
-                <p className="m-0 mt-1 text-sm font-medium text-slate-600">
+                <p className="m-0 mt-1 text-sm font-semibold text-[#B8C0D4]">
                   Link your account to access exclusive group benefits.
                 </p>
               </div>
             </div>
             <button
               onClick={() => setShowJoinModal(true)}
-              className="px-8 py-4 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-[#1C4D8D] transition-all whitespace-nowrap shadow-md hover:-translate-y-0.5"
+              className="btn-premium-gold px-8 py-4 text-sm font-bold whitespace-nowrap shadow-[#D4A62A]/10 hover:-translate-y-0.5 cursor-pointer"
             >
               Enter Join Code
             </button>
           </div>
         ) : (
-          <div className="mb-12 rounded-[2rem] p-6 flex items-center gap-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 shadow-sm">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+          <div className="mb-12 rounded-[2rem] p-6 flex items-center gap-4 bg-emerald-500/10 border border-emerald-500/20 shadow-md">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-[#0D1328] flex items-center justify-center flex-shrink-0 shadow-sm font-bold">
               <Icon name="CheckBadgeIcon" size={24} />
             </div>
             <div>
               <p
-                className="m-0 font-bold text-lg text-emerald-900 tracking-tight"
+                className="m-0 font-bold text-lg text-emerald-400 tracking-tight"
                 style={HEADING_FONT}
               >
                 Linked to {associationName}
               </p>
-              <p className="m-0 mt-0.5 text-sm font-medium text-emerald-700">
+              <p className="m-0 mt-0.5 text-sm font-semibold text-[#B8C0D4]">
                 You are actively receiving group benefits from your association.
               </p>
             </div>
@@ -735,29 +734,29 @@ const MemberDashboardContent = () => {
                 action={
                   <Link
                     to="/browse-discounts"
-                    className="px-6 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-[#1C4D8D] transition-all whitespace-nowrap shadow-sm"
+                    className="px-6 py-3 bg-[#111936] border border-white/8 rounded-xl text-sm font-bold text-[#B8C0D4] hover:bg-[#161F3D] hover:text-[#D4A62A] hover:border-[#D4A62A]/30 transition-all whitespace-nowrap shadow-sm"
                   >
                     View All Offers
                   </Link>
                 }
               />
-              <div className="bg-white border border-slate-200/60 rounded-[2rem] overflow-hidden shadow-sm p-2">
+              <div className="bg-[#111936]/80 border border-white/8 rounded-[2rem] overflow-hidden shadow-2xl p-2">
                 {recentTransactions.length === 0 ? (
                   <div className="py-20 text-center">
-                    <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4 border border-slate-100 shadow-sm">
+                    <div className="w-16 h-16 rounded-full bg-[#161F3D] flex items-center justify-center mx-auto mb-4 border border-white/8 shadow-inner">
                       <Icon
                         name="ClockIcon"
                         size={32}
-                        className="text-slate-400"
+                        className="text-[#8D95A8]"
                       />
                     </div>
                     <p
-                      className="m-0 font-bold text-lg text-slate-900 mb-1 tracking-tight"
+                      className="m-0 font-bold text-lg text-white mb-1 tracking-tight"
                       style={HEADING_FONT}
                     >
                       No transactions yet
                     </p>
-                    <p className="m-0 text-sm font-medium text-slate-500">
+                    <p className="m-0 text-sm font-semibold text-[#8D95A8]">
                       Your savings history will appear here once you redeem
                       offers.
                     </p>
@@ -767,9 +766,9 @@ const MemberDashboardContent = () => {
                     {recentTransactions.map((tx, i) => (
                       <li
                         key={tx.id || i}
-                        className="px-6 py-5 flex items-center gap-5 hover:bg-slate-50/50 rounded-2xl transition-colors group"
+                        className="px-6 py-5 flex items-center gap-5 hover:bg-[#161F3D]/40 rounded-2xl transition-colors group"
                       >
-                        <div className="w-14 h-14 rounded-[1rem] flex-shrink-0 bg-slate-50 border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm group-hover:border-slate-300 transition-colors p-2">
+                        <div className="w-14 h-14 rounded-[1rem] flex-shrink-0 bg-[#0D1328] border border-white/8 flex items-center justify-center overflow-hidden shadow-inner group-hover:border-white/12 transition-colors p-2">
                           {tx.business?.logoUrl ? (
                             <AppImage
                               src={tx.business.logoUrl}
@@ -780,15 +779,15 @@ const MemberDashboardContent = () => {
                             <Icon
                               name="BuildingStorefrontIcon"
                               size={24}
-                              className="text-slate-400"
+                              className="text-[#8D95A8]"
                             />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="m-0 font-bold text-base text-slate-900 truncate group-hover:text-[#1C4D8D] transition-colors">
+                          <p className="m-0 font-bold text-base text-white truncate group-hover:text-[#D4A62A] transition-colors">
                             {tx.business?.name || "Business"}
                           </p>
-                          <p className="m-0 mt-1 text-xs font-medium text-slate-500">
+                          <p className="m-0 mt-1 text-xs font-semibold text-[#8D95A8]">
                             {tx.offer?.title || tx.type || "Discount"}{" "}
                             <span className="mx-1 opacity-50">•</span>
                             {new Date(
@@ -801,10 +800,10 @@ const MemberDashboardContent = () => {
                           </p>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <p className="m-0 font-black text-lg text-emerald-600">
+                          <p className="m-0 font-black text-lg text-emerald-400">
                             −${(tx.savingsAmount || 0).toFixed(2)}
                           </p>
-                          <p className="m-0 mt-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                          <p className="m-0 mt-1 text-[10px] font-bold uppercase tracking-wider text-[#8D95A8]">
                             ${(tx.saleAmount || 0).toFixed(2)} Spent
                           </p>
                         </div>
@@ -825,26 +824,26 @@ const MemberDashboardContent = () => {
                 action={
                   <Link
                     to="/discounts"
-                    className="px-6 py-3 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-[#1C4D8D] transition-all whitespace-nowrap shadow-md"
+                    className="btn-premium-gold px-6 py-3 text-sm font-bold shadow-[#D4A62A]/10 whitespace-nowrap block"
                   >
                     Explore All Deals
                   </Link>
                 }
               />
               {newDiscounts.length === 0 ? (
-                <div className="text-center py-20 bg-white border border-slate-200/60 rounded-[2rem] shadow-sm">
-                  <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4 border border-slate-100 shadow-sm">
-                    <Icon name="TagIcon" size={32} className="text-slate-400" />
+                <div className="text-center py-20 bg-[#111936]/80 border border-white/8 rounded-[2rem] shadow-2xl">
+                  <div className="w-16 h-16 rounded-full bg-[#161F3D] flex items-center justify-center mx-auto mb-4 border border-white/8 shadow-inner">
+                    <Icon name="TagIcon" size={32} className="text-[#8D95A8]" />
                   </div>
                   <p
-                    className="m-0 font-bold text-lg text-slate-900 mb-1 tracking-tight"
+                    className="m-0 font-bold text-lg text-white mb-1 tracking-tight"
                     style={HEADING_FONT}
                   >
                     No new discounts
                   </p>
                   <Link
                     to="/browse-discounts"
-                    className="text-[#1C4D8D] font-bold text-sm hover:underline"
+                    className="text-[#D4A62A] font-bold text-sm hover:underline"
                   >
                     Browse directory →
                   </Link>
@@ -854,10 +853,10 @@ const MemberDashboardContent = () => {
                   {newDiscounts.map((discount) => (
                     <div
                       key={discount.id || discount._id}
-                      className="bg-white border border-slate-200/60 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full group"
+                      className="bg-[#111936]/80 border border-white/8 rounded-[2rem] p-6 shadow-2xl hover:shadow-[#D4A62A]/5 hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full group"
                     >
                       <div className="flex items-start gap-4 mb-6">
-                        <div className="w-16 h-16 rounded-2xl flex-shrink-0 bg-slate-50 border border-slate-200 flex items-center justify-center p-2 shadow-sm group-hover:border-blue-300 transition-colors overflow-hidden">
+                        <div className="w-16 h-16 rounded-2xl flex-shrink-0 bg-[#0D1328] border border-white/8 flex items-center justify-center p-2 shadow-inner group-hover:border-[#D4A62A]/30 transition-colors overflow-hidden">
                           {discount.business?.logoUrl ? (
                             <AppImage
                               src={discount.business.logoUrl}
@@ -868,15 +867,15 @@ const MemberDashboardContent = () => {
                             <Icon
                               name="BuildingStorefrontIcon"
                               size={28}
-                              className="text-slate-400 group-hover:text-blue-500 transition-colors"
+                              className="text-[#8D95A8] group-hover:text-[#D4A62A] transition-colors"
                             />
                           )}
                         </div>
                         <div className="flex-1 min-w-0 pt-1">
-                          <h3 className="m-0 mb-1.5 font-bold text-lg text-slate-900 leading-tight tracking-tight truncate group-hover:text-[#1C4D8D] transition-colors">
+                          <h3 className="m-0 mb-1.5 font-bold text-lg text-white leading-tight tracking-tight truncate group-hover:text-[#D4A62A] transition-colors">
                             {discount.business?.name || "Business"}
                           </h3>
-                          <span className="inline-block px-2.5 py-1 bg-slate-100 rounded-md text-[10px] font-black uppercase tracking-wider text-slate-500">
+                          <span className="inline-block px-2.5 py-1 bg-[#0D1328]/60 rounded-md text-[10px] font-black uppercase tracking-wider text-[#8D95A8] border border-white/4">
                             {getCategoryLabel(discount.category) ||
                               getCategoryLabel(discount.business?.category) ||
                               "General"}
@@ -884,10 +883,10 @@ const MemberDashboardContent = () => {
                         </div>
                       </div>
 
-                      <div className="rounded-2xl p-5 mb-6 text-center bg-gradient-to-br from-blue-50 to-indigo-50/50 border border-blue-100/60 relative overflow-hidden mt-auto group-hover:bg-blue-50 transition-colors">
-                        <div className="absolute top-0 right-0 w-20 h-20 bg-white/40 rounded-full blur-xl -mr-10 -mt-10 pointer-events-none" />
+                      <div className="rounded-2xl p-5 mb-6 text-center bg-gradient-to-br from-[#161F3D] to-[#0D1328]/80 border border-white/8 relative overflow-hidden mt-auto group-hover:bg-[#161F3D] transition-colors">
+                        <div className="absolute top-0 right-0 w-20 h-20 bg-white/5 rounded-full blur-xl -mr-10 -mt-10 pointer-events-none" />
                         <p
-                          className="m-0 text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#1C4D8D] to-indigo-600 tracking-tight relative z-10"
+                          className="m-0 text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#D4A62A] to-[#E0B53A] tracking-tight relative z-10"
                           style={HEADING_FONT}
                         >
                           {(discount.type || "DISCOUNT") === "DISCOUNT"
@@ -898,7 +897,7 @@ const MemberDashboardContent = () => {
 
                       <Link
                         to={`/business-profile/${discount.business?.id || discount.businessId}`}
-                        className="w-full py-3.5 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-900 hover:text-white transition-all text-center block"
+                        className="w-full py-3.5 bg-[#161F3D] text-[#B8C0D4] rounded-xl font-bold text-sm hover:bg-[#D4A62A] hover:text-[#0D1328] transition-all text-center block"
                       >
                         View Details
                       </Link>
@@ -918,33 +917,33 @@ const MemberDashboardContent = () => {
                 action={
                   <Link
                     to="/travel"
-                    className="px-6 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-[#1C4D8D] transition-all whitespace-nowrap shadow-sm"
+                    className="px-6 py-3 bg-[#111936] border border-white/8 rounded-xl text-sm font-bold text-[#B8C0D4] hover:bg-[#161F3D] hover:text-[#D4A62A] hover:border-[#D4A62A]/30 transition-all whitespace-nowrap shadow-sm"
                   >
                     View All Destinations
                   </Link>
                 }
               />
               {travelDeals.length === 0 ? (
-                <div className="text-center py-20 bg-white border border-slate-200/60 rounded-[2rem] shadow-sm">
-                  <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4 border border-slate-100 shadow-sm">
+                <div className="text-center py-20 bg-[#111936]/80 border border-white/8 rounded-[2rem] shadow-2xl">
+                  <div className="w-16 h-16 rounded-full bg-[#161F3D] flex items-center justify-center mx-auto mb-4 border border-white/8 shadow-inner">
                     <Icon
                       name="GlobeAltIcon"
                       size={32}
-                      className="text-slate-400"
+                      className="text-[#8D95A8]"
                     />
                   </div>
                   <p
-                    className="m-0 font-bold text-lg text-slate-900 mb-1 tracking-tight"
+                    className="m-0 font-bold text-lg text-white mb-1 tracking-tight"
                     style={HEADING_FONT}
                   >
                     Checking for deals...
                   </p>
-                  <p className="text-sm font-medium text-slate-500 mb-4">
+                  <p className="text-sm font-semibold text-[#8D95A8] mb-4">
                     Travel deals will appear here once configured.
                   </p>
                   <Link
                     to="/travel"
-                    className="text-[#1C4D8D] font-bold text-sm hover:underline"
+                    className="text-[#D4A62A] font-bold text-sm hover:underline"
                   >
                     Go to Travel Portal →
                   </Link>
@@ -955,9 +954,9 @@ const MemberDashboardContent = () => {
                     <Link
                       key={deal.id || deal._id}
                       to="/travel"
-                      className="bg-white border border-slate-200/60 rounded-[2rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 group block text-decoration-none"
+                      className="bg-[#111936]/80 border border-white/8 rounded-[2rem] overflow-hidden shadow-2xl hover:shadow-[#D4A62A]/5 transition-all duration-300 hover:-translate-y-1.5 group block text-decoration-none"
                     >
-                      <div className="relative h-56 bg-slate-100 overflow-hidden">
+                      <div className="relative h-56 bg-[#0D1328] overflow-hidden">
                         {(deal.image_url || deal.imageUrl || deal.image) && (
                           <AppImage
                             src={deal.image_url || deal.imageUrl || deal.image}
@@ -965,7 +964,7 @@ const MemberDashboardContent = () => {
                             className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                           />
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-80" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0D1328] via-[#0D1328]/40 to-transparent opacity-85" />
                         <div className="absolute bottom-5 left-6 right-6">
                           <h3
                             className="m-0 text-xl font-bold text-white tracking-tight drop-shadow-md line-clamp-2"
@@ -975,13 +974,13 @@ const MemberDashboardContent = () => {
                           </h3>
                         </div>
                       </div>
-                      <div className="p-6 flex items-center justify-between bg-white">
+                      <div className="p-6 flex items-center justify-between bg-[#111936]/90 border-t border-white/4">
                         <div>
-                          <p className="m-0 mb-1 text-[10px] font-black tracking-widest uppercase text-slate-400">
+                          <p className="m-0 mb-1 text-[10px] font-black tracking-widest uppercase text-[#8D95A8]">
                             Member Price
                           </p>
                           <span
-                            className="text-2xl font-black text-slate-900 tracking-tight"
+                            className="text-2xl font-black text-[#D4A62A] tracking-tight"
                             style={HEADING_FONT}
                           >
                             $
@@ -991,7 +990,7 @@ const MemberDashboardContent = () => {
                               "–"}
                           </span>
                         </div>
-                        <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-[#1C4D8D] group-hover:text-white transition-colors">
+                        <div className="w-10 h-10 rounded-full bg-[#161F3D] text-[#D4A62A] flex items-center justify-center group-hover:bg-[#D4A62A] group-hover:text-[#0D1328] transition-colors border border-white/8">
                           <Icon name="ArrowRightIcon" size={18} />
                         </div>
                       </div>
@@ -1015,9 +1014,9 @@ const MemberDashboardContent = () => {
                     <Link
                       key={business.id || business._id}
                       to={`/business-profile/${business.id || business._id}`}
-                      className="bg-white border border-slate-200/60 rounded-[1.5rem] p-5 flex flex-col items-center text-center no-underline hover:shadow-lg hover:border-slate-300 hover:-translate-y-1 transition-all duration-300 group"
+                      className="bg-[#111936]/80 border border-white/8 rounded-[1.5rem] p-5 flex flex-col items-center text-center no-underline hover:shadow-[#D4A62A]/5 hover:border-[#D4A62A]/30 hover:-translate-y-1 transition-all duration-300 group"
                     >
-                      <div className="w-16 h-16 rounded-2xl mb-4 bg-slate-50 border border-slate-200 flex items-center justify-center overflow-hidden p-1 shadow-sm group-hover:border-blue-200 transition-colors">
+                      <div className="w-16 h-16 rounded-2xl mb-4 bg-[#0D1328] border border-white/8 flex items-center justify-center overflow-hidden p-1 shadow-inner group-hover:border-[#D4A62A]/30 transition-colors">
                         {business.logoUrl ? (
                           <AppImage
                             src={business.logoUrl}
@@ -1028,17 +1027,17 @@ const MemberDashboardContent = () => {
                           <Icon
                             name="BuildingStorefrontIcon"
                             size={28}
-                            className="text-slate-400 group-hover:text-blue-500 transition-colors"
+                            className="text-[#8D95A8] group-hover:text-[#D4A62A] transition-colors"
                           />
                         )}
                       </div>
-                      <h3 className="m-0 mb-1 font-bold text-sm text-slate-900 truncate w-full group-hover:text-[#1C4D8D] transition-colors">
+                      <h3 className="m-0 mb-1 font-bold text-sm text-white truncate w-full group-hover:text-[#D4A62A] transition-colors">
                         {business.name}
                       </h3>
-                      <p className="m-0 mb-2 text-xs font-medium text-slate-500 truncate w-full">
+                      <p className="m-0 mb-2 text-xs font-semibold text-[#8D95A8] truncate w-full">
                         {getCategoryLabel(business.category) || "General"}
                       </p>
-                      <span className="mt-auto px-2.5 py-1 bg-slate-100 rounded-md text-[9px] font-black tracking-widest uppercase text-slate-500 truncate w-full">
+                      <span className="mt-auto px-2.5 py-1 bg-[#0D1328]/60 rounded-md text-[9px] font-black tracking-widest uppercase text-[#8D95A8] border border-white/4 truncate w-full">
                         {business.district || "Cayman Islands"}
                       </span>
                     </Link>
@@ -1064,19 +1063,19 @@ const MemberDashboardContent = () => {
       {showQRModal && (
         <div
           onClick={() => setShowQRModal(false)}
-          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300 animate-in fade-in"
+          className="fixed inset-0 z-50 bg-[#0D1328]/80 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-300 animate-in fade-in"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="max-w-sm w-full bg-white rounded-[2rem] border border-slate-200 shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300"
+            className="max-w-sm w-full bg-[#111936] rounded-[2rem] border border-white/8 shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300"
           >
-            <div className="px-8 pt-8 pb-6 flex items-start justify-between bg-slate-50/50 border-b border-slate-100">
+            <div className="px-8 pt-8 pb-6 flex items-start justify-between bg-[#161F3D]/50 border-b border-white/8">
               <div>
-                <p className="m-0 text-[10px] font-black tracking-widest uppercase text-blue-600 mb-1.5">
+                <p className="m-0 text-[10px] font-black tracking-widest uppercase text-[#D4A62A] mb-1.5">
                   Discount Club Cayman
                 </p>
                 <h3
-                  className="m-0 text-2xl font-bold text-slate-900 tracking-tight"
+                  className="m-0 text-2xl font-bold text-white tracking-tight"
                   style={HEADING_FONT}
                 >
                   Member ID
@@ -1084,15 +1083,15 @@ const MemberDashboardContent = () => {
               </div>
               <button
                 onClick={() => setShowQRModal(false)}
-                className="w-10 h-10 rounded-xl bg-white border border-slate-200 cursor-pointer flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors shadow-sm"
+                className="w-10 h-10 rounded-xl bg-[#161F3D] border border-white/8 cursor-pointer flex items-center justify-center text-[#8D95A8] hover:text-[#D4A62A] hover:bg-[#161F3D] transition-colors shadow-sm"
               >
                 <Icon name="XMarkIcon" size={20} />
               </button>
             </div>
 
-            <div className="p-8 flex flex-col items-center bg-white">
-              <div className="rounded-[2rem] p-6 bg-white border-2 border-dashed border-slate-200 shadow-sm relative group overflow-hidden">
-                <div className="absolute inset-0 bg-blue-50/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="p-8 flex flex-col items-center bg-transparent">
+              <div className="rounded-[2rem] p-6 bg-white border-2 border-dashed border-[#D4A62A] shadow-xl relative group overflow-hidden">
+                <div className="absolute inset-0 bg-[#D4A62A]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <QRCodeSVG
                   value={getQrValue()}
                   size={220}
@@ -1100,7 +1099,7 @@ const MemberDashboardContent = () => {
                   className="relative z-10"
                 />
               </div>
-              <p className="m-0 mt-6 font-mono text-sm font-black tracking-[0.2em] text-slate-800 bg-slate-100 px-4 py-2 rounded-lg border border-slate-200">
+              <p className="m-0 mt-6 font-mono text-sm font-black tracking-[0.2em] text-[#D4A62A] bg-[#0D1328] px-4 py-2 rounded-lg border border-white/8 shadow-inner">
                 {(user?.id || user?._id || "UNKNOWN")
                   .toString()
                   .substring(0, 8)
@@ -1108,11 +1107,11 @@ const MemberDashboardContent = () => {
               </p>
             </div>
 
-            <div className="px-8 pb-8 text-center bg-white">
-              <p className="m-0 mb-1.5 text-base font-bold text-slate-900">
+            <div className="px-8 pb-8 text-center bg-transparent">
+              <p className="m-0 mb-1.5 text-base font-bold text-white">
                 Show this code at checkout
               </p>
-              <p className="m-0 text-xs font-medium text-slate-500">
+              <p className="m-0 text-xs font-semibold text-[#8D95A8]">
                 Refreshes every 10 minutes for security.
               </p>
             </div>

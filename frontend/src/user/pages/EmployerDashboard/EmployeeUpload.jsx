@@ -180,7 +180,7 @@ const EmployeeUpload = () => {
   // ── Success screen ──────────────────────────────────────────────────────────
   if (result) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-white text-slate-900 flex items-center justify-center px-4">
         <div className="bg-white rounded-2xl p-10 max-w-md w-full text-center shadow-xl border border-slate-100">
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <Icon
@@ -249,7 +249,7 @@ const EmployeeUpload = () => {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/20 to-indigo-50/10 py-10 px-4">
+    <div className="min-h-screen bg-white text-slate-900 py-10 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8">

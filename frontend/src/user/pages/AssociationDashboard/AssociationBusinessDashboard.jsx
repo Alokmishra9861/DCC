@@ -363,7 +363,7 @@ const AssociationBusinessDashboard = () => {
   const totalPages = Math.ceil(total / 15);
 
   return (
-    <div className="min-h-screen bg-slate-50/50 selection:bg-[#1C4D8D]/20">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-[#1C4D8D]/20">
       {/* Decorative blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden mix-blend-multiply opacity-60">
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-br from-blue-100/40 to-indigo-100/40 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3" />

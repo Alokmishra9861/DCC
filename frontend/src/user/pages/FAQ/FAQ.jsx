@@ -184,11 +184,11 @@ const FAQ = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-slate-50 to-blue-100 py-24 md:py-32 overflow-hidden">
+      <div className="relative bg-transparent py-24 md:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyaWJhKDMwLCA1OCwgMTM5LCAwLjA4KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-50"></div>
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center max-w-3xl mx-auto animate-fade-up">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1 text-sm font-semibold text-[#1C4D8D]">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#D4AF37]/10 px-4 py-1 text-sm font-semibold text-[#D4AF37]">
               <Icon name="QuestionMarkCircleIcon" size={16} />
               We're Here to Help
             </div>
@@ -205,11 +205,11 @@ const FAQ = () => {
 
       {/* FAQ Section */}
       <div className="py-24 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#4988C4]/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/10 rounded-full blur-3xl"></div>
         <div className="max-w-4xl mx-auto px-6 relative z-10">
           {faqs.map((category, catIndex) => (
             <div key={catIndex} className="mb-16">
-              <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-8 pb-4 border-b-2 border-[#1C4D8D]/20">
+              <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-8 pb-4 border-b-2 border-[#D4AF37]/20">
                 {category.category}
               </h2>
               <div className="space-y-4">
@@ -218,11 +218,11 @@ const FAQ = () => {
                   return (
                     <div
                       key={globalIndex}
-                      className="bg-white rounded-lg border border-slate-200 hover:border-[#1C4D8D]/30 transition-all duration-300 overflow-hidden"
+                      className="bg-white/5 backdrop-blur-md rounded-lg border border-white/10 hover:border-[#D4AF37]/50 transition-all duration-300 overflow-hidden"
                     >
                       <button
                         onClick={() => toggleFAQ(globalIndex)}
-                        className="w-full px-6 py-4 flex items-start justify-between hover:bg-slate-50 transition-colors duration-200"
+                        className="w-full px-6 py-4 flex items-start justify-between hover:bg-transparent transition-colors duration-200"
                       >
                         <h3 className="font-heading font-bold text-foreground text-left text-lg">
                           {item.q}
@@ -235,12 +235,12 @@ const FAQ = () => {
                           <Icon
                             name="ChevronDownIcon"
                             size={24}
-                            className="text-[#1C4D8D]"
+                            className="text-[#D4AF37]"
                           />
                         </div>
                       </button>
                       {openIndex === globalIndex && (
-                        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50">
+                        <div className="px-6 py-4 border-t border-white/10 bg-transparent">
                           <p className="text-muted-foreground text-base leading-relaxed">
                             {item.a}
                           </p>
@@ -256,7 +256,7 @@ const FAQ = () => {
       </div>
 
       {/* Contact Section */}
-      <div className="py-24 bg-slate-50 relative overflow-hidden">
+      <div className="py-24 bg-transparent relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center max-w-3xl mx-auto">
             <h2 className="font-heading text-4xl md:text-5xl font-bold text-foreground mb-6">
@@ -269,14 +269,14 @@ const FAQ = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="/contact"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#1C4D8D] text-white rounded-lg font-semibold hover:bg-[#0F2854] transition-colors duration-200"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#D4AF37] text-white rounded-lg font-semibold hover:bg-[#b5952f] transition-colors duration-200"
               >
                 <span>Contact Us</span>
                 <Icon name="ArrowRightIcon" size={20} />
               </a>
               <a
                 href="mailto:support@discountclubcayman.ky"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3 border-2 border-[#1C4D8D] text-[#1C4D8D] rounded-lg font-semibold hover:bg-blue-50 transition-colors duration-200"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3 border-2 border-[#D4AF37] text-[#D4AF37] rounded-lg font-semibold hover:bg-white/5 transition-colors duration-200"
               >
                 <Icon name="EnvelopeIcon" size={20} />
                 <span>Email Support</span>

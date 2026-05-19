@@ -113,9 +113,11 @@ const LoginContent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center py-12 px-6">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyaWJhKDMwLCA1OCwgMTM5LCAwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-100" />
+    <div className="min-h-screen bg-[#0D1328] flex items-center justify-center py-12 px-6 relative overflow-hidden grid-background">
+      {/* Premium Luxury Background Orbs */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="glow-orb w-[450px] h-[450px] bg-[#D4A62A]/5 top-[10%] left-[10%]" />
+        <div className="glow-orb w-[450px] h-[450px] bg-[#E0B53A]/5 bottom-[10%] right-[10%]" />
       </div>
 
       <div className="max-w-md w-full relative z-10">
@@ -125,17 +127,17 @@ const LoginContent = () => {
             <img
               src="/logo-rmbg.png"
               alt="DCC Logo"
-              className="h-28 w-auto object-contain rounded-xl"
+              className="h-28 w-auto object-contain rounded-xl filter brightness-110"
             />
           </div>
-          <h1 className="font-heading text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">
+          <h1 className="font-heading text-3xl md:text-4xl font-extrabold text-white mb-2 tracking-tight">
             Welcome Back
           </h1>
-          <p className="text-slate-500">Log in to access your account</p>
+          <p className="text-[#B8C0D4] font-medium text-sm">Log in to access your account</p>
         </div>
 
-        {/* Role toggle — 3+3 grid so B2B fits without squishing */}
-        <div className="bg-white rounded-2xl p-1.5 mb-1 border border-slate-100 shadow-sm animate-fade-up">
+        {/* Role toggle — 3+3 grid in modern navy container */}
+        <div className="bg-[#111936] rounded-2xl p-1.5 mb-1.5 border border-white/8 shadow-2xl animate-fade-up">
           <div className="grid grid-cols-3 gap-1 sm:grid-cols-6">
             {ROLE_TABS.map(({ key, label }) => (
               <button
@@ -145,10 +147,10 @@ const LoginContent = () => {
                   setSelectedRole(key);
                   setError("");
                 }}
-                className={`py-2.5 px-1 rounded-xl text-xs font-semibold transition-all duration-200 ${
+                className={`py-2.5 px-1 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
                   selectedRole === key
-                    ? "bg-[#1C4D8D] text-white shadow-md"
-                    : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                    ? "bg-[#D4A62A] text-[#0D1328] shadow-md shadow-[#D4A62A]/10 font-extrabold"
+                    : "text-[#8D95A8] hover:text-white hover:bg-[#161F3D]"
                 }`}
               >
                 {label}
@@ -158,24 +160,24 @@ const LoginContent = () => {
         </div>
 
         {/* Role hint line */}
-        <p className="text-center text-xs text-slate-400 mb-4 min-h-[1.25rem]">
+        <p className="text-center text-xs text-[#8D95A8] font-bold mb-4 min-h-[1.25rem]">
           {ROLE_HINTS[selectedRole]}
         </p>
 
         {/* B2B callout — only shown when B2B tab is selected */}
         {selectedRole === "b2b" && (
-          <div className="mb-4 p-4 bg-gradient-to-r from-[#1C4D8D]/8 to-[#4988C4]/8 border border-[#1C4D8D]/20 rounded-2xl flex items-start gap-3">
+          <div className="mb-4 p-4 bg-[#161F3D]/80 border border-white/8 rounded-2xl flex items-start gap-3 shadow-inner">
             <span className="text-xl flex-shrink-0 mt-0.5">🤝</span>
             <div>
-              <p className="font-bold text-[#1C4D8D] text-sm">
+              <p className="font-bold text-[#D4A62A] text-sm">
                 B2B Partner Portal
               </p>
-              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+              <p className="text-xs text-[#B8C0D4] mt-0.5 leading-relaxed font-semibold">
                 Manage your directory listing, services profile, and member
                 enquiries. Not registered yet?{" "}
                 <Link
                   to="/sign-up"
-                  className="text-[#1C4D8D] font-semibold hover:underline"
+                  className="text-[#D4A62A] font-bold hover:underline"
                 >
                   Sign up as a B2B Partner →
                 </Link>
@@ -185,29 +187,29 @@ const LoginContent = () => {
         )}
 
         {/* Main card */}
-        <div className="bg-white rounded-3xl p-8 md:p-10 border border-slate-100 shadow-xl animate-fade-up animation-delay-100">
+        <div className="glass-panel bg-[#111936]/80 rounded-3xl p-8 md:p-10 border border-white/8 shadow-2xl animate-fade-up animation-delay-100">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <p className="text-sm text-slate-500 font-medium">
+            <p className="text-sm text-[#B8C0D4] font-bold">
               Signing in as{" "}
-              <span className="text-[#1C4D8D] font-bold">
+              <span className="text-[#D4A62A] font-black">
                 {ROLE_TABS.find((r) => r.key === selectedRole)?.label}
               </span>
             </p>
 
             {error && (
-              <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
+              <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-start gap-3">
                 <Icon
                   name="ExclamationCircleIcon"
                   size={20}
-                  className="text-red-600 mt-0.5 flex-shrink-0"
+                  className="text-rose-400 mt-0.5 flex-shrink-0"
                 />
-                <p className="text-sm text-red-600 font-medium">{error}</p>
+                <p className="text-sm text-rose-400 font-bold leading-tight">{error}</p>
               </div>
             )}
 
             {/* Email */}
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-[#B8C0D4] ml-1">
                 Email Address
               </label>
               <div className="relative">
@@ -226,12 +228,12 @@ const LoginContent = () => {
                   onBlur={() =>
                     setTimeout(() => setShowSuggestions(false), 200)
                   }
-                  className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1C4D8D]/20 focus:border-[#1C4D8D] transition-all"
+                  className="input-premium w-full"
                   placeholder="your@email.com"
                   autoComplete="off"
                 />
                 {showSuggestions && suggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 overflow-hidden">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-[#111936] border border-white/8 rounded-xl shadow-2xl z-50 overflow-hidden">
                     {suggestions.map((login, idx) => (
                       <button
                         key={idx}
@@ -240,20 +242,20 @@ const LoginContent = () => {
                           e.preventDefault();
                           selectSuggestion(login);
                         }}
-                        className="w-full px-5 py-3 text-left hover:bg-blue-50 border-b border-slate-100 last:border-b-0 transition-colors flex items-center justify-between group"
+                        className="w-full px-5 py-3 text-left hover:bg-[#161F3D] border-b border-white/4 last:border-b-0 transition-colors flex items-center justify-between group cursor-pointer"
                       >
                         <div>
-                          <p className="text-sm font-semibold text-slate-900">
+                          <p className="text-sm font-bold text-white">
                             {login.email}
                           </p>
-                          <p className="text-xs text-slate-400">
+                          <p className="text-xs text-[#8D95A8] font-bold">
                             Click to auto-fill
                           </p>
                         </div>
                         <Icon
                           name="ChevronRightIcon"
                           size={16}
-                          className="text-slate-300 group-hover:text-[#1C4D8D] transition-colors"
+                          className="text-[#8D95A8] group-hover:text-[#D4A62A] transition-colors"
                         />
                       </button>
                     ))}
@@ -263,8 +265,8 @@ const LoginContent = () => {
             </div>
 
             {/* Password */}
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-[#B8C0D4] ml-1">
                 Password
               </label>
               <input
@@ -272,7 +274,7 @@ const LoginContent = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1C4D8D]/20 focus:border-[#1C4D8D] transition-all"
+                className="input-premium w-full"
                 placeholder="••••••••"
               />
             </div>
@@ -284,15 +286,15 @@ const LoginContent = () => {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={handleRememberMeChange}
-                  className="w-4 h-4 text-[#1C4D8D] border-slate-300 rounded focus:ring-[#1C4D8D]"
+                  className="w-4 h-4 accent-[#D4A62A] bg-[#0D1328] border-white/10 rounded focus:ring-0"
                 />
-                <span className="text-sm text-slate-600 group-hover:text-slate-800 transition-colors">
+                <span className="text-sm text-[#B8C0D4] group-hover:text-white transition-colors font-bold">
                   Remember me
                 </span>
               </label>
               <Link
                 to="#"
-                className="text-sm text-[#1C4D8D] hover:text-blue-700 hover:underline font-semibold transition-colors"
+                className="text-sm text-[#D4A62A] hover:text-[#E0B53A] font-bold transition-colors"
               >
                 Forgot password?
               </Link>
@@ -302,7 +304,7 @@ const LoginContent = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-6 py-3 bg-[#1C4D8D] text-white rounded-xl font-bold text-lg hover:bg-[#1C4D8D]/90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+              className="btn-premium-gold w-full py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 text-lg font-bold disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
               {loading ? (
                 <>
@@ -339,15 +341,15 @@ const LoginContent = () => {
           <div className="mt-8">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200" />
+                <div className="w-full border-t border-white/8" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-slate-400 font-medium">
+                <span className="px-4 bg-[#111936] text-[#8D95A8] font-bold">
                   Or continue with
                 </span>
               </div>
             </div>
-            <button className="mt-6 w-full px-6 py-3 border-2 border-slate-200 rounded-xl font-semibold text-slate-700 hover:border-[#1C4D8D] hover:text-[#1C4D8D] hover:bg-blue-50/50 transition-all flex items-center justify-center gap-3">
+            <button className="mt-6 w-full px-6 py-3 border border-white/8 rounded-xl font-bold text-white bg-[#161F3D]/50 hover:border-[#D4A62A] hover:text-[#D4A62A] hover:bg-[#161F3D] transition-all flex items-center justify-center gap-3 cursor-pointer">
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"
@@ -370,11 +372,11 @@ const LoginContent = () => {
             </button>
           </div>
 
-          <p className="mt-8 text-center text-sm text-slate-500">
+          <p className="mt-8 text-center text-sm text-[#B8C0D4] font-bold">
             Don't have an account?{" "}
             <Link
               to="/sign-up"
-              className="text-[#1C4D8D] hover:underline font-bold"
+              className="text-[#D4A62A] hover:underline font-black"
             >
               Join now
             </Link>

@@ -379,7 +379,7 @@ const B2BDirectoryPage = () => {
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <>
-      <div className="min-h-screen" style={{ background: "#f8f9fc" }}>
+      <div className="min-h-screen bg-white text-slate-900">
         {/* ══════════════════════════════════════════════════════════════════
             HERO BANNER — deep navy with mesh grid and floating orbs
         ══════════════════════════════════════════════════════════════════ */}

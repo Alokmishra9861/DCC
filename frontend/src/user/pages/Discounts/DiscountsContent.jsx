@@ -188,7 +188,7 @@ const DiscountsContent = () => {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen bg-white text-slate-900 flex flex-col items-center justify-center gap-4">
         <div className="w-12 h-12 border-4 border-slate-200 border-t-[#1C4D8D] rounded-full animate-spin shadow-sm" />
         <p className="text-sm font-bold text-slate-400 uppercase tracking-widest animate-pulse">
           Authenticating...
@@ -296,7 +296,7 @@ const DiscountsContent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 selection:bg-[#1C4D8D]/20 pt-20 md:pt-24">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-[#1C4D8D]/20 pt-20 md:pt-24">
       {/* Hero Section */}
       <div className="relative bg-gradient-to-br from-[#0f172a] via-[#1e3a8a] to-[#312e81] py-16 md:py-24 overflow-hidden">
         <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none" />

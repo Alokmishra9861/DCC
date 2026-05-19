@@ -1,73 +1,93 @@
-import React from 'react'
-import {Link} from 'react-router-dom'
-import Icon from '../../components/ui/AppIcon'
+import React from "react";
+import { Link } from "react-router-dom";
+import Icon from "../../components/ui/AppIcon";
+
+const HEADING_FONT = { fontFamily: "'Playfair Display', serif" };
 
 const HeroSection = () => {
-    const valueBullets = [
+  const stats = [
     {
-      icon: 'GlobeAmericasIcon',
-      text: 'Save up to 70% on travel',
-      color: 'from-teal-400 to-cyan-500'
+      value: "Up to 70%",
+      label: "Travel savings on member-only hotel rates globally",
     },
     {
-      icon: 'BuildingStorefrontIcon',
-      text: 'Save 10–25% locally, all year',
-      color: 'from-orange-400 to-pink-500'
+      value: "10–25%",
+      label: "Everyday savings at premier local partners",
     },
     {
-      icon: 'TicketIcon',
-      text: 'Redeem real dollar-value certificates',
-      color: 'from-purple-400 to-indigo-500'
-    }
+      value: "$2,000",
+      label: "Worth of pre-paid redeemable certificates",
+    },
   ];
 
   return (
-    <section className="relative flex min-h-[90vh] items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 sm:min-h-screen -mt-16 lg:-mt-20">
-      {/* Background decoration */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyaWJhKDMwLCA1OCwgMTM5LCAwLjA4KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-50"></div>
-        <div className="absolute top-0 -left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl opacity-50"></div>
-        <div className="absolute bottom-0 -right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl opacity-50"></div>
+    <section className="relative flex min-h-[90vh] items-center justify-center overflow-hidden bg-gradient-to-b from-[#0D1328] via-[#111936] to-[#0D1328] sm:min-h-screen -mt-16 lg:-mt-20 grid-background">
+      {/* Premium Luxury Background Orbs */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="glow-orb w-[500px] h-[500px] bg-[#D4A62A]/10 top-[-100px] left-[-100px]" />
+        <div className="glow-orb w-[600px] h-[600px] bg-[#E0B53A]/8 bottom-[-150px] right-[-150px]" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-6xl px-4 pt-24 pb-12 text-center sm:px-6 md:pt-32 md:pb-20">
+      <div className="relative z-10 mx-auto max-w-6xl px-4 pt-28 pb-12 text-center sm:px-6 md:pt-36 md:pb-20">
         <div className="space-y-8 animate-fade-up md:space-y-10">
+          {/* Subtitle Banner with Gold Frames */}
+          <div className="flex items-center justify-center gap-3">
+            <span className="h-px w-8 bg-gradient-to-r from-transparent to-[#D4A62A]" />
+            <span className="text-[10px] sm:text-xs font-black tracking-[0.3em] uppercase text-[#D4A62A]">
+              Cayman Islands' Premier Savings Membership
+            </span>
+            <span className="h-px w-8 bg-gradient-to-l from-transparent to-[#D4A62A]" />
+          </div>
+
           {/* Main Headline */}
-          <h1 className="font-heading text-4xl font-bold leading-tight tracking-tighter text-foreground animate-fade-up sm:text-5xl md:text-6xl">
-            Save on Travel. Save Locally. Save <br />Every Day.
+          <h1
+            className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight text-white animate-fade-up drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]"
+            style={HEADING_FONT}
+          >
+            Save on Travel. <br />
+            Save Locally. <br />
+            Save <span className="gold-glow-text">Every Day</span>.
           </h1>
 
           {/* Subhead */}
-          <p className="mx-auto max-w-3xl text-lg leading-relaxed text-muted-foreground animate-fade-up animation-delay-100 md:text-xl">
-            One membership that unlocks real savings on travel, everyday essentials, and redeemable certificates.
+          <p className="mx-auto max-w-3xl text-lg sm:text-xl leading-relaxed text-[#B8C0D4] animate-fade-up animation-delay-100 font-medium">
+            One membership that delivers real savings on travel, everyday
+            essentials, and redeemable certificates worth up to $2,000.
           </p>
 
-          {/* Value Bullets */}
-          <div className="mx-auto flex max-w-max flex-col items-start gap-y-5 gap-x-10 py-4 animate-fade-up animation-delay-200 sm:flex-row sm:items-center">
-            {valueBullets.map((bullet, index) => (
-              <div key={index} className="flex items-center gap-3">
-                <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-white shadow-lg md:h-12 md:w-12 ${bullet.color}`}>
-                  <Icon name={bullet.icon} size={24} className="scale-90 md:scale-100" />
-                </div>
-                <span className="text-base font-semibold text-foreground md:text-lg">{bullet.text}</span>
+          {/* Stats / Metrics Grid */}
+          <div className="mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl py-6 animate-fade-up animation-delay-200">
+            {stats.map((stat, idx) => (
+              <div
+                key={idx}
+                className="bg-[#111936]/60 border border-white/8 backdrop-blur-md rounded-2xl p-6 text-center hover:border-[#D4A62A]/20 hover:bg-[#111936]/80 transition-all duration-300 shadow-lg"
+              >
+                <p
+                  className="text-3xl sm:text-4xl font-extrabold text-[#D4A62A] drop-shadow-[0_2px_8px_rgba(212,166,42,0.15)] mb-2"
+                  style={HEADING_FONT}
+                >
+                  {stat.value}
+                </p>
+                <p className="text-sm font-semibold text-[#B8C0D4]">
+                  {stat.label}
+                </p>
               </div>
             ))}
           </div>
 
-          {/* Digital Convenience Highlight */}
-          <div className="relative py-6 animate-fade-up animation-delay-300">
-            <div className="mx-auto max-w-3xl overflow-hidden rounded-3xl bg-slate-900 p-1 shadow-2xl">
-              <div className="rounded-[1.4rem] bg-slate-800/50 px-6 py-8 backdrop-blur-md md:px-8 md:py-10">
-                <div className="flex flex-col items-center justify-center gap-6 text-white md:flex-row">
-                  <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1C4D8D] to-[#4988C4] text-white shadow-lg md:h-20 md:w-20">
-                    <Icon name="DevicePhoneMobileIcon" size={40} className="scale-90 md:scale-100" />
+          {/* Swipe Card Highlight */}
+          <div className="relative py-2 animate-fade-up animation-delay-300">
+            <div className="mx-auto max-w-2xl overflow-hidden rounded-3xl bg-gradient-to-br from-white/10 to-white/0 p-[1px] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+              <div className="rounded-[1.4rem] bg-[#111936]/80 px-6 py-5 backdrop-blur-md border border-white/5">
+                <div className="flex flex-row items-center justify-center gap-4 text-white">
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#D4A62A] to-[#E0B53A] text-[#0D1328] shadow-md shadow-[#D4A62A]/10">
+                    <Icon name="DevicePhoneMobileIcon" size={24} />
                   </div>
-                  <div className="text-center md:text-left">
-                    <p className="text-xl font-bold leading-tight text-white md:text-2xl">
-                      No more cards to lose or forget.
-                    </p>
-                    <p className="mt-1 text-lg text-slate-300 md:text-xl">
-                      Just open the app and <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-300">SWIPE</span>.
+                  <div className="text-left">
+                    <p className="text-base font-bold leading-tight text-white">
+                      No physical card required — open the app and{" "}
+                      <span className="font-black text-[#D4A62A]">SWIPE</span> to
+                      redeem.
                     </p>
                   </div>
                 </div>
@@ -76,30 +96,30 @@ const HeroSection = () => {
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col justify-center gap-4 pt-4 animate-fade-up animation-delay-400 sm:flex-row">
+          <div className="flex flex-col justify-center gap-4 pt-4 animate-fade-up animation-delay-400 sm:flex-row items-center">
             <Link
               to="/sign-up"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#4988C4] px-8 py-4 text-lg font-bold text-primary-foreground shadow-lg transition-all hover:-translate-y-1 hover:bg-[#1C4D8D] hover:shadow-2xl sm:w-auto"
+              className="btn-premium-gold w-full sm:w-auto text-lg py-4 px-10 gap-2 flex items-center justify-center shadow-[#D4A62A]/15 hover:shadow-[#D4A62A]/30"
             >
               Join Now
               <Icon name="ArrowRightIcon" size={20} />
             </Link>
             <Link
               to="/login"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white bg-slate-200 px-8 py-4 text-lg font-semibold text-[#1C4D8D] backdrop-blur-sm transition-all hover:border-[#1C4D8D] hover:bg-white sm:w-auto"
+              className="btn-premium-outline w-full sm:w-auto text-lg py-4 px-10 flex items-center justify-center"
             >
               Sign In
             </Link>
           </div>
 
-          {/* Microcopy */}
-          <p className="text-sm text-muted-foreground pt-4 animate-fade-up animation-delay-500">
+          {/* Disclaimer */}
+          <p className="text-sm text-[#8D95A8] pt-2 animate-fade-up animation-delay-500 font-bold">
             All savings are member-only. Full details visible after sign-in.
           </p>
         </div>
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default HeroSection
+export default HeroSection;

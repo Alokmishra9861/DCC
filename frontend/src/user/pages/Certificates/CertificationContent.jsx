@@ -272,14 +272,14 @@ const CertificationContent = () => {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-white text-slate-900 flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white text-slate-900">
       {selectedCert && (
         <PurchaseModal
           cert={selectedCert}
@@ -294,10 +294,10 @@ const CertificationContent = () => {
       <div className="bg-gradient-to-br from-primary/10 to-secondary/10 py-20">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-3xl mx-auto">
-            <h1 className="font-heading text-5xl md:text-6xl font-bold text-foreground mb-6">
+            <h1 className="font-heading text-5xl md:text-6xl font-bold text-slate-900 mb-6">
               Redeemable Certificates
             </h1>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-xl text-slate-600">
               Purchase certificates at member-exclusive prices and redeem them
               at participating businesses. Your membership pays for itself!
             </p>
@@ -309,10 +309,10 @@ const CertificationContent = () => {
       <div className="py-20">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="font-heading text-4xl font-bold text-foreground mb-4">
+            <h2 className="font-heading text-4xl font-bold text-slate-900 mb-4">
               How Certificates Work
             </h2>
-            <p className="text-xl text-muted-foreground">Three simple steps</p>
+            <p className="text-xl text-slate-600">Three simple steps</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
@@ -336,10 +336,10 @@ const CertificationContent = () => {
                 <div className="w-20 h-20 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-6 text-3xl font-bold">
                   {step}
                 </div>
-                <h3 className="font-heading text-2xl font-bold text-foreground mb-3">
+                <h3 className="font-heading text-2xl font-bold text-slate-900 mb-3">
                   {title}
                 </h3>
-                <p className="text-muted-foreground">{desc}</p>
+                <p className="text-slate-600">{desc}</p>
               </div>
             ))}
           </div>
@@ -350,10 +350,10 @@ const CertificationContent = () => {
       <div className="bg-gradient-to-br from-primary/5 to-secondary/5 py-20">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="font-heading text-4xl font-bold text-foreground mb-4">
+            <h2 className="font-heading text-4xl font-bold text-slate-900 mb-4">
               Value-Added Certificates
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-xl text-slate-600">
               Get dollars off your next purchase at participating businesses
             </p>
           </div>
@@ -383,10 +383,10 @@ const CertificationContent = () => {
       <div className="py-20">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="font-heading text-4xl font-bold text-foreground mb-4">
+            <h2 className="font-heading text-4xl font-bold text-slate-900 mb-4">
               Prepaid Gift Certificates
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-xl text-slate-600">
               Perfect for gifting — share the unique code with anyone!
             </p>
           </div>
@@ -456,9 +456,9 @@ const EmptyState = ({ icon, message }) => (
     <Icon
       name={icon}
       size={64}
-      className="text-muted-foreground mx-auto mb-4"
+      className="text-slate-600 mx-auto mb-4"
     />
-    <p className="text-xl text-muted-foreground">{message}</p>
+    <p className="text-xl text-slate-600">{message}</p>
   </div>
 );
 
@@ -488,14 +488,14 @@ const CertCard = ({ cert, variant, onPurchase, calcSavings, calcPct }) => {
             />
           )}
         </div>
-        <h3 className="font-heading text-2xl font-bold text-foreground mb-2">
+        <h3 className="font-heading text-2xl font-bold text-slate-900 mb-2">
           {cert.offer?.business?.name}
         </h3>
-        <p className="text-muted-foreground">{cert.offer?.title}</p>
+        <p className="text-slate-600">{cert.offer?.title}</p>
       </div>
       <div className="p-6">
         {cert.offer?.description && (
-          <p className="text-muted-foreground text-sm mb-4">
+          <p className="text-slate-600 text-sm mb-4">
             {cert.offer.description}
           </p>
         )}
@@ -505,26 +505,26 @@ const CertCard = ({ cert, variant, onPurchase, calcSavings, calcPct }) => {
               <p className="text-4xl font-bold text-emerald-600 mb-1">
                 ${cert.offer?.discountValue || cert.faceValue} off
               </p>
-              <p className="text-base font-semibold text-foreground">
+              <p className="text-base font-semibold text-slate-900">
                 your next purchase
               </p>
               {cert.offer?.minSpend && (
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-slate-600 mt-1">
                   Min. spend: ${cert.offer.minSpend}
                 </p>
               )}
             </div>
             <div className="bg-primary/5 rounded-xl p-4 mb-5">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-slate-600">
                   Certificate Value
                 </span>
-                <span className="text-xl font-bold text-foreground">
+                <span className="text-xl font-bold text-slate-900">
                   ${cert.faceValue}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-slate-600">
                   Member Price
                 </span>
                 <span className="text-xl font-bold text-primary">
@@ -536,13 +536,13 @@ const CertCard = ({ cert, variant, onPurchase, calcSavings, calcPct }) => {
         ) : (
           <div className="bg-primary/5 rounded-xl p-4 mb-5">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-muted-foreground">Face Value</span>
-              <span className="text-xl font-bold text-foreground">
+              <span className="text-sm text-slate-600">Face Value</span>
+              <span className="text-xl font-bold text-slate-900">
                 ${cert.faceValue}
               </span>
             </div>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-slate-600">
                 Member Price
               </span>
               <span className="text-xl font-bold text-primary">
@@ -550,7 +550,7 @@ const CertCard = ({ cert, variant, onPurchase, calcSavings, calcPct }) => {
               </span>
             </div>
             <div className="border-t border-border pt-2 flex justify-between items-center">
-              <span className="font-semibold text-foreground">You Save</span>
+              <span className="font-semibold text-slate-900">You Save</span>
               <span className="font-bold text-green-600">
                 ${calcSavings(cert.faceValue, cert.memberPrice)}{" "}
                 <span className="text-sm">
@@ -560,7 +560,7 @@ const CertCard = ({ cert, variant, onPurchase, calcSavings, calcPct }) => {
             </div>
           </div>
         )}
-        <div className="flex justify-between text-xs text-muted-foreground mb-4">
+        <div className="flex justify-between text-xs text-slate-600 mb-4">
           <span>Status: {cert.status || "AVAILABLE"}</span>
           <span>
             Expires:{" "}

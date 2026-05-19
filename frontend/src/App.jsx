@@ -135,7 +135,7 @@ const UserLayout = () => (
         <Route path="/login" element={<LoginContent />} />
         <Route path="/sign-up" element={<SignupContent />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
-        <Route path="/for-individuals" element={<ForIndividualsContent />} />
+        <Route path="/members" element={<ForIndividualsContent />} />
         <Route path="/for-businesses" element={<ForBusinessContent />} />
         <Route path="/for-employers" element={<ForEmployersContent />} />
         <Route path="/for-associations" element={<ForAssociationsContent />} />
