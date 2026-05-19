@@ -46,7 +46,8 @@ const LOGIN_INCLUDE = {
 // POST /api/auth/register
 // ─────────────────────────────────────────────────────────────────────────────
 exports.register = asyncHandler(async (req, res) => {
-  const { email, password, role, profile } = req.body;
+  const { email, password, role } = req.body;
+  const profile = req.body.profile || req.body;
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) throw ApiError.conflict("Email already registered");
