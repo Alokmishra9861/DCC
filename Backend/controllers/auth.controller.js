@@ -11,6 +11,7 @@ const {
 } = require("../services/email.service");
 const { generateMemberQR } = require("../services/qr.service");
 const { buildAuthResponse } = require("../utils/auth.redirect");
+const admin = require("../config/firebase");
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const generateToken = (id, secret, expiresIn) =>
@@ -58,7 +59,7 @@ exports.register = asyncHandler(async (req, res) => {
   const allowedRoles = ["MEMBER", "EMPLOYER", "ASSOCIATION", "BUSINESS", "B2B"];
   if (!allowedRoles.includes(role)) throw ApiError.badRequest("Invalid role");
 
-  const roleData = {};
+  const roleData = {}; 
 
   if (role === "MEMBER") {
     if (!profile?.firstName || !profile?.lastName) {
@@ -379,4 +380,145 @@ exports.getMe = asyncHandler(async (req, res) => {
     ...safeUser
   } = user;
   return ApiResponse.success(res, safeUser);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/auth/google
+// ─────────────────────────────────────────────────────────────────────────────
+exports.googleLogin = asyncHandler(async (req, res) => {
+  const { idToken, role } = req.body;
+
+  if (!idToken) throw ApiError.badRequest("Google ID token is required");
+
+  // Verify the Firebase ID token
+  const decodedToken = await admin.auth().verifyIdToken(idToken);
+  const { email, name, picture } = decodedToken;
+
+  if (!email) throw ApiError.badRequest("Google account does not have an email");
+
+  // Check if user exists
+  let user = await prisma.user.findUnique({
+    where: { email },
+    include: LOGIN_INCLUDE,
+  });
+
+  if (user) {
+    if (!user.isActive) throw ApiError.unauthorized("Account is deactivated");
+    
+    // Validate role match if role was specified in request
+    if (role) {
+      const selectedRole = role.toUpperCase();
+      if (selectedRole !== user.role) {
+        throw ApiError.unauthorized(
+          `This email is registered as a ${user.role.toLowerCase()}, not ${selectedRole.toLowerCase()}. Please select the correct account type.`
+        );
+      }
+    }
+  } else {
+    // Register new user using Google details
+    if (!role) {
+      throw ApiError.badRequest("Role must be provided for new signups");
+    }
+
+    const selectedRole = role.toUpperCase();
+    const allowedRoles = ["MEMBER", "EMPLOYER", "ASSOCIATION", "BUSINESS", "B2B"];
+    if (!allowedRoles.includes(selectedRole)) throw ApiError.badRequest("Invalid role");
+
+    // We generate a random password for OAuth users so they still have a hash
+    const randomPassword = crypto.randomBytes(16).toString("hex");
+    const hashedPassword = await bcrypt.hash(randomPassword, 12);
+
+    const roleData = {};
+    const [firstName, ...lastNameParts] = (name || "").split(" ");
+    const lastName = lastNameParts.join(" ") || "";
+
+    if (selectedRole === "MEMBER") {
+      roleData.member = {
+        create: {
+          firstName: normalizeString(firstName) || "User",
+          lastName: normalizeString(lastName) || "Name",
+        },
+      };
+    } else if (selectedRole === "EMPLOYER") {
+      roleData.employer = {
+        create: {
+          companyName: name || "Company",
+        },
+      };
+    } else if (selectedRole === "ASSOCIATION") {
+      roleData.association = {
+        create: {
+          name: name || "Association",
+          associationType: "MEMBER",
+        },
+      };
+    } else if (selectedRole === "BUSINESS") {
+      // Need a default category, let's just pick the first one or require it?
+      // Since Google sign-in skips the normal registration form, a business might fail
+      // if we don't have a category. We will just find any category or fail.
+      const firstCategory = await prisma.category.findFirst();
+      if (!firstCategory) throw ApiError.badRequest("No categories exist in DB. Cannot create Business.");
+      
+      roleData.business = {
+        create: {
+          name: name || "Business",
+          email: email,
+          categoryId: firstCategory.id,
+          status: "PENDING",
+        },
+      };
+    } else if (selectedRole === "B2B") {
+      roleData.b2bPartner = {
+        create: {
+          companyName: name || "B2B Partner",
+          email: email,
+        },
+      };
+    }
+
+    user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        role: selectedRole,
+        isEmailVerified: true, // Google emails are already verified
+        ...roleData,
+      },
+      include: LOGIN_INCLUDE,
+    });
+
+    if (selectedRole === "MEMBER" && user.member) {
+      const qrCode = await generateMemberQR(user.member);
+      await prisma.member.update({
+        where: { id: user.member.id },
+        data: { qrCode },
+      });
+    }
+
+    sendWelcomeEmail(email, { name: name || "Member" })
+      .catch((err) => console.error("Welcome email failed:", err.message));
+  }
+
+  // Generate tokens
+  const accessToken = generateToken(
+    user.id,
+    process.env.JWT_SECRET,
+    process.env.JWT_EXPIRES_IN || "7d",
+  );
+  const refreshToken = generateToken(
+    user.id,
+    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+    process.env.JWT_REFRESH_EXPIRES_IN || "30d",
+  );
+
+  return ApiResponse.success(
+    res,
+    buildAuthResponse(
+      { accessToken, refreshToken },
+      user,
+      user.association, 
+      user.member?.membership,
+    ),
+    "Google Login successful",
+  );
 });

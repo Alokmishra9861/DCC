@@ -8,6 +8,8 @@ import {
   ROLE_ROUTES,
   getAssociationRoute,
 } from "../../../services/api";
+import { auth, googleProvider } from "../../../config/firebase";
+import { signInWithPopup } from "firebase/auth";
 
 // ── 6 tabs — B2B Partner added ────────────────────────────────────────────────
 const ROLE_TABS = [
@@ -112,6 +114,32 @@ const LoginContent = () => {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+      
+      const data = await authAPI.googleLogin(idToken, selectedRole);
+      saveAuthData(data);
+
+      const role = data.user?.role;
+      const destination =
+        data.redirectTo ||
+        (role === "ASSOCIATION"
+          ? getAssociationRoute(data.user)
+          : ROLE_ROUTES[role] || "/member-dashboard");
+
+      navigate(destination, { replace: true });
+    } catch (err) {
+      console.error("Google Login Error:", err);
+      setError(err.message || "Google Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0D1328] flex items-center justify-center py-12 px-6 relative overflow-hidden grid-background">
       {/* Premium Luxury Background Orbs */}
@@ -125,7 +153,7 @@ const LoginContent = () => {
         <div className="text-center mb-8 animate-fade-up">
           <div className="flex items-center justify-center mx-auto mb-6">
             <img
-              src="/logo-rmbg.png"
+              src="/DCC-rmbg.png"
               alt="DCC Logo"
               className="h-28 w-auto object-contain rounded-xl filter brightness-110"
             />
@@ -349,7 +377,12 @@ const LoginContent = () => {
                 </span>
               </div>
             </div>
-            <button className="mt-6 w-full px-6 py-3 border border-white/8 rounded-xl font-bold text-white bg-[#161F3D]/50 hover:border-[#D4A62A] hover:text-[#D4A62A] hover:bg-[#161F3D] transition-all flex items-center justify-center gap-3 cursor-pointer">
+            <button 
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="mt-6 w-full px-6 py-3 border border-white/8 rounded-xl font-bold text-white bg-[#161F3D]/50 hover:border-[#D4A62A] hover:text-[#D4A62A] hover:bg-[#161F3D] transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"

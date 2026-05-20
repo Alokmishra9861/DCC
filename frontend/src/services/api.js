@@ -86,6 +86,11 @@ export const authAPI = {
       method: "POST",
       body: JSON.stringify({ email, password, role }),
     }),
+  googleLogin: (idToken, role) =>
+    request("/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ idToken, role }),
+    }),
   me: () => request("/auth/me"),
   forgotPassword: (email) =>
     request("/auth/forgot-password", {
