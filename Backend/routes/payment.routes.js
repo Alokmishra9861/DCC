@@ -27,7 +27,15 @@ router.post(
 // Both GET verify routes are public so Stripe mobile redirects don't crash on 401.
 // They verify with Stripe securely via checkout session ID, then return the JWT token.
 router.get("/verify-session", verifyStripeSession);
-router.get("/stripe/verify", verifyStripeSession);
+router.get(
+  "/stripe/verify",
+  asyncHandler(async (req, res, next) => {
+    if (String(req.query.type || "").toLowerCase() === "certificate") {
+      return verifyCertificateSession(req, res, next);
+    }
+    return verifyStripeSession(req, res, next);
+  }),
+);
 router.get("/verify-certificate-session", verifyCertificateSession);
 
 // ── All routes below require a valid JWT ──────────────────────────────────────
