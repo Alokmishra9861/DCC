@@ -2,8 +2,7 @@ const { prisma } = require("../config/db");
 const { ApiError } = require("../utils/ApiError");
 const { asyncHandler } = require("../middlewares/errorhandler");
 const amadeus = require("../services/amadeus.service");
-const Stripe = require("stripe");
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = require("../config/stripe");
 
 // ── Membership helpers ────────────────────────────────────────────────────────
 const getMemberWithMembership = async (userId) =>

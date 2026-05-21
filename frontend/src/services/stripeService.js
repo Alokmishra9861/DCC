@@ -6,7 +6,9 @@ import { getToken, certificateAPI } from "./api"; // ← uses dcc_token correctl
 let stripePromise = null;
 const getStripe = () => {
   if (!stripePromise) {
-    stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+    const pubKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+    console.log("ℹ️ Stripe Frontend Publishable Key:", pubKey);
+    stripePromise = loadStripe(pubKey);
   }
   return stripePromise;
 };
