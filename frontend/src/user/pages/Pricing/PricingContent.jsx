@@ -22,7 +22,7 @@ const PricingContent = () => {
       setError('');
       try {
         const res = await membershipAPI.getPlans();
-        const activePlans = res?.data || [];
+        const activePlans = Array.isArray(res) ? res : (res?.data ?? []);
         setPlans(activePlans);
         if (activePlans.length > 0) {
           // Pre-select Premium or the second plan by default

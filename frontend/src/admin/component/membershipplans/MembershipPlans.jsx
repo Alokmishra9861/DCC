@@ -364,7 +364,8 @@ const MembershipPlans = () => {
     setError("");
     try {
       const res = await membershipAPI.getAdminPlans();
-      setPlans(res?.data || []);
+      setPlans(Array.isArray(res) ? res : (res?.data ?? []));
+      console.log(res);
     } catch (err) {
       setError(err.message || "Failed to load membership plans");
     } finally {
