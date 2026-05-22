@@ -106,7 +106,7 @@ exports.register = asyncHandler(async (req, res) => {
 
     if (categoryId) {
       resolvedCategory = await prisma.category.findUnique({
-        where: { id: Number(categoryId) },
+        where: { id: categoryId },
       });
     }
     if (!resolvedCategory && categoryName) {
