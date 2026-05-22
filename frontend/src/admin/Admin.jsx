@@ -12,6 +12,8 @@ import { Route, Routes, useLocation, NavLink } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "./Navbar";
 import Sidebar from "./component/sidebar/Sidebar";
+import MembershipPlans from "./component/membershipplans/MembershipPlans";
+
 
 const ADMIN_FONTS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap');
@@ -103,6 +105,15 @@ const Admin = () => {
                   </PageTransition>
                 }
               />
+              <Route
+                path="/membership-plans"
+                element={
+                  <PageTransition>
+                    <MembershipPlans />
+                  </PageTransition>
+                }
+              />
+
               <Route
                 path="*"
                 element={

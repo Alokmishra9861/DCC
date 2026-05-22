@@ -372,13 +372,31 @@ export const discountAPI = {
 export const membershipAPI = {
   getPlans: () => request("/membership/plans"),
   getMy: () => request("/membership/my"),
-  subscribe: (planType, paymentProvider, paymentId) =>
+  subscribe: (planType, paymentProvider, paymentId, planId) =>
     request("/membership/subscribe", {
       method: "POST",
-      body: JSON.stringify({ planType, paymentProvider, paymentId }),
+      body: JSON.stringify({ planType, paymentProvider, paymentId, planId }),
     }),
   cancel: (id) => request(`/membership/${id}/cancel`, { method: "PUT" }),
+  
+  // Admin membership plans management
+  getAdminPlans: () => request("/admin/membership-plans"),
+  createPlan: (data) =>
+    request("/admin/membership-plans", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  updatePlan: (id, data) =>
+    request(`/admin/membership-plans/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  deletePlan: (id) =>
+    request(`/admin/membership-plans/${id}`, {
+      method: "DELETE",
+    }),
 };
+
 
 // ─── Certificates ─────────────────────────────────────────────────────────────
 export const certificateAPI = {

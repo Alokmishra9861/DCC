@@ -141,6 +141,7 @@ const NAV = [
   { path: "/admin", label: "Dashboard", icon: "🏠", exact: true },
   { path: "/admin/approvals", label: "Approvals", icon: "✅", hasDot: true },
   { path: "/admin/banners", label: "Banner Ads", icon: "📢" },
+  { path: "/admin/membership-plans", label: "Membership Plans", icon: "💳" },
   { path: "/admin/members", label: "Members", icon: "👥" },
   { path: "/admin/businesses", label: "Businesses", icon: "🏪" },
   { path: "/admin/analytics", label: "Analytics", icon: "📊" },

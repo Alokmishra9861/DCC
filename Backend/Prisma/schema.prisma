@@ -467,10 +467,35 @@ model Membership {
   paymentId       String?
   paymentStatus   PaymentStatus    @default(PENDING)
 
+  planId          String?         @db.ObjectId
+  plan            MembershipPlan? @relation(fields: [planId], references: [id])
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   @@map("memberships")
+}
+
+// ─────────────────────────────────────────
+// MEMBERSHIP PLAN (DYNAMIC)
+// ─────────────────────────────────────────
+
+model MembershipPlan {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  price        Float
+  currency     String   @default("KYD")
+  billingCycle String   @default("year")
+  description  String?
+  badge        String?
+  isActive     Boolean  @default(true)
+  features     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships  Membership[]
+
+  @@map("membership_plans")
 }
 
 // ─────────────────────────────────────────

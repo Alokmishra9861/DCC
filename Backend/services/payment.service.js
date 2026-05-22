@@ -162,6 +162,10 @@ const createPayPalOrder = async ({ priceUSD, description, metadata = {} }) => {
     ? "https://api-m.paypal.com"
     : "https://api-m.sandbox.paypal.com";
 
+  const frontendUrl =
+    process.env.FRONTEND_URL || "https://dcc-frontend-ce9z.onrender.com";
+  const membershipId = metadata.membershipId || "";
+
   const auth = Buffer.from(
     `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`,
   ).toString("base64");
@@ -190,6 +194,10 @@ const createPayPalOrder = async ({ priceUSD, description, metadata = {} }) => {
           description,
         },
       ],
+      application_context: {
+        return_url: `${frontendUrl}/payment/success?type=membership&membership_id=${membershipId}&payment_provider=paypal`,
+        cancel_url: `${frontendUrl}/payment/cancelled`,
+      },
     }),
   });
 

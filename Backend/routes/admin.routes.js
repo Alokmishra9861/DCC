@@ -1,4 +1,4 @@
-﻿// Backend/routes/admin.routes.js
+// Backend/routes/admin.routes.js
 // Mount in app.js: app.use("/api/admin", require("./routes/admin.routes"))
 
 const express = require("express");
@@ -61,4 +61,11 @@ router.put("/inquiries/:id/status", ctrl.updateInquiryStatus);
 // ── Audit log ─────────────────────────────────────────────────────────────────
 router.get("/audit", ctrl.getAuditLog);
 
+// ── Membership plans CRUD ─────────────────────────────────────────────────────
+router.get("/membership-plans", ctrl.getAdminMembershipPlans);
+router.post("/membership-plans", ctrl.createMembershipPlan);
+router.put("/membership-plans/:id", ctrl.updateMembershipPlan);
+router.delete("/membership-plans/:id", ctrl.deleteMembershipPlan);
+
 module.exports = router;
+

@@ -45,6 +45,7 @@ exports.createStripeCheckout = asyncHandler(async (req, res) => {
   }
 
   // ── MEMBERSHIP PURCHASE FLOW ────────────────────────────────────────
+  const { planId } = req.body;
   const member = await prisma.member.findUnique({
     where: { userId: req.user.id },
     include: { user: true, membership: true },
@@ -54,27 +55,51 @@ exports.createStripeCheckout = asyncHandler(async (req, res) => {
     throw ApiError.conflict("You already have an active membership");
   }
 
+  let price = MEMBERSHIP_PRICE_USD;
+  let finalPlanType = "INDIVIDUAL";
+  let dbPlan = null;
+
+  if (planId) {
+    dbPlan = await prisma.membershipPlan.findUnique({ where: { id: planId } });
+    if (!dbPlan) throw ApiError.notFound("Selected membership plan not found");
+    price = dbPlan.price;
+    if (dbPlan.name.toUpperCase().includes("EMPLOYER")) {
+      finalPlanType = "EMPLOYER";
+    } else if (dbPlan.name.toUpperCase().includes("ASSOCIATION")) {
+      finalPlanType = "ASSOCIATION";
+    } else {
+      finalPlanType = "INDIVIDUAL";
+    }
+  }
+
   // Upsert a PENDING membership record
   const membership = await prisma.membership.upsert({
     where: { memberId: member.id },
     update: {
       status: "PENDING",
-      priceUSD: MEMBERSHIP_PRICE_USD,
+      priceUSD: price,
       paymentStatus: "PENDING",
+      planId: planId || null,
+      type: finalPlanType,
     },
     create: {
       memberId: member.id,
-      type: "INDIVIDUAL",
+      type: finalPlanType,
       status: "PENDING",
-      priceUSD: MEMBERSHIP_PRICE_USD,
+      priceUSD: price,
+      planId: planId || null,
     },
   });
 
   const session = await createStripeCheckoutSession({
     memberId: member.id,
     email: member.user.email,
-    priceUSD: MEMBERSHIP_PRICE_USD,
-    metadata: { membershipId: membership.id, type: "membership" },
+    priceUSD: price,
+    metadata: {
+      membershipId: membership.id,
+      type: "membership",
+      ...(planId && { planId }),
+    },
   });
 
   return ApiResponse.success(res, {
@@ -85,26 +110,54 @@ exports.createStripeCheckout = asyncHandler(async (req, res) => {
 
 // ── Create membership order (PayPal) ──────────────────
 exports.createPayPalCheckout = asyncHandler(async (req, res) => {
+  const { planId } = req.body;
   const member = await prisma.member.findUnique({
     where: { userId: req.user.id },
   });
   if (!member) throw ApiError.notFound("Member not found");
 
+  let price = MEMBERSHIP_PRICE_USD;
+  let finalPlanType = "INDIVIDUAL";
+  let dbPlan = null;
+
+  if (planId) {
+    dbPlan = await prisma.membershipPlan.findUnique({ where: { id: planId } });
+    if (!dbPlan) throw ApiError.notFound("Selected membership plan not found");
+    price = dbPlan.price;
+    if (dbPlan.name.toUpperCase().includes("EMPLOYER")) {
+      finalPlanType = "EMPLOYER";
+    } else if (dbPlan.name.toUpperCase().includes("ASSOCIATION")) {
+      finalPlanType = "ASSOCIATION";
+    } else {
+      finalPlanType = "INDIVIDUAL";
+    }
+  }
+
   const membership = await prisma.membership.upsert({
     where: { memberId: member.id },
-    update: { status: "PENDING", priceUSD: MEMBERSHIP_PRICE_USD },
+    update: {
+      status: "PENDING",
+      priceUSD: price,
+      planId: planId || null,
+      type: finalPlanType,
+    },
     create: {
       memberId: member.id,
-      type: "INDIVIDUAL",
+      type: finalPlanType,
       status: "PENDING",
-      priceUSD: MEMBERSHIP_PRICE_USD,
+      priceUSD: price,
+      planId: planId || null,
     },
   });
 
   const order = await createPayPalOrder({
-    priceUSD: MEMBERSHIP_PRICE_USD,
-    description: "DCC Annual Membership",
-    metadata: { membershipId: membership.id, memberId: member.id },
+    priceUSD: price,
+    description: `DCC ${dbPlan ? dbPlan.name : "Annual"} Membership`,
+    metadata: {
+      membershipId: membership.id,
+      memberId: member.id,
+      ...(planId && { planId }),
+    },
   });
 
   return ApiResponse.success(res, { orderId: order.id, links: order.links });
@@ -368,7 +421,64 @@ exports.capturePayPal = asyncHandler(async (req, res) => {
 
   if (capture.status === "COMPLETED") {
     await activateMembership(membershipId, orderId, "PAYPAL");
-    return ApiResponse.success(res, {}, "Membership activated successfully");
+
+    // Fetch the member associated with this membership to generate a token
+    const membership = await prisma.membership.findUnique({
+      where: { id: membershipId },
+      include: { member: { include: { user: true } } },
+    });
+    if (!membership || !membership.member || !membership.member.user) {
+      throw ApiError.notFound("Associated member profile not found");
+    }
+
+    const member = membership.member;
+
+    // ── Generate JWT Tokens for seamless auto-login ───────────────────────────
+    const jwt = require("jsonwebtoken");
+    const generateToken = (id, secret, expiresIn) =>
+      jwt.sign({ id }, secret, { expiresIn });
+
+    const accessToken = generateToken(
+      member.user.id,
+      process.env.JWT_SECRET,
+      process.env.JWT_EXPIRES_IN || "7d",
+    );
+    const refreshToken = generateToken(
+      member.user.id,
+      process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+      process.env.JWT_REFRESH_EXPIRES_IN || "30d",
+    );
+
+    const { buildAuthResponse } = require("../utils/auth.redirect");
+
+    // Fetch full user with role includes to match buildAuthResponse structure
+    const fullUser = await prisma.user.findUnique({
+      where: { id: member.user.id },
+      include: {
+        member: { include: { membership: true } },
+        employer: true,
+        association: true,
+        business: true,
+        b2bPartner: true,
+      },
+    });
+
+    const authData = buildAuthResponse(
+      { accessToken, refreshToken },
+      fullUser,
+      fullUser.association,
+      fullUser.member?.membership
+    );
+
+    return ApiResponse.success(
+      res,
+      {
+        ...authData,
+        type: "membership",
+        activated: true,
+      },
+      "Membership activated successfully"
+    );
   }
 
   throw ApiError.badRequest("PayPal payment not completed");

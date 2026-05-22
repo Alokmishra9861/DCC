@@ -15,6 +15,9 @@ const PaymentSuccessPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const sessionId = searchParams.get("session_id");
+  const paypalToken = searchParams.get("token"); // PayPal Order ID is passed as "token"
+  const membershipId = searchParams.get("membership_id");
+  const paymentProvider = searchParams.get("payment_provider") || "";
   const typeParam = searchParams.get("type") || "";
 
   // Detect if this is a certificate, banner, or membership payment
@@ -33,9 +36,9 @@ const PaymentSuccessPage = () => {
 
   // ── 1. Verify payment ─────────────────────────────────────────────────────
   useEffect(() => {
-    if (!sessionId) {
+    if (!sessionId && !paypalToken) {
       setError(
-        "No session ID found. If you just paid, your payment may already be processed.",
+        "No session or payment identifier found. If you just paid, your payment may already be processed.",
       );
       setStatus("error");
       return;
@@ -57,6 +60,15 @@ const PaymentSuccessPage = () => {
             saveAuthData(data);
           }
           setRedirectPath("/member-dashboard/certificates");
+          if (cancelled) return;
+          setStatus("success");
+        } else if (paymentProvider === "paypal" || paypalToken) {
+          // PayPal Membership payment — verify and capture via backend
+          const data = await paymentAPI.capturePayPal(paypalToken, membershipId);
+          if (data && (data.accessToken || data.token)) {
+            saveAuthData(data);
+          }
+          setRedirectPath("/member-dashboard");
           if (cancelled) return;
           setStatus("success");
         } else {
@@ -92,7 +104,7 @@ const PaymentSuccessPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [sessionId, isCertificatePayment, isBannerPayment]);
+  }, [sessionId, paypalToken, membershipId, paymentProvider, isCertificatePayment, isBannerPayment]);
 
   // ── 2. Auto-redirect countdown ────────────────────────────────────────────
   useEffect(() => {

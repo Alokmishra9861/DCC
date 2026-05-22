@@ -2,7 +2,7 @@ const { prisma } = require("../config/db");
 const { ApiError } = require("../utils/ApiError");
 const { asyncHandler } = require("../middlewares/errorhandler");
 
-// ── Static plans (no DB model for plans in schema) ───────────────────────────
+// ── Static plans fallback ───────────────────────────────────────────────────
 const PLANS = [
   {
     id: "individual",
@@ -49,11 +49,94 @@ const PLANS = [
   },
 ];
 
+// Seed function for default plans
+const seedDefaultPlans = async () => {
+  const defaultPlans = [
+    {
+      name: "Basic",
+      price: 49.00,
+      currency: "KYD",
+      billingCycle: "year",
+      description: "Access standard discounts across selected partners.",
+      badge: "",
+      isActive: true,
+      features: {
+        "Access to all discounts": "Standard",
+        "Digital membership card": true,
+        "Mobile app access": true,
+        "Unlimited savings": true,
+        "Certificate purchases": "5 per month",
+        "Support": "Email support",
+        "Exclusive travel deals": false,
+        "DCC VIP Events": false,
+        "Priority concierge": false
+      }
+    },
+    {
+      name: "Premium",
+      price: 89.00,
+      currency: "KYD",
+      billingCycle: "year",
+      description: "Get exclusive offers, priority support and special access.",
+      badge: "Most Popular",
+      isActive: true,
+      features: {
+        "Access to all discounts": "Standard + Premium",
+        "Digital membership card": true,
+        "Mobile app access": true,
+        "Unlimited savings": true,
+        "Certificate purchases": "Unlimited",
+        "Support": "Priority email & chat",
+        "Exclusive travel deals": true,
+        "DCC VIP Events": false,
+        "Priority concierge": false
+      }
+    },
+    {
+      name: "VIP",
+      price: 149.00,
+      currency: "KYD",
+      billingCycle: "year",
+      description: "Ultimate luxury and priority. Unlocked all-inclusive benefits.",
+      badge: "Elite",
+      isActive: true,
+      features: {
+        "Access to all discounts": "All-inclusive VIP",
+        "Digital membership card": true,
+        "Mobile app access": true,
+        "Unlimited savings": true,
+        "Certificate purchases": "Unlimited (VIP rates)",
+        "Support": "24/7 Dedicated phone",
+        "Exclusive travel deals": true,
+        "DCC VIP Events": true,
+        "Priority concierge": true
+      }
+    }
+  ];
+
+  for (const plan of defaultPlans) {
+    await prisma.membershipPlan.create({ data: plan });
+  }
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/membership/plans
 // ─────────────────────────────────────────────────────────────────────────────
 exports.getPlans = asyncHandler(async (req, res) => {
-  return res.status(200).json({ success: true, data: PLANS });
+  let plans = await prisma.membershipPlan.findMany({
+    where: { isActive: true },
+    orderBy: { price: 'asc' }
+  });
+
+  if (plans.length === 0) {
+    await seedDefaultPlans();
+    plans = await prisma.membershipPlan.findMany({
+      where: { isActive: true },
+      orderBy: { price: 'asc' }
+    });
+  }
+
+  return res.status(200).json({ success: true, data: plans });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -86,24 +169,47 @@ exports.getMyMembership = asyncHandler(async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/membership/subscribe
 // Called after payment is confirmed. Activates or creates the membership record.
-// Body: { planType: "INDIVIDUAL"|"EMPLOYER"|"ASSOCIATION",
-//         paymentProvider: "STRIPE"|"PAYPAL",
-//         paymentId: "pi_xxx" | "paypal-order-id" }
+// Body: { planId, planType, paymentProvider, paymentId }
 // ─────────────────────────────────────────────────────────────────────────────
 exports.subscribe = asyncHandler(async (req, res) => {
-  const { planType, paymentProvider, paymentId } = req.body;
+  const { planId, planType, paymentProvider, paymentId } = req.body;
 
-  if (!planType || !paymentProvider || !paymentId) {
+  if (!paymentProvider || !paymentId) {
     throw ApiError.badRequest(
-      "planType, paymentProvider and paymentId are required",
+      "paymentProvider and paymentId are required",
     );
   }
 
-  const validTypes = ["INDIVIDUAL", "EMPLOYER", "ASSOCIATION"];
-  if (!validTypes.includes(planType)) {
-    throw ApiError.badRequest(
-      `planType must be one of: ${validTypes.join(", ")}`,
-    );
+  let priceUSD = 0;
+  let finalPlanType = "INDIVIDUAL";
+
+  if (planId) {
+    const dbPlan = await prisma.membershipPlan.findUnique({
+      where: { id: planId }
+    });
+    if (!dbPlan) throw ApiError.notFound("Membership plan not found");
+    priceUSD = dbPlan.price;
+    
+    // Default to INDIVIDUAL type for custom dynamic membership plans unless named otherwise
+    if (dbPlan.name.toUpperCase().includes("EMPLOYER")) {
+      finalPlanType = "EMPLOYER";
+    } else if (dbPlan.name.toUpperCase().includes("ASSOCIATION")) {
+      finalPlanType = "ASSOCIATION";
+    } else {
+      finalPlanType = "INDIVIDUAL";
+    }
+  } else if (planType) {
+    const validTypes = ["INDIVIDUAL", "EMPLOYER", "ASSOCIATION"];
+    if (!validTypes.includes(planType)) {
+      throw ApiError.badRequest(
+        `planType must be one of: ${validTypes.join(", ")}`,
+      );
+    }
+    const plan = PLANS.find((p) => p.type === planType);
+    priceUSD = plan?.price ?? 0;
+    finalPlanType = planType;
+  } else {
+    throw ApiError.badRequest("planId or planType is required");
   }
 
   const member = await prisma.member.findUnique({
@@ -111,10 +217,6 @@ exports.subscribe = asyncHandler(async (req, res) => {
     include: { membership: true },
   });
   if (!member) throw ApiError.notFound("Member profile not found");
-
-  // Find the matching plan for price
-  const plan = PLANS.find((p) => p.type === planType);
-  const priceUSD = plan?.price ?? 0;
 
   const now = new Date();
   const expiryDate = new Date(now);
@@ -127,7 +229,7 @@ exports.subscribe = asyncHandler(async (req, res) => {
     membership = await prisma.membership.update({
       where: { id: member.membership.id },
       data: {
-        type: planType,
+        type: finalPlanType,
         status: "ACTIVE",
         priceUSD,
         startDate: now,
@@ -135,6 +237,7 @@ exports.subscribe = asyncHandler(async (req, res) => {
         paymentProvider,
         paymentId,
         paymentStatus: "COMPLETED",
+        planId: planId || null,
       },
     });
   } else {
@@ -142,7 +245,7 @@ exports.subscribe = asyncHandler(async (req, res) => {
     membership = await prisma.membership.create({
       data: {
         memberId: member.id,
-        type: planType,
+        type: finalPlanType,
         status: "ACTIVE",
         priceUSD,
         startDate: now,
@@ -150,6 +253,7 @@ exports.subscribe = asyncHandler(async (req, res) => {
         paymentProvider,
         paymentId,
         paymentStatus: "COMPLETED",
+        planId: planId || null,
       },
     });
   }

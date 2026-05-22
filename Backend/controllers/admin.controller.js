@@ -967,3 +967,87 @@ exports.getAllAssociations = asyncHandler(async (req, res) => {
     buildPaginationMeta(total, page, limit),
   );
 });
+
+// ── Membership Plans CRUD (Admin) ───────────────────────────────────────────
+exports.getAdminMembershipPlans = asyncHandler(async (req, res) => {
+  const plans = await prisma.membershipPlan.findMany({
+    orderBy: { price: "asc" },
+  });
+  return ApiResponse.success(res, plans, "Membership plans fetched successfully");
+});
+
+exports.createMembershipPlan = asyncHandler(async (req, res) => {
+  const { name, price, currency, billingCycle, description, badge, isActive, features } = req.body;
+
+  if (!name || price === undefined) {
+    throw ApiError.badRequest("Name and price are required");
+  }
+
+  const plan = await prisma.membershipPlan.create({
+    data: {
+      name,
+      price: parseFloat(price),
+      currency: currency || "KYD",
+      billingCycle: billingCycle || "year",
+      description,
+      badge,
+      isActive: isActive !== undefined ? isActive : true,
+      features: features || {},
+    },
+  });
+
+  return ApiResponse.success(res, plan, "Membership plan created successfully");
+});
+
+exports.updateMembershipPlan = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { name, price, currency, billingCycle, description, badge, isActive, features } = req.body;
+
+  const existingPlan = await prisma.membershipPlan.findUnique({ where: { id } });
+  if (!existingPlan) throw ApiError.notFound("Membership plan not found");
+
+  const plan = await prisma.membershipPlan.update({
+    where: { id },
+    data: {
+      ...(name && { name }),
+      ...(price !== undefined && { price: parseFloat(price) }),
+      ...(currency && { currency }),
+      ...(billingCycle && { billingCycle }),
+      description: description !== undefined ? description : existingPlan.description,
+      badge: badge !== undefined ? badge : existingPlan.badge,
+      ...(isActive !== undefined && { isActive }),
+      ...(features !== undefined && { features }),
+    },
+  });
+
+  return ApiResponse.success(res, plan, "Membership plan updated successfully");
+});
+
+exports.deleteMembershipPlan = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const existingPlan = await prisma.membershipPlan.findUnique({ where: { id } });
+  if (!existingPlan) throw ApiError.notFound("Membership plan not found");
+
+  // Check if any memberships are using this plan
+  const usageCount = await prisma.membership.count({
+    where: { planId: id }
+  });
+
+  if (usageCount > 0) {
+    // Soft delete / make inactive instead of hard delete to preserve integrity
+    const updated = await prisma.membershipPlan.update({
+      where: { id },
+      data: { isActive: false },
+    });
+    return ApiResponse.success(
+      res,
+      updated,
+      "Membership plan has active subscriptions. It has been deactivated instead of deleted."
+    );
+  }
+
+  await prisma.membershipPlan.delete({ where: { id } });
+  return ApiResponse.success(res, null, "Membership plan deleted successfully");
+});
+
