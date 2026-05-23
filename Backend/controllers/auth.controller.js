@@ -104,9 +104,14 @@ exports.register = asyncHandler(async (req, res) => {
     const { categoryId, categoryName } = profile;
     let resolvedCategory = null;
 
-    if (categoryId) {
+    let finalCategoryId = categoryId;
+    if (categoryId && typeof categoryId === "object") {
+      finalCategoryId = categoryId.id || categoryId._id;
+    }
+
+    if (finalCategoryId && typeof finalCategoryId === "string") {
       resolvedCategory = await prisma.category.findUnique({
-        where: { id: categoryId },
+        where: { id: finalCategoryId },
       });
     }
     if (!resolvedCategory && categoryName) {
@@ -122,9 +127,9 @@ exports.register = asyncHandler(async (req, res) => {
 
     roleData.business = {
       create: {
-        name: normalizeString(profile.name),
+        name: normalizeString(profile.name || profile.businessName) || "Unnamed Business",
         categoryId: resolvedCategory.id,
-        description: normalizeString(profile.description),
+        description: normalizeString(profile.description) || "",
         phone: normalizeString(profile.phone),
         email: email,
         address: normalizeString(profile.address),
