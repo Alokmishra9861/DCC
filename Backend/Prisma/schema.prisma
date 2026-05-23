@@ -413,6 +413,15 @@ model Business {
   imageUrls     String[]
   videoUrl      String?
 
+  // New fields for premium Edit Profile form
+  cuisineType   String?
+  addressLine1  String?
+  addressLine2  String?
+  landmark      String?
+  country       String?  @default("Cayman Islands")
+  coverBannerUrl String?
+  socialLinks   String?  // JSON string of social media links
+
   stripeAccountId  String?
   paypalEmail      String?
 

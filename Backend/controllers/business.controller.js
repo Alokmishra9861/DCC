@@ -207,8 +207,26 @@ exports.getMyBusiness = asyncHandler(async (req, res) => {
 
 // ── Business: update profile ──────────────────────────
 exports.updateBusiness = asyncHandler(async (req, res) => {
-  const { name, categoryId, description, phone, address, district, website } =
-    req.body;
+  const {
+    name,
+    categoryId,
+    description,
+    phone,
+    address,
+    district,
+    website,
+    cuisineType,
+    addressLine1,
+    addressLine2,
+    landmark,
+    country,
+    coverBannerUrl,
+    socialLinks,
+    videoUrl,
+    workingHours,
+    logoUrl,
+    imageUrls
+  } = req.body;
 
   const business = await prisma.business.findUnique({
     where: { userId: req.user.id },
@@ -225,7 +243,26 @@ exports.updateBusiness = asyncHandler(async (req, res) => {
 
   const updated = await prisma.business.update({
     where: { id: business.id },
-    data: { name, categoryId, description, phone, address, district, website },
+    data: {
+      name,
+      categoryId,
+      description,
+      phone,
+      address,
+      district,
+      website,
+      cuisineType,
+      addressLine1,
+      addressLine2,
+      landmark,
+      country,
+      coverBannerUrl,
+      socialLinks: typeof socialLinks === "object" ? JSON.stringify(socialLinks) : socialLinks,
+      videoUrl,
+      workingHours: typeof workingHours === "object" ? JSON.stringify(workingHours) : workingHours,
+      logoUrl,
+      imageUrls: Array.isArray(imageUrls) ? imageUrls : undefined
+    },
   });
 
   return ApiResponse.success(res, updated, "Business profile updated");

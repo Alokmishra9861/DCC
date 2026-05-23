@@ -298,10 +298,10 @@ export const businessAPI = {
   getById: (id) => request(`/businesses/${id}`),
 
   // Authenticated business owner endpoints
-  getProfile: () => request("/business/profile"),
+  getProfile: () => request("/businesses/me/profile"),
   getDashboard: () => request("/business/dashboard"),
   updateProfile: (data) =>
-    request("/business/profile", { method: "PUT", body: JSON.stringify(data) }),
+    request("/businesses/me/profile", { method: "PUT", body: JSON.stringify(data) }),
 
   // Offers management
   getOffers: () => request("/business/offers"),

@@ -1,6 +1,7 @@
 // Frontend/src/user/pages/Dashboard/BusinessDashboardContent.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import Icon from "../../components/ui/AppIcon";
+import EditProfileView from "./EditProfileView";
 import {
   businessAPI,
   offerAPI,
@@ -9,6 +10,7 @@ import {
   advertisementAPI,
   getUser,
   uploadAPI,
+  categoryAPI,
 } from "../../../services/api";
 import AnalyticsStatsPanel from "../../components/ui/AnalyticsStatsPanel";
 
@@ -391,9 +393,11 @@ const RedemptionPanel = () => {
   );
 };
 
+
 // ─── Main BusinessDashboardContent ───────────────────────────────────────────
 const BusinessDashboardContent = () => {
   const [activeTab, setActiveTab] = useState("overview");
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [showBannerModal, setShowBannerModal] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState("top");
   const [selectedDuration, setSelectedDuration] = useState("monthly");
@@ -469,6 +473,7 @@ const BusinessDashboardContent = () => {
             engagementRate: p.engagementRate ?? 0,
             performanceOverview: p.performanceOverview || [],
             _id: p._id || p.id,
+            raw: p,
           });
           if (p._id || p.id) loadOffers(p._id || p.id);
         }
@@ -725,7 +730,18 @@ const BusinessDashboardContent = () => {
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header Hero */}
+        {isEditingProfile ? (
+          <EditProfileView
+            businessData={businessData}
+            onBack={() => setIsEditingProfile(false)}
+            onSaved={() => {
+              setIsEditingProfile(false);
+              window.location.reload();
+            }}
+          />
+        ) : (
+          <>
+            {/* Header Hero */}
         <div className="mb-10">
           <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#0A1628] via-[#1C4D8D] to-[#4988C4] p-10 md:p-14 shadow-2xl shadow-blue-900/20">
             <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none" />
@@ -754,7 +770,14 @@ const BusinessDashboardContent = () => {
               </div>
               {businessData?.id && (
                 <div className="flex flex-col items-start md:items-end gap-3">
-                  <p className="text-blue-200 text-xs font-black uppercase tracking-widest">
+                  <button
+                    onClick={() => setIsEditingProfile(true)}
+                    className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-xl font-bold hover:bg-white/20 transition-all shadow-md hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <Icon name="PencilSquareIcon" size={18} />
+                    Edit Business
+                  </button>
+                  <p className="text-blue-200 text-xs font-black uppercase tracking-widest mt-2">
                     Business ID
                   </p>
                   <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-6 py-4 flex items-center gap-3">
@@ -1851,7 +1874,7 @@ const BusinessDashboardContent = () => {
                   </form>
                 </div>
               ) : (
-                <div className="p-8 bg-slate-50/30">
+                <div className="p-8 bg-slate-50/30">  
                   <div className="bg-white border border-slate-200 rounded-2xl p-6 mb-8 shadow-sm">
                     <h4 className="font-bold text-slate-900 mb-4 tracking-tight uppercase text-xs">
                       Order Summary
@@ -1930,6 +1953,8 @@ const BusinessDashboardContent = () => {
               )}
             </div>
           </div>
+        )}
+          </>
         )}
       </div>
     </div>
