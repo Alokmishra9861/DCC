@@ -21,45 +21,56 @@ async function runSeed() {
 
   // 1. CLEANUP / ROLLBACK PHASE
   console.log("\n🧹 Phase 1: Cleaning up previously seeded records...");
+  const deleteModel = async (modelName) => {
+    try {
+      const res = await prisma[modelName].deleteMany({ where: { isSeeded: true } });
+      return res.count || 0;
+    } catch (err) {
+      console.warn(`  ⚠️ Warning clearing ${modelName}:`, err.message);
+      return 0;
+    }
+  };
+
+  let wipedCounts = {};
+  wipedCounts.reviews = await deleteModel("review");
+  wipedCounts.referrals = await deleteModel("referral");
+  wipedCounts.commissions = await deleteModel("commission");
+  wipedCounts.payouts = await deleteModel("payout");
+  wipedCounts.invoices = await deleteModel("invoice");
+  wipedCounts.notifications = await deleteModel("notification");
+  wipedCounts.messages = await deleteModel("message");
+  wipedCounts.travelBookings = await deleteModel("travelBooking");
+  wipedCounts.transactions = await deleteModel("transaction");
+  wipedCounts.purchases = await deleteModel("certificatePurchase");
+  wipedCounts.certificates = await deleteModel("certificate");
+  wipedCounts.offers = await deleteModel("offer");
+  wipedCounts.ads = await deleteModel("advertisement");
+  wipedCounts.assocBusinesses = await deleteModel("associationBusiness");
+  wipedCounts.assocMembers = await deleteModel("associationMember");
+  wipedCounts.employees = await deleteModel("employee");
+
+  // Clear relations in member before deleting employers/associations
   try {
-    const deletedReviews = await prisma.review.deleteMany({ where: { isSeeded: true } });
-    const deletedReferrals = await prisma.referral.deleteMany({ where: { isSeeded: true } });
-    const deletedCommissions = await prisma.commission.deleteMany({ where: { isSeeded: true } });
-    const deletedPayouts = await prisma.payout.deleteMany({ where: { isSeeded: true } });
-    const deletedInvoices = await prisma.invoice.deleteMany({ where: { isSeeded: true } });
-    const deletedNotifications = await prisma.notification.deleteMany({ where: { isSeeded: true } });
-    const deletedMessages = await prisma.message.deleteMany({ where: { isSeeded: true } });
-    const deletedTravelBookings = await prisma.travelBooking.deleteMany({ where: { isSeeded: true } });
-    const deletedTransactions = await prisma.transaction.deleteMany({ where: { isSeeded: true } });
-    const deletedPurchases = await prisma.certificatePurchase.deleteMany({ where: { isSeeded: true } });
-    const deletedCertificates = await prisma.certificate.deleteMany({ where: { isSeeded: true } });
-    const deletedOffers = await prisma.offer.deleteMany({ where: { isSeeded: true } });
-    const deletedAds = await prisma.advertisement.deleteMany({ where: { isSeeded: true } });
-    const deletedAssocBusinesses = await prisma.associationBusiness.deleteMany({ where: { isSeeded: true } });
-    const deletedAssocMembers = await prisma.associationMember.deleteMany({ where: { isSeeded: true } });
-    const deletedEmployees = await prisma.employee.deleteMany({ where: { isSeeded: true } });
-    
-    // Clear relations in member before deleting employers/associations
     await prisma.member.updateMany({
       where: { isSeeded: true },
       data: { employerId: null, associationId: null }
     });
-
-    const deletedMemberships = await prisma.membership.deleteMany({ where: { isSeeded: true } });
-    const deletedPlans = await prisma.membershipPlan.deleteMany({ where: { isSeeded: true } });
-    const deletedMembers = await prisma.member.deleteMany({ where: { isSeeded: true } });
-    const deletedBusinesses = await prisma.business.deleteMany({ where: { isSeeded: true } });
-    const deletedPartners = await prisma.b2BPartner.deleteMany({ where: { isSeeded: true } });
-    const deletedEmployers = await prisma.employer.deleteMany({ where: { isSeeded: true } });
-    const deletedAssociations = await prisma.association.deleteMany({ where: { isSeeded: true } });
-    const deletedUsers = await prisma.user.deleteMany({ where: { isSeeded: true } });
-    const deletedCategories = await prisma.category.deleteMany({ where: { isSeeded: true } });
-    
-    console.log("  ✓ Cleanup complete.");
-    console.log(`    Wiped: ${deletedUsers.count} Users, ${deletedMembers.count} Members, ${deletedBusinesses.count} Businesses, ${deletedEmployers.count} Employers, ${deletedAssociations.count} Associations, ${deletedTransactions.count} Transactions, ${deletedReviews.count} Reviews.`);
   } catch (err) {
-    console.error("  ❌ Warning during cleanup phase:", err.message);
+    console.warn("  ⚠️ Warning clearing member relations:", err.message);
   }
+
+  wipedCounts.memberships = await deleteModel("membership");
+  wipedCounts.plans = await deleteModel("membershipPlan");
+  wipedCounts.members = await deleteModel("member");
+  wipedCounts.businesses = await deleteModel("business");
+  wipedCounts.partners = await deleteModel("b2BPartner");
+  wipedCounts.employers = await deleteModel("employer");
+  wipedCounts.associations = await deleteModel("association");
+  wipedCounts.users = await deleteModel("user");
+  wipedCounts.categories = await deleteModel("category");
+
+  console.log("  ✓ Cleanup complete.");
+  console.log(`    Wiped: ${wipedCounts.users} Users, ${wipedCounts.members} Members, ${wipedCounts.businesses} Businesses, ${wipedCounts.employers} Employers, ${wipedCounts.associations} Associations, ${wipedCounts.transactions} Transactions, ${wipedCounts.reviews} Reviews.`);
 
   // 2. SEEDING PHASE
   console.log("\n🌱 Phase 2: Running relational seeding...");
