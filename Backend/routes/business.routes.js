@@ -13,7 +13,7 @@ router.get("/", ctrl.listBusinesses);
 router.get("/:id", optionalAuth, ctrl.getBusinessProfile);
 
 // Business-authenticated routes
-router.get("/me/profile", protect, authorize("BUSINESS"), ctrl.getMyBusiness);
+router.get("/me/profile", ctrl.getMyBusiness);
 router.put("/me/profile", protect, authorize("BUSINESS"), ctrl.updateBusiness);
 router.post(
   "/me/logo",
