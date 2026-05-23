@@ -14,6 +14,7 @@ router.get("/:id", optionalAuth, ctrl.getBusinessProfile);
 
 // Business-authenticated routes
 router.get("/me/profile", protect, authorize("BUSINESS"), ctrl.getMyBusiness);
+router.get("/profile/:id", protect, authorize("BUSINESS"), ctrl.getMemberProfileById);
 router.put("/me/profile", protect, authorize("BUSINESS"), ctrl.updateBusiness);
 router.post(
   "/me/logo",

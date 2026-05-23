@@ -204,7 +204,38 @@ exports.getMyBusiness = asyncHandler(async (req, res) => {
     "Business profile retrieved",
   );
 });
+// ── Get individual member profile by ID ────────────────
+exports.getMemberProfileById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
+  let member = await prisma.member.findUnique({
+    where: { id },
+    include: {
+      user: { select: { email: true, isEmailVerified: true, createdAt: true } },
+      membership: true,
+      employer: { select: { companyName: true, logoUrl: true } },
+      association: { select: { name: true, logoUrl: true } },
+    },
+  });
+
+  // Fall back to userId lookup if member was not found by member id directly
+  if (!member) {
+    member = await prisma.member.findUnique({
+      where: { userId: id },
+      include: {
+        user: { select: { email: true, isEmailVerified: true, createdAt: true } },
+        membership: true,
+        employer: { select: { companyName: true, logoUrl: true } },
+        association: { select: { name: true, logoUrl: true } },
+      },
+    });
+  }
+
+  if (!member) throw ApiError.notFound("Member profile not found");
+
+  const summary = buildMemberSummary(member, member.membership);
+  return ApiResponse.success(res, { ...member, summary });
+});
 // ── Business: update profile ──────────────────────────
 exports.updateBusiness = asyncHandler(async (req, res) => {
   const {
