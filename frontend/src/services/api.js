@@ -168,6 +168,7 @@ export const userAPI = {
 // ─── Member ───────────────────────────────────────────────────────────────────
 export const memberAPI = {
   getProfile: () => request("/member/profile"),
+  getMemberProfileById: (id) => request(`/member/profile/${id}`),
   updateProfile: (data) =>
     request("/member/profile", { method: "PUT", body: JSON.stringify(data) }),
   getMyQR: () => request("/member/qr"),
@@ -702,6 +703,7 @@ export const adminAPI = {
     const qs = new URLSearchParams(params).toString();
     return request(`/admin/members${qs ? `?${qs}` : ""}`);
   },
+  getMemberById: (id) => request(`/admin/members/${id}`),
   updateMember: (id, data) =>
     request(`/admin/members/${id}`, {
       method: "PATCH",

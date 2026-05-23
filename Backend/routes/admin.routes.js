@@ -20,6 +20,7 @@ router.delete("/users/:id", ctrl.deleteUser);
 
 // ── Members ───────────────────────────────────────────────────────────────────
 router.get("/members", ctrl.getAdminMembers);
+router.get("/members/:id", ctrl.getAdminMemberById);
 router.patch("/members/:id", ctrl.updateMember);
 router.delete("/members/:id", ctrl.deleteMember);
 

@@ -241,6 +241,39 @@ exports.getAdminMembers = asyncHandler(async (req, res) => {
   );
 });
 
+// ── Get individual member details by ID (admin) ──────────────────────────────────
+exports.getAdminMemberById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  let member = await prisma.member.findUnique({
+    where: { id },
+    include: {
+      user: { select: { email: true, isEmailVerified: true, createdAt: true } },
+      membership: true,
+      employer: { select: { companyName: true, logoUrl: true } },
+      association: { select: { name: true, logoUrl: true } },
+    },
+  });
+
+  if (!member) {
+    member = await prisma.member.findUnique({
+      where: { userId: id },
+      include: {
+        user: { select: { email: true, isEmailVerified: true, createdAt: true } },
+        membership: true,
+        employer: { select: { companyName: true, logoUrl: true } },
+        association: { select: { name: true, logoUrl: true } },
+      },
+    });
+  }
+
+  if (!member) throw ApiError.notFound("Member profile not found");
+
+  const { buildMemberSummary } = require("../utils/savingsCalculator");
+  const summary = buildMemberSummary(member, member.membership);
+  return ApiResponse.success(res, { ...member, summary });
+});
+
 // ── Update member (admin) ─────────────────────────────────────────────────────
 exports.updateMember = asyncHandler(async (req, res) => {
   const { id } = req.params;

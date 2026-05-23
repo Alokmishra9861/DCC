@@ -4,6 +4,10 @@ const ctrl = require("../controllers/member.controller");
 const { protect, authorize } = require("../middlewares/auth.middleware");
 
 router.use(protect);
+
+// Accessible by any authenticated user (e.g., admin, employer, association, or member)
+router.get("/profile/:id", ctrl.getMemberProfileById);
+
 router.use(authorize("MEMBER"));
 
 router.get("/profile", ctrl.getProfile);
