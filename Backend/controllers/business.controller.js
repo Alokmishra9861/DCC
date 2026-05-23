@@ -204,37 +204,123 @@ exports.getMyBusiness = asyncHandler(async (req, res) => {
     "Business profile retrieved",
   );
 });
-// ── Get individual member profile by ID ────────────────
-exports.getMemberProfileById = asyncHandler(async (req, res) => {
+// ── Get individual business profile by ID ────────────────
+exports.getBusinessProfileById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  let member = await prisma.member.findUnique({
+  let business = await prisma.business.findUnique({
     where: { id },
     include: {
-      user: { select: { email: true, isEmailVerified: true, createdAt: true } },
-      membership: true,
-      employer: { select: { companyName: true, logoUrl: true } },
-      association: { select: { name: true, logoUrl: true } },
+      category: true,
+      offers: {
+        include: { certificates: true },
+        orderBy: { createdAt: "desc" },
+      },
+      advertisements: true,
     },
   });
 
-  // Fall back to userId lookup if member was not found by member id directly
-  if (!member) {
-    member = await prisma.member.findUnique({
+  // Fall back to userId lookup if business was not found by business id directly
+  if (!business) {
+    business = await prisma.business.findUnique({
       where: { userId: id },
       include: {
-        user: { select: { email: true, isEmailVerified: true, createdAt: true } },
-        membership: true,
-        employer: { select: { companyName: true, logoUrl: true } },
-        association: { select: { name: true, logoUrl: true } },
+        category: true,
+        offers: {
+          include: { certificates: true },
+          orderBy: { createdAt: "desc" },
+        },
+        advertisements: true,
       },
     });
   }
 
-  if (!member) throw ApiError.notFound("Member profile not found");
+  if (!business) throw ApiError.notFound("Business profile not found");
 
-  const summary = buildMemberSummary(member, member.membership);
-  return ApiResponse.success(res, { ...member, summary });
+  const offers = business.offers || [];
+  const profileViews = offers.reduce((sum, o) => sum + (o.views || 0), 0);
+  const offerSaves = offers.reduce((sum, o) => sum + (o.clicks || 0), 0);
+
+  const certificateRedemptions = await prisma.certificatePurchase.count({
+    where: {
+      certificate: { offer: { businessId: business.id } },
+      status: "REDEEMED",
+    },
+  });
+
+  const engagementRate =
+    profileViews > 0
+      ? Math.round(((offerSaves + certificateRedemptions) / profileViews) * 100)
+      : 0;
+
+  const months = buildRecentMonths(5);
+  const startDate = months[0]?.start;
+  const now = new Date();
+
+  const [transactions, purchases, redemptions] = await Promise.all([
+    prisma.transaction.findMany({
+      where: {
+        businessId: business.id,
+        ...(startDate && { transactionDate: { gte: startDate, lte: now } }),
+      },
+      select: { transactionDate: true },
+    }),
+    prisma.certificatePurchase.findMany({
+      where: {
+        certificate: { offer: { businessId: business.id } },
+        ...(startDate && { createdAt: { gte: startDate, lte: now } }),
+      },
+      select: { purchasedAt: true, createdAt: true },
+    }),
+    prisma.certificatePurchase.findMany({
+      where: {
+        certificate: { offer: { businessId: business.id } },
+        status: "REDEEMED",
+        ...(startDate && { updatedAt: { gte: startDate, lte: now } }),
+      },
+      select: { redeemedAt: true, updatedAt: true },
+    }),
+  ]);
+
+  const monthMap = new Map(
+    months.map((m) => [
+      m.key,
+      { month: m.label, views: 0, saves: 0, redemptions: 0 },
+    ]),
+  );
+
+  transactions.forEach((t) => {
+    const key = buildMonthKey(t.transactionDate);
+    if (monthMap.has(key)) monthMap.get(key).views += 1;
+  });
+
+  purchases.forEach((p) => {
+    const key = buildMonthKey(p.purchasedAt || p.createdAt);
+    if (monthMap.has(key)) monthMap.get(key).saves += 1;
+  });
+
+  redemptions.forEach((r) => {
+    const key = buildMonthKey(r.redeemedAt || r.updatedAt);
+    if (monthMap.has(key)) monthMap.get(key).redemptions += 1;
+  });
+
+  const performanceOverview = months
+    .map((m) => monthMap.get(m.key))
+    .filter(Boolean);
+
+  return ApiResponse.success(
+    res,
+    {
+      ...business,
+      offerCount: business.offers.length,
+      profileViews,
+      offerSaves,
+      certificateRedemptions,
+      engagementRate,
+      performanceOverview,
+    },
+    "Business profile retrieved",
+  );
 });
 // ── Business: update profile ──────────────────────────
 exports.updateBusiness = asyncHandler(async (req, res) => {

@@ -303,6 +303,7 @@ export const businessAPI = {
   getDashboard: () => request("/business/dashboard"),
   updateProfile: (data) =>
     request("/businesses/me/profile", { method: "PUT", body: JSON.stringify(data) }),
+  getBusinessProfileById: (id) => request(`/businesses/profile/${id}`),
 
   // Offers management
   getOffers: () => request("/business/offers"),
