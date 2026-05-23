@@ -67,5 +67,8 @@ router.post("/membership-plans", ctrl.createMembershipPlan);
 router.put("/membership-plans/:id", ctrl.updateMembershipPlan);
 router.delete("/membership-plans/:id", ctrl.deleteMembershipPlan);
 
+// ── Demo Seeder Endpoint ──────────────────────────────────────────────────────
+router.post("/seed-demo", ctrl.seedDemo);
+
 module.exports = router;
 

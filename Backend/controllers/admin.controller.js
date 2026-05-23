@@ -1051,3 +1051,19 @@ exports.deleteMembershipPlan = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, null, "Membership plan deleted successfully");
 });
 
+// ── Demo Seeder Trigger Endpoint ──────────────────────────────────────────────
+exports.seedDemo = asyncHandler(async (req, res) => {
+  console.log("🔒 Programmatic demo seed trigger invoked by Admin");
+  
+  // Call the master seeder
+  const { runSeed } = require("../scripts/seed-runner");
+  
+  await runSeed();
+  
+  return ApiResponse.success(
+    res,
+    { message: "Platform database seeded successfully relationally." },
+    "Database successfully cleared and re-seeded with demo records!"
+  );
+});
+

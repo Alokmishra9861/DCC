@@ -211,7 +211,7 @@ const MemberShipFormContent = () => {
                       </div>
                       <div className="text-right">
                         <p className="text-xl font-bold text-white">
-                          ${plan.price}
+                          {(plan.currency || "").toUpperCase() === "KYD" ? "CI$" : "$"}{plan.price}
                         </p>
                         <p className="text-xs text-slate-300 capitalize">
                           {plan.billingCycle}

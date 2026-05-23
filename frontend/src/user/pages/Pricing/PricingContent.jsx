@@ -210,16 +210,18 @@ const PricingContent = () => {
                       {/* Pricing */}
                       <div className="text-center mb-6 pb-6 border-b border-slate-100/60">
                         <div className="flex items-baseline justify-center gap-1">
-                          <span className="text-xs text-slate-400 font-bold self-start mt-2">KYD</span>
+                          <span className="text-xs text-slate-400 font-bold self-start mt-2">
+                            {plan.currency || "KYD"}
+                          </span>
                           <span className="text-5xl font-bold text-slate-800 tracking-tight">
-                            ${Math.floor(plan.price)}
+                            {(plan.currency || "").toUpperCase() === "KYD" ? "CI$" : "$"}{Math.floor(plan.price)}
                           </span>
                           <span className="text-lg font-bold text-slate-800">
                             .{(plan.price % 1).toFixed(2).substring(2)}
                           </span>
                         </div>
                         <span className="text-slate-400 text-xs font-semibold mt-1.5 block">
-                          per year (billed annually)
+                          per {plan.billingCycle || "year"} (billed {plan.billingCycle === "year" ? "annually" : plan.billingCycle === "month" ? "monthly" : "one-time"})
                         </span>
                       </div>
 
@@ -308,7 +310,9 @@ const PricingContent = () => {
                     {plans.map(p => (
                       <th key={p.id} className="py-4 px-6 text-center">
                         <span className="text-slate-800 font-bold block text-sm">{p.name}</span>
-                        <span className="text-slate-400 text-xs font-semibold">${p.price}</span>
+                        <span className="text-slate-400 text-xs font-semibold">
+                          {(p.currency || "").toUpperCase() === "KYD" ? "CI$" : "$"}{p.price}
+                        </span>
                       </th>
                     ))}
                   </tr>

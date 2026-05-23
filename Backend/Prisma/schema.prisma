@@ -122,6 +122,7 @@ model User {
   resetToken       String?
   resetTokenExpiry DateTime?
   isActive         Boolean  @default(true)
+  isSeeded         Boolean  @default(false)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -130,6 +131,9 @@ model User {
   association Association?
   business    Business?
   b2bPartner  B2BPartner?
+
+  invoices      Invoice[]
+  notifications Notification[]
 
   @@map("users")
 }
@@ -159,7 +163,7 @@ model Member {
   association   Association? @relation(fields: [associationId], references: [id])
 
   // Back-link to the Employee record that sponsored this member account
-  employeeRecord Employee? @relation("EmployeeMember")
+  employeeRecord Employee[] @relation("EmployeeMember")
 
   totalSavings   Float @default(0)
   totalSpent     Float @default(0)
@@ -167,7 +171,9 @@ model Member {
   membership     Membership?
   transactions   Transaction[]
   certPurchases  CertificatePurchase[]
+  reviews        Review[]
 
+  isSeeded     Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -216,6 +222,7 @@ model Employer {
   memberships     Membership[]
   employees       Employee[]   // ← NEW
 
+  isSeeded        Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -223,7 +230,7 @@ model Employer {
 }
 
 // ─────────────────────────────────────────
-// EMPLOYEE  ← NEW MODEL
+// EMPLOYEE
 // Represents a person invited by an employer.
 // When they accept, a Member + User record is created and linked here.
 // ─────────────────────────────────────────
@@ -247,14 +254,15 @@ model Employee {
   inviteAcceptedAt DateTime?
 
   // Once employee accepts → their User and Member records are linked here
-  userId          String?        @unique @db.ObjectId
-  memberId        String?        @unique @db.ObjectId
+  userId          String?        @db.ObjectId
+  memberId        String?        @db.ObjectId
   member          Member?        @relation("EmployeeMember", fields: [memberId], references: [id])
 
   // Snapshot savings for this employee (denormalized for employer dashboard speed)
   totalSavings    Float          @default(0)
   totalRedemptions Int           @default(0)
 
+  isSeeded        Boolean        @default(false)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
@@ -302,6 +310,7 @@ model Association {
   associationMembers   AssociationMember[]    // ← NEW: MEMBER type
   associationBusinesses AssociationBusiness[] // ← NEW: BUSINESS type
 
+  isSeeded        Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -309,7 +318,7 @@ model Association {
 }
 
 // ─────────────────────────────────────────
-// ASSOCIATION MEMBER  ← NEW
+// ASSOCIATION MEMBER
 // Represents a person linked to a MEMBER-type association.
 // Similar to Employee — can be invited via CSV or join via code.
 // ─────────────────────────────────────────
@@ -331,13 +340,14 @@ model AssociationMember {
   inviteAcceptedAt DateTime?
 
   // Once member accepts → link their User + Member records
-  userId          String?               @unique @db.ObjectId
-  memberId        String?               @unique @db.ObjectId
+  userId          String?               @db.ObjectId
+  memberId        String?               @db.ObjectId
 
   // Snapshot savings for dashboard
   totalSavings    Float                 @default(0)
   totalRedemptions Int                  @default(0)
 
+  isSeeded        Boolean               @default(false)
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
 
@@ -346,7 +356,7 @@ model AssociationMember {
 }
 
 // ─────────────────────────────────────────
-// ASSOCIATION BUSINESS  ← NEW
+// ASSOCIATION BUSINESS
 // Represents a business linked to a BUSINESS-type association.
 // Can be linked by ID (existing) or invited to register.
 // ─────────────────────────────────────────
@@ -373,6 +383,7 @@ model AssociationBusiness {
   inviteSentAt    DateTime?
   inviteAcceptedAt DateTime?
 
+  isSeeded        Boolean                 @default(false)
   createdAt       DateTime                @default(now())
   updatedAt       DateTime                @updatedAt
 
@@ -381,7 +392,7 @@ model AssociationBusiness {
 }
 
 // ─────────────────────────────────────────
-// BUSINESS PARTNER
+// BUSINESS
 // ─────────────────────────────────────────
 
 model Business {
@@ -409,11 +420,20 @@ model Business {
   status        String   @default("PENDING")
   isB2B         Boolean  @default(false)
 
+  // Seeding details
+  workingHours  String?
+  bankName      String?
+  bankAccountNumber String?
+  upiQrUrl      String?
+
   offers        Offer[]
   transactions  Transaction[]
   advertisements Advertisement[]
-  associationBusinesses AssociationBusiness[]  // ← NEW: business assoc link
+  associationBusinesses AssociationBusiness[]
+  reviews       Review[]
+  payouts       Payout[]
 
+  isSeeded      Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -437,6 +457,11 @@ model B2BPartner {
   website       String?
   isApproved    Boolean  @default(false)
 
+  referrals     Referral[]
+  commissions   Commission[]
+  payouts       Payout[]
+
+  isSeeded      Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -470,6 +495,7 @@ model Membership {
   planId          String?         @db.ObjectId
   plan            MembershipPlan? @relation(fields: [planId], references: [id])
 
+  isSeeded        Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -490,6 +516,7 @@ model MembershipPlan {
   badge        String?
   isActive     Boolean  @default(true)
   features     Json?
+  isSeeded     Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -522,6 +549,7 @@ model Offer {
   certificates  Certificate[]
   transactions  Transaction[]
 
+  isSeeded      Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -545,6 +573,7 @@ model Certificate {
 
   purchases     CertificatePurchase[]
 
+  isSeeded      Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -583,8 +612,9 @@ model CertificatePurchase {
   purchasedAt     DateTime?
   redeemedAt      DateTime?
 
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  isSeeded        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@map("certificate_purchases")
 }
@@ -616,6 +646,7 @@ model Transaction {
   status          TransactionStatus @default(COMPLETED)
   transactionDate DateTime          @default(now())
 
+  isSeeded        Boolean  @default(false)
   createdAt       DateTime @default(now())
 
   @@map("transactions")
@@ -637,6 +668,7 @@ model TravelBooking {
   savingsAmount   Float   @default(0)
 
   bookedAt        DateTime @default(now())
+  isSeeded        Boolean  @default(false)
   createdAt       DateTime @default(now())
 
   @@map("travel_bookings")
@@ -672,6 +704,7 @@ model Advertisement {
   stripePaymentId String?
   pricePaid     Float?
 
+  isSeeded      Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -692,6 +725,7 @@ model Category {
 
   businesses    Business[]
 
+  isSeeded      Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -713,6 +747,7 @@ model ContactInquiry {
   status      String   @default("pending")
   response    String?
   respondedAt DateTime?
+  isSeeded    Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -731,7 +766,149 @@ model AuditLog {
   entityId    String?
   details     Json?
   ipAddress   String?
+  isSeeded    Boolean  @default(false)
   createdAt   DateTime @default(now())
 
   @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────
+// REVIEWS (NEW MODEL)
+// ─────────────────────────────────────────
+
+model Review {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  memberId    String   @db.ObjectId
+  member      Member   @relation(fields: [memberId], references: [id])
+  businessId  String   @db.ObjectId
+  business    Business @relation(fields: [businessId], references: [id])
+  rating      Int
+  comment     String
+  isSeeded    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("reviews")
+}
+
+// ─────────────────────────────────────────
+// REFERRALS (NEW MODEL)
+// ─────────────────────────────────────────
+
+model Referral {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  partnerId     String     @db.ObjectId
+  partner       B2BPartner @relation(fields: [partnerId], references: [id])
+  referredEmail String
+  referredName  String
+  entityType    String     // "EMPLOYER" | "BUSINESS"
+  status        String     // "PENDING" | "REGISTERED" | "CONVERTED"
+  isSeeded      Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@map("referrals")
+}
+
+// ─────────────────────────────────────────
+// COMMISSIONS (NEW MODEL)
+// ─────────────────────────────────────────
+
+model Commission {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  partnerId   String     @db.ObjectId
+  partner     B2BPartner @relation(fields: [partnerId], references: [id])
+  amount      Float
+  currency    String     @default("USD")
+  status      String     // "UNPAID" | "PAID"
+  source      String     // e.g. "Employer Sign-up - Cayman Retail Group"
+  isSeeded    Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("commissions")
+}
+
+// ─────────────────────────────────────────
+// PAYOUTS (NEW MODEL)
+// ─────────────────────────────────────────
+
+model Payout {
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  businessId   String?     @db.ObjectId
+  business     Business?   @relation(fields: [businessId], references: [id])
+  partnerId    String?     @db.ObjectId
+  partner      B2BPartner? @relation(fields: [partnerId], references: [id])
+  amount       Float
+  currency     String      @default("USD")
+  status       String      // "PENDING" | "COMPLETED" | "FAILED"
+  method       String      // "STRIPE" | "PAYPAL" | "BANK_TRANSFER"
+  referenceId  String?
+  isSeeded     Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@map("payouts")
+}
+
+// ─────────────────────────────────────────
+// INVOICES (NEW MODEL)
+// ─────────────────────────────────────────
+
+model Invoice {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id])
+  invoiceNo   String   @unique
+  amount      Float
+  currency    String   @default("USD")
+  status      String   // "DRAFT" | "SENT" | "PAID" | "VOID"
+  description String
+  pdfUrl      String?
+  dueDate     DateTime
+  paidAt      DateTime?
+  isSeeded    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("invoices")
+}
+
+// ─────────────────────────────────────────
+// NOTIFICATIONS (NEW MODEL)
+// ─────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  type      String   // "INFO" | "BOOKING" | "PAYOUT" | "SYSTEM"
+  isRead    Boolean  @default(false)
+  isSeeded  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("notifications")
+}
+
+// ─────────────────────────────────────────
+// MESSAGES (NEW MODEL)
+// ─────────────────────────────────────────
+
+model Message {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  senderId    String?  @db.ObjectId
+  senderName  String
+  senderEmail String
+  receiverId  String?  @db.ObjectId
+  subject     String
+  body        String
+  isRead      Boolean  @default(false)
+  isSeeded    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("messages")
 }

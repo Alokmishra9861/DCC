@@ -580,10 +580,10 @@ const MembershipPlans = () => {
 
                   <div className="flex items-baseline gap-1 mb-6 pb-6 border-b border-slate-100">
                     <span className="text-3xl font-bold text-slate-900 tracking-tight">
-                      ${p.price.toFixed(2)}
+                      {(p.currency || "").toUpperCase() === "KYD" ? "CI$" : "$"}{p.price.toFixed(2)}
                     </span>
-                    <span className="text-slate-400 text-xs font-semibold">
-                      {p.currency} / {p.billingCycle}
+                    <span className="text-slate-400 text-xs font-semibold capitalize">
+                      / {p.billingCycle}
                     </span>
                   </div>
 
