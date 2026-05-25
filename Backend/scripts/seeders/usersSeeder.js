@@ -10,14 +10,24 @@ async function seed(prisma, faker) {
   const salaryLevels = ["under_30k", "30k_50k", "50k_75k", "75k_100k", "over_100k"];
   const sexes = ["male", "female"];
 
-  // 1. Seed 5 Admin Users
+  // 1. Seed 15 Admin Users
   const admins = [];
   const adminEmails = [
     "admin@discountclubcayman.com",
     "superadmin@dcc.ky",
     "operations@dcc.ky",
     "support@dcc.ky",
-    "finance@dcc.ky"
+    "finance@dcc.ky",
+    "marketing@dcc.ky",
+    "moderator@dcc.ky",
+    "audit@dcc.ky",
+    "hr.internal@dcc.ky",
+    "it@dcc.ky",
+    "compliance@dcc.ky",
+    "executive@dcc.ky",
+    "sales.internal@dcc.ky",
+    "billing@dcc.ky",
+    "analytics@dcc.ky"
   ];
 
   for (let i = 0; i < adminEmails.length; i++) {
@@ -41,7 +51,7 @@ async function seed(prisma, faker) {
     }
   }
 
-  // 2. Seed 10 Individual Member Users
+  // 2. Seed 20 Individual Member Users
   const members = [];
   const memberEmails = [
     "john.doe@gmail.com",
@@ -53,7 +63,17 @@ async function seed(prisma, faker) {
     "linda.taylor@gmail.com",
     "james.brown@yahoo.com",
     "elizabeth.jones@gmail.com",
-    "william.garcia@gmail.com"
+    "william.garcia@gmail.com",
+    "charles.martinez@gmail.com",
+    "patricia.robinson@yahoo.com",
+    "christopher.clark@outlook.com",
+    "barbara.rodriguez@gmail.com",
+    "matthew.lewis@gmail.com",
+    "susan.lee@hotmail.com",
+    "joseph.walker@yahoo.com",
+    "jessica.hall@gmail.com",
+    "thomas.allen@outlook.com",
+    "karen.young@gmail.com"
   ];
 
   for (let i = 0; i < memberEmails.length; i++) {

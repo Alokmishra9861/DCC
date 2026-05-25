@@ -36,6 +36,66 @@ async function seed(prisma, faker) {
       companyName: "BDO Cayman",
       servicesOffered: "Financial Advisory & Corporate Strategy",
       website: "https://www.bdo.ky"
+    },
+    {
+      email: "b2b@pwc.ky",
+      companyName: "PwC Cayman",
+      servicesOffered: "Tax Consultation, Auditing & Executive Referrals",
+      website: "https://www.pwc.ky"
+    },
+    {
+      email: "b2b@ey.ky",
+      companyName: "EY Cayman",
+      servicesOffered: "Transaction Advisory & Strategic Business Links",
+      website: "https://www.ey.ky"
+    },
+    {
+      email: "refer@kpmg.ky",
+      companyName: "KPMG Cayman",
+      servicesOffered: "Risk Management, IT Consulting & Referrals",
+      website: "https://www.kpmg.ky"
+    },
+    {
+      email: "advisory@deloitte.ky",
+      companyName: "Deloitte Cayman",
+      servicesOffered: "Enterprise Strategy & Tech Integration Links",
+      website: "https://www.deloitte.ky"
+    },
+    {
+      email: "partners@cec.ky",
+      companyName: "Cayman Enterprise City",
+      servicesOffered: "Special Economic Zone Relocation & Advisory",
+      website: "https://www.caymanenterprisecity.com"
+    },
+    {
+      email: "info@strategicpartners.ky",
+      companyName: "Strategic Partners Cayman",
+      servicesOffered: "Venture Consulting & Retail Directory Strategy",
+      website: "https://www.strategicpartners.ky"
+    },
+    {
+      email: "corporate@genesistrust.ky",
+      companyName: "Genesis Trust & Corporate Services",
+      servicesOffered: "Fiduciary Services & Corporate Formations",
+      website: "https://www.genesistrust.ky"
+    },
+    {
+      email: "info@sterlingtrust.ky",
+      companyName: "Sterling Trust Cayman",
+      servicesOffered: "Wealth Management & Offshore Referrals",
+      website: "https://www.sterlingtrust.ky"
+    },
+    {
+      email: "b2b@caymanmanagement.ky",
+      companyName: "Cayman Management Ltd",
+      servicesOffered: "Company Management & Local Business Advisory",
+      website: "https://www.caymanmanagement.ky"
+    },
+    {
+      email: "referral@ipg.ky",
+      companyName: "IPG Cayman",
+      servicesOffered: "Intellectual Property Guard & Tech Referral Partner",
+      website: "https://www.ipg.ky"
     }
   ];
 

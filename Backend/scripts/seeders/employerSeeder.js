@@ -39,7 +39,7 @@ async function seed(prisma, faker, seededUsers) {
       seatsPurchased: 50,
       seatsUsed: 1,
       bulkPriceUSD: 1200.0,
-      description: "Supporting foster's supermarket staff with discount opportunities across the island."
+      description: "Supporting Foster's Supermarket staff with discount opportunities across the island."
     },
     {
       email: "hr@kirkmarket.ky",
@@ -49,7 +49,7 @@ async function seed(prisma, faker, seededUsers) {
       seatsPurchased: 50,
       seatsUsed: 1,
       bulkPriceUSD: 1200.0,
-      description: "Kirk market corporate wellness program discount benefits package."
+      description: "Kirk Market corporate wellness program discount benefits package."
     },
     {
       email: "hr@healthcity.ky",
@@ -60,6 +60,106 @@ async function seed(prisma, faker, seededUsers) {
       seatsUsed: 1,
       bulkPriceUSD: 2000.0,
       description: "Caring for our healthcare professionals with local savings memberships."
+    },
+    {
+      email: "recruitment@maples.com",
+      companyName: "Maples Group",
+      industry: "Legal & Fiduciary",
+      planType: "ENTERPRISE",
+      seatsPurchased: 120,
+      seatsUsed: 2,
+      bulkPriceUSD: 3000.0,
+      description: "Providing DCC benefits to our leading legal and financial consultancy teams."
+    },
+    {
+      email: "hr@walkersglobal.com",
+      companyName: "Walkers Global",
+      industry: "Legal Services",
+      planType: "ENTERPRISE",
+      seatsPurchased: 100,
+      seatsUsed: 1,
+      bulkPriceUSD: 2500.0,
+      description: "Walkers international legal services staff reward program."
+    },
+    {
+      email: "careers@mourant.com",
+      companyName: "Mourant",
+      industry: "Legal Services",
+      planType: "STANDARD",
+      seatsPurchased: 40,
+      seatsUsed: 1,
+      bulkPriceUSD: 1000.0,
+      description: "Reward package for our professional offshore law firm practitioners."
+    },
+    {
+      email: "hr@islandheritage.com.ky",
+      companyName: "Island Heritage Insurance",
+      industry: "Insurance",
+      planType: "STANDARD",
+      seatsPurchased: 35,
+      seatsUsed: 1,
+      bulkPriceUSD: 850.0,
+      description: "Island Heritage Insurance employee benefits and retail discounts program."
+    },
+    {
+      email: "grandcayman.hr@ritzcarlton.com",
+      companyName: "Ritz-Carlton Grand Cayman",
+      industry: "Hospitality",
+      planType: "ENTERPRISE",
+      seatsPurchased: 200,
+      seatsUsed: 3,
+      bulkPriceUSD: 4500.0,
+      description: "Corporate rewards for the ladies and gentlemen of the Ritz-Carlton."
+    },
+    {
+      email: "hr@seafireresort.com",
+      companyName: "Kimpton Seafire Resort",
+      industry: "Hospitality",
+      planType: "ENTERPRISE",
+      seatsPurchased: 150,
+      seatsUsed: 2,
+      bulkPriceUSD: 3500.0,
+      description: "Providing beachside staff with outstanding island discount coupons."
+    },
+    {
+      email: "hr@caymanairways.com",
+      companyName: "Cayman Airways",
+      industry: "Aviation & Tourism",
+      planType: "STANDARD",
+      seatsPurchased: 60,
+      seatsUsed: 2,
+      bulkPriceUSD: 1500.0,
+      description: "Cayman National Flag carrier corporate employee savings portal."
+    },
+    {
+      email: "hr@cuc.ky",
+      companyName: "Caribbean Utilities Company",
+      industry: "Utilities & Energy",
+      planType: "ENTERPRISE",
+      seatsPurchased: 110,
+      seatsUsed: 1,
+      bulkPriceUSD: 2750.0,
+      description: "Powering Cayman and saving our staff money on local business bookings."
+    },
+    {
+      email: "hr@flow.ky",
+      companyName: "Flow Cayman Islands",
+      industry: "Telecommunications",
+      planType: "STANDARD",
+      seatsPurchased: 45,
+      seatsUsed: 1,
+      bulkPriceUSD: 1100.0,
+      description: "DCC savings network for Flow telecom engineering and support staff."
+    },
+    {
+      email: "hr@digicel.ky",
+      companyName: "Digicel Cayman Islands",
+      industry: "Telecommunications",
+      planType: "STANDARD",
+      seatsPurchased: 40,
+      seatsUsed: 1,
+      bulkPriceUSD: 1000.0,
+      description: "Digicel staff wellness and local lifestyle savings portal."
     }
   ];
 
@@ -128,7 +228,8 @@ async function seed(prisma, faker, seededUsers) {
       let userId = null;
       let memberId = null;
 
-      if (i < 2 && memberIndex < members.length) {
+      // Link 1 member per employer dynamically, leaving some members unassociated
+      if (i === 0 && memberIndex < members.length) {
         status = "ACTIVE";
         const member = members[memberIndex];
         userId = member.userId;

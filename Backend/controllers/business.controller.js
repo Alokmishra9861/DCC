@@ -115,6 +115,33 @@ exports.getMyBusiness = asyncHandler(async (req, res) => {
         orderBy: { createdAt: "desc" },
       },
       advertisements: true,
+      reviews: {
+        include: {
+          member: {
+            select: {
+              firstName: true,
+              lastName: true,
+              avatarUrl: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      },
+      payouts: {
+        orderBy: { createdAt: "desc" },
+      },
+      transactions: {
+        include: {
+          member: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+        orderBy: { transactionDate: "desc" },
+        take: 50,
+      },
     },
   });
   if (!business) throw ApiError.notFound("Business profile not found");

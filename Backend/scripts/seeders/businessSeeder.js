@@ -10,7 +10,7 @@ async function seed(prisma, faker) {
 
   // 1. Seed Categories first
   const CATEGORIES = [
-    { name: "Automotive & Marine", slug: "automotive-marine", icon: "TruckIcon", imageUrl: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=2070&auto=format&fit=crop", description: "deals on vehicle maintenance, parts, detailing, and marine services." },
+    { name: "Automotive & Marine", slug: "automotive-marine", icon: "TruckIcon", imageUrl: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=2070&auto=format&fit=crop", description: "Deals on vehicle maintenance, parts, detailing, and marine services." },
     { name: "B2B Members", slug: "b2b", icon: "BriefcaseIcon", imageUrl: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop", description: "Business-to-business services, wholesale opportunities, and corporate solutions." },
     { name: "Beauty Salon & Barber Shop", slug: "beauty", icon: "SparklesIcon", imageUrl: "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1974&auto=format&fit=crop", description: "Haircuts, styling, spa treatments, and grooming." },
     { name: "Construction", slug: "construction", icon: "WrenchScrewdriverIcon", imageUrl: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=2031&auto=format&fit=crop", description: "Building materials, contractors, renovation services, and equipment." },
@@ -35,14 +35,24 @@ async function seed(prisma, faker) {
     }
   }
 
-  // 2. Seed 6 Businesses under different categories
+  // 2. Seed 16 Businesses under different categories
   const businessesData = [
     { email: "info@grandcaymanauto.com", name: "Grand Cayman Auto Repair", catSlug: "automotive-marine", desc: "Full service auto repair, detailing and diagnostic checks.", district: "George Town" },
     { email: "salon@caymanbarber.ky", name: "Cayman Barber & Salon", catSlug: "beauty", desc: "Modern and traditional hair styling, spa shaving and facials.", district: "West Bay" },
     { email: "eat@islandgourmet.ky", name: "Island Gourmet Bistro", catSlug: "food", desc: "Fine dining seaside restaurant with authentic Caribbean fusion flavor.", district: "George Town" },
     { email: "build@caymanhomes.ky", name: "Cayman Home & Garden", catSlug: "home", desc: "Premium interior decor, outdoor landscapes, and gardening tools.", district: "Bodden Town" },
     { email: "play@kidsfunzone.ky", name: "Kids Fun Zone & Toys", catSlug: "kids", desc: "Safe play areas, birthday event plans, and premium children's toys.", district: "George Town" },
-    { email: "sales@electrohouse.ky", name: "Cayman Electro House", catSlug: "electronics", desc: "Authorized tech dealer offering laptops, home screens, and office tools.", district: "George Town" }
+    { email: "sales@electrohouse.ky", name: "Cayman Electro House", catSlug: "electronics", desc: "Authorized tech dealer offering laptops, home screens, and office tools.", district: "George Town" },
+    { email: "contact@caymanwellness.ky", name: "Cayman Wellness Hub", catSlug: "health", desc: "Holistic physiotherapy, yoga, nutrition counseling and pharmacy discounts.", district: "West Bay" },
+    { email: "dive@bluewater.ky", name: "Blue Water Watersports", catSlug: "automotive-marine", desc: "Yacht charters, private boat cruises, jet ski rentals and scuba tours.", district: "North Side" },
+    { email: "info@rumpointseaside.ky", name: "Rum Point Seaside Club", catSlug: "food", desc: "Casual beachfront dining with mudslides, seafood, and tropical drinks.", district: "North Side" },
+    { email: "spa@sevenmilebeach.ky", name: "Seven Mile Beach Spa", catSlug: "beauty", desc: "Relaxing massage treatments, beauty facials, and marine mud wraps.", district: "West Bay" },
+    { email: "spirits@jacquesscott.com", name: "Jacques Scott Wine & Spirits", catSlug: "retail", desc: "Cayman's leading distributor of fine wines, beers, and premium spirits.", district: "George Town" },
+    { email: "travel@caymanairways.com", name: "Cayman Airways Travel", catSlug: "fashion", desc: "Exclusive booking discounts on regional flights and travel perks.", district: "George Town" },
+    { email: "cinema@camanabay.ky", name: "Camana Bay VIP Cinema", catSlug: "kids", desc: "Luxury movie theatre experiences with reclining seats and gourmet food.", district: "George Town" },
+    { email: "sports@redsail.ky", name: "Red Sail Sports Cayman", catSlug: "automotive-marine", desc: "Catamaran sails, stingray city tours, paddleboards and dive courses.", district: "West Bay" },
+    { email: "brewery@caymanbeer.ky", name: "Cayman Islands Brewery", catSlug: "retail", desc: "Home of Caybrew! Local brewery tours, tasting room and merchandise store.", district: "George Town" },
+    { email: "sales@caymanconstruction.ky", name: "Cayman Construction Supplies", catSlug: "construction", desc: "Wholesale cement, professional power tools, and high-quality paint materials.", district: "Bodden Town" }
   ];
 
   const businesses = [];
@@ -179,7 +189,8 @@ async function seed(prisma, faker) {
       }
     });
     console.log(`  ✓ Seeded Banner Ad for: ${business.name}`);
-    // 5. Link Business to raw BUSINESS Associations
+
+    // 5. Link Business to BUSINESS Associations
     const businessAssocs = await prisma.association.findMany({
       where: { associationType: "BUSINESS" }
     });

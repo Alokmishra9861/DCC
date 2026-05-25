@@ -88,8 +88,13 @@ async function seed(prisma, faker, seededUsers) {
       const savings = faceValue - amountPaid;
 
       const status = faker.helpers.arrayElement(["PURCHASED", "REDEEMED", "PURCHASED"]);
-      const purchasedAt = new Date(Date.now() - faker.number.int({ min: 1, max: 15 }) * 24 * 60 * 60 * 1000);
-      const redeemedAt = status === "REDEEMED" ? new Date(purchasedAt.getTime() + 2 * 24 * 60 * 60 * 1000) : null;
+      const now = new Date();
+      const purchasedAt = new Date();
+      purchasedAt.setMonth(now.getMonth() - faker.number.int({ min: 0, max: 11 }));
+      purchasedAt.setDate(faker.number.int({ min: 1, max: 28 }));
+      purchasedAt.setHours(faker.number.int({ min: 9, max: 20 }));
+
+      const redeemedAt = status === "REDEEMED" ? new Date(purchasedAt.getTime() + faker.number.int({ min: 1, max: 5 }) * 24 * 60 * 60 * 1000) : null;
 
       // Update certificate status
       await prisma.certificate.update({

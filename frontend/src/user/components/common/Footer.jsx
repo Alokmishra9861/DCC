@@ -44,7 +44,7 @@ const Footer = () => {
             <div className="col-span-2 lg:col-span-1 space-y-6">
               <div className="flex items-center gap-2">
                 <AppImage
-                  src="/logo-rmbg.png"
+                  src="/DCC-logo.png"
                   alt="Discount Club Cayman Logo"
                   className="h-20 filter brightness-110"
                 />

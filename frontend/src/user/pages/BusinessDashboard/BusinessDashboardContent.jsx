@@ -267,7 +267,7 @@ const RedemptionPanel = () => {
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-collapse table-light">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
                     {[
@@ -708,6 +708,10 @@ const BusinessDashboardContent = () => {
     { id: "overview", label: "Overview" },
     { id: "offers", label: "Offers" },
     { id: "certificates", label: "Certificates" },
+    { id: "transactions", label: "Transactions" },
+    { id: "payouts", label: "Payouts" },
+    { id: "reviews", label: "Reviews" },
+    { id: "details", label: "Merchant Specs" },
     { id: "redeem", label: "Redeem" },
     { id: "banners", label: "Banners" },
   ];
@@ -1068,7 +1072,7 @@ const BusinessDashboardContent = () => {
               </div>
 
               <div className="overflow-x-auto rounded-2xl border border-slate-200/60 shadow-sm">
-                <table className="w-full text-left">
+                <table className="w-full text-left table-light">
                   <thead className="bg-slate-50/80 border-b border-slate-200/60">
                     <tr>
                       {[
@@ -1081,7 +1085,7 @@ const BusinessDashboardContent = () => {
                       ].map((h) => (
                         <th
                           key={h}
-                          className="py-4 px-6 text-[11px] font-black uppercase tracking-wider text-slate-500 whitespace-nowrap"
+                          className="py-4 px-6 text-[11px] font-black uppercase tracking-wider text-slate-800 whitespace-nowrap"
                         >
                           {h}
                         </th>
@@ -1093,7 +1097,7 @@ const BusinessDashboardContent = () => {
                       <tr>
                         <td
                           colSpan={6}
-                          className="py-12 text-center text-slate-500 font-medium"
+                          className="py-12 text-center text-slate-800 font-medium"
                         >
                           No offers created yet.
                         </td>
@@ -1104,7 +1108,7 @@ const BusinessDashboardContent = () => {
                           key={offer.id}
                           className="hover:bg-slate-50/50 transition-colors group"
                         >
-                          <td className="py-4 px-6 font-bold text-slate-900">
+                          <td className="py-4 px-6 font-bold text-slate-950">
                             {offer.title}
                           </td>
                           <td className="py-4 px-6">
@@ -1116,7 +1120,7 @@ const BusinessDashboardContent = () => {
                                   : "Prepaid"}
                             </span>
                           </td>
-                          <td className="py-4 px-6 text-sm font-medium text-slate-500 whitespace-nowrap">
+                          <td className="py-4 px-6 text-sm font-bold text-slate-800 whitespace-nowrap">
                             {offer.expiryDate
                               ? new Date(offer.expiryDate).toLocaleDateString(
                                   undefined,
@@ -1128,10 +1132,10 @@ const BusinessDashboardContent = () => {
                                 )
                               : "No expiry"}
                           </td>
-                          <td className="py-4 px-6 text-sm font-bold text-slate-700">
+                          <td className="py-4 px-6 text-sm font-bold text-slate-900">
                             {offer.views || 0}
                           </td>
-                          <td className="py-4 px-6 text-sm font-bold text-slate-700">
+                          <td className="py-4 px-6 text-sm font-bold text-slate-900">
                             {offer.saves || 0}
                           </td>
                           <td className="py-4 px-6">
@@ -1193,7 +1197,7 @@ const BusinessDashboardContent = () => {
               </div>
 
               <div className="overflow-x-auto rounded-2xl border border-slate-200/60 shadow-sm">
-                <table className="w-full text-left">
+                <table className="w-full text-left table-light">
                   <thead className="bg-slate-50/80 border-b border-slate-200/60">
                     <tr>
                       {[
@@ -1206,7 +1210,7 @@ const BusinessDashboardContent = () => {
                       ].map((h) => (
                         <th
                           key={h}
-                          className="py-4 px-6 text-[11px] font-black uppercase tracking-wider text-slate-500 whitespace-nowrap"
+                          className="py-4 px-6 text-[11px] font-black uppercase tracking-wider text-slate-800 whitespace-nowrap"
                         >
                           {h}
                         </th>
@@ -1218,7 +1222,7 @@ const BusinessDashboardContent = () => {
                       <tr>
                         <td
                           colSpan={6}
-                          className="py-12 text-center text-slate-500 font-medium"
+                          className="py-12 text-center text-slate-800 font-medium"
                         >
                           No certificates created yet.
                         </td>
@@ -1229,19 +1233,19 @@ const BusinessDashboardContent = () => {
                           key={cert.id}
                           className="hover:bg-slate-50/50 transition-colors group"
                         >
-                          <td className="py-4 px-6 font-bold text-slate-900">
+                          <td className="py-4 px-6 font-bold text-slate-950">
                             {cert.title}
                           </td>
-                          <td className="py-4 px-6 text-sm font-black text-slate-700">
+                          <td className="py-4 px-6 text-sm font-black text-slate-900">
                             ${cert.faceValue}
                           </td>
-                          <td className="py-4 px-6 text-sm font-black text-emerald-600 bg-emerald-50/50">
+                          <td className="py-4 px-6 text-sm font-black text-emerald-700 bg-emerald-50/50 font-bold">
                             ${cert.memberPrice}
                           </td>
-                          <td className="py-4 px-6 text-sm font-bold text-slate-700">
+                          <td className="py-4 px-6 text-sm font-bold text-slate-900">
                             {cert.sold || 0}
                           </td>
-                          <td className="py-4 px-6 text-sm font-bold text-slate-700">
+                          <td className="py-4 px-6 text-sm font-bold text-slate-900">
                             {cert.redeemed || 0}
                           </td>
                           <td className="py-4 px-6">
@@ -1265,6 +1269,250 @@ const BusinessDashboardContent = () => {
                     )}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          {/* ── Transactions tab ──────────────────────────────────────── */}
+          {activeTab === "transactions" && (
+            <div className="bg-white rounded-[2rem] border border-slate-200/60 p-8 shadow-sm">
+              <h3 className="text-2xl font-bold text-slate-900 mb-6" style={HEADING_FONT}>
+                Transactions History
+              </h3>
+              <div className="overflow-x-auto rounded-2xl border border-slate-200/60 shadow-sm">
+                <table className="w-full text-left table-light">
+                  <thead className="bg-slate-50/80 border-b border-slate-200/60">
+                    <tr>
+                      {["Date", "Member", "Sale Amount", "Discount Given", "Status"].map((h) => (
+                        <th key={h} className="py-4 px-6 text-[11px] font-black uppercase tracking-wider text-slate-500 whitespace-nowrap">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100/80">
+                    {(!businessData?.raw?.transactions || businessData.raw.transactions.length === 0) ? (
+                      <tr>
+                        <td colSpan={5} className="py-12 text-center text-slate-500 font-medium">
+                          No transactions found.
+                        </td>
+                      </tr>
+                    ) : (
+                      businessData.raw.transactions.map((txn) => (
+                        <tr key={txn.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="py-4 px-6 text-sm font-medium text-slate-500 whitespace-nowrap">
+                            {new Date(txn.transactionDate).toLocaleString()}
+                          </td>
+                          <td className="py-4 px-6 font-bold text-slate-900">
+                            {txn.member ? `${txn.member.firstName} ${txn.member.lastName}` : "Registered Member"}
+                          </td>
+                          <td className="py-4 px-6 text-sm font-black text-slate-700">
+                            ${txn.saleAmount.toFixed(2)}
+                          </td>
+                          <td className="py-4 px-6 text-sm font-black text-emerald-600">
+                            -${txn.savingsAmount.toFixed(2)}
+                          </td>
+                          <td className="py-4 px-6">
+                            <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md text-[10px] font-black uppercase tracking-wider whitespace-nowrap">
+                              {txn.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ── Payouts tab ──────────────────────────────────────────── */}
+          {activeTab === "payouts" && (
+            <div className="bg-white rounded-[2rem] border border-slate-200/60 p-8 shadow-sm">
+              <h3 className="text-2xl font-bold text-slate-900 mb-6" style={HEADING_FONT}>
+                Payout Settlements
+              </h3>
+              <div className="overflow-x-auto rounded-2xl border border-slate-200/60 shadow-sm">
+                <table className="w-full text-left table-light">
+                  <thead className="bg-slate-50/80 border-b border-slate-200/60">
+                    <tr>
+                      {["Date", "Amount", "Method", "Reference", "Status"].map((h) => (
+                        <th key={h} className="py-4 px-6 text-[11px] font-black uppercase tracking-wider text-slate-500 whitespace-nowrap">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100/80">
+                    {(!businessData?.raw?.payouts || businessData.raw.payouts.length === 0) ? (
+                      <tr>
+                        <td colSpan={5} className="py-12 text-center text-slate-500 font-medium">
+                          No payouts processed yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      businessData.raw.payouts.map((pay) => (
+                        <tr key={pay.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="py-4 px-6 text-sm font-medium text-slate-500 whitespace-nowrap">
+                            {new Date(pay.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="py-4 px-6 text-sm font-black text-slate-900">
+                            ${pay.amount.toFixed(2)} {pay.currency}
+                          </td>
+                          <td className="py-4 px-6 text-sm font-bold text-slate-600 whitespace-nowrap">
+                            {pay.method}
+                          </td>
+                          <td className="py-4 px-6 text-sm font-mono text-slate-500">
+                            {pay.referenceId || "N/A"}
+                          </td>
+                          <td className="py-4 px-6">
+                            <span className={`px-2.5 py-1 border rounded-md text-[10px] font-black uppercase tracking-wider whitespace-nowrap ${
+                              pay.status === "COMPLETED" 
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-100" 
+                                : "bg-amber-50 text-amber-700 border-amber-100"
+                            }`}>
+                              {pay.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ── Reviews tab ──────────────────────────────────────────── */}
+          {activeTab === "reviews" && (
+            <div className="bg-white rounded-[2rem] border border-slate-200/60 p-8 shadow-sm">
+              <h3 className="text-2xl font-bold text-slate-900 mb-6" style={HEADING_FONT}>
+                Customer Ratings & Reviews
+              </h3>
+              <div className="space-y-6">
+                {(!businessData?.raw?.reviews || businessData.raw.reviews.length === 0) ? (
+                  <div className="text-center py-12 text-slate-400 font-medium">
+                    No customer reviews yet.
+                  </div>
+                ) : (
+                  businessData.raw.reviews.map((rev) => (
+                    <div key={rev.id} className="p-6 bg-slate-50/60 border border-slate-100 rounded-2xl flex gap-4">
+                      <div className="w-12 h-12 bg-slate-200 rounded-full overflow-hidden shrink-0">
+                        {rev.member?.avatarUrl ? (
+                          <img src={rev.member.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-lg">
+                            {rev.member?.firstName?.[0] || "U"}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="font-bold text-slate-900">
+                            {rev.member ? `${rev.member.firstName} ${rev.member.lastName}` : "Anonymous"}
+                          </p>
+                          <p className="text-xs text-slate-400 font-bold">
+                            {new Date(rev.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1 mb-3">
+                          {[...Array(5)].map((_, i) => (
+                            <Icon 
+                              key={i} 
+                              name="StarIcon" 
+                              size={16} 
+                              className={i < rev.rating ? "text-amber-400" : "text-slate-200"} 
+                            />
+                          ))}
+                        </div>
+                        <p className="text-slate-600 text-sm leading-relaxed">
+                          {rev.comment}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── Details tab (Merchant Specs) ─────────────────────────── */}
+          {activeTab === "details" && (
+            <div className="bg-white rounded-[2rem] border border-slate-200/60 p-8 shadow-sm space-y-8">
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Bank Details */}
+                <div className="bg-slate-50/60 border border-slate-100 p-6 rounded-2xl space-y-4">
+                  <div className="flex items-center gap-3 border-b border-slate-200/60 pb-3">
+                    <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
+                      <Icon name="BuildingLibraryIcon" size={20} />
+                    </div>
+                    <h4 className="font-bold text-slate-900">Bank Details</h4>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Settlement Bank</p>
+                    <p className="text-sm font-bold text-slate-800 mt-1">{businessData?.raw?.bankName || "Cayman National Bank"}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Account Number</p>
+                    <p className="text-sm font-mono font-bold text-slate-800 mt-1">{businessData?.raw?.bankAccountNumber || "N/A"}</p>
+                  </div>
+                </div>
+
+                {/* UPI / QR Merchant Codes */}
+                <div className="bg-slate-50/60 border border-slate-100 p-6 rounded-2xl space-y-4">
+                  <div className="flex items-center gap-3 border-b border-slate-200/60 pb-3">
+                    <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center">
+                      <Icon name="QrCodeIcon" size={20} />
+                    </div>
+                    <h4 className="font-bold text-slate-900">UPI / QR Merchant scan</h4>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Payment QR Code</p>
+                    {businessData?.raw?.upiQrUrl ? (
+                      <div className="mt-2 w-32 h-32 bg-white p-2 rounded-xl border border-slate-200/60 flex items-center justify-center">
+                        <img src={businessData.raw.upiQrUrl} alt="UPI QR" className="w-full h-full object-contain" />
+                      </div>
+                    ) : (
+                      <p className="text-sm font-bold text-slate-500 mt-1">No QR Code assigned.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Working Hours */}
+              <div className="bg-slate-50/60 border border-slate-100 p-6 rounded-2xl">
+                <div className="flex items-center gap-3 border-b border-slate-200/60 pb-3 mb-4">
+                  <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center">
+                    <Icon name="ClockIcon" size={20} />
+                  </div>
+                  <h4 className="font-bold text-slate-900">Operating Working Hours</h4>
+                </div>
+                {(() => {
+                  try {
+                    const parsed = JSON.parse(businessData?.raw?.workingHours);
+                    if (Array.isArray(parsed)) {
+                      return (
+                        <div className="grid sm:grid-cols-2 gap-3">
+                          {parsed.map((h, i) => (
+                            <div key={i} className="flex justify-between py-2 border-b border-slate-100 text-sm">
+                              <span className="font-bold text-slate-500">{h.day}</span>
+                              <span className="font-semibold text-slate-800">
+                                {h.closed ? <span className="text-rose-500">Closed</span> : `${h.open} - ${h.close}`}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+                  } catch {
+                    // fallback
+                  }
+                  return (
+                    <p className="text-sm font-bold text-slate-800">
+                      {businessData?.raw?.workingHours || "Mon-Fri: 8:30 AM - 5:30 PM, Sat: 9:00 AM - 4:00 PM"}
+                    </p>
+                  );
+                })()}
               </div>
             </div>
           )}

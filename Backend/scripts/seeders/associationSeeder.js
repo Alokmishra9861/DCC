@@ -48,6 +48,94 @@ async function seed(prisma, faker) {
       orgType: "Hospitality Guild",
       joinCode: "CTA-VISIT-2026",
       description: "Representing hotels, restaurants, dive operators, and transport services in the Cayman Islands."
+    },
+    {
+      email: "lawsociety@lawsoc.ky",
+      name: "Cayman Islands Law Society",
+      associationType: "MEMBER",
+      orgType: "Professional Organization",
+      joinCode: "LAW-SOCIETY-2026",
+      description: "The official representative body of Cayman offshore legal professionals and practitioners."
+    },
+    {
+      email: "bankers@cba.ky",
+      name: "Cayman Bankers Association",
+      associationType: "MEMBER",
+      orgType: "Banking Board",
+      joinCode: "BANKERS-SAVE-2026",
+      description: "Promoting banking standards and local savings benefits for banking industry professionals."
+    },
+    {
+      email: "cireba@cireba.ky",
+      name: "Cayman Islands Real Estate Brokers Association",
+      associationType: "BUSINESS",
+      orgType: "Real Estate Guild",
+      joinCode: "CIREBA-BIZ-2026",
+      description: "Uniting local real estate brokers and property management firms across the Cayman Islands."
+    },
+    {
+      email: "nurses@health.ky",
+      name: "Cayman Islands Nurses Association",
+      associationType: "MEMBER",
+      orgType: "Healthcare Guild",
+      joinCode: "NURSES-CARE-2026",
+      description: "Caring for our caregivers. Offering premium health sector DCC discounts to nursing practitioners."
+    },
+    {
+      email: "teachers@teachers.ky",
+      name: "Cayman Islands Teachers Association",
+      associationType: "MEMBER",
+      orgType: "Teachers Union",
+      joinCode: "TEACHERS-EDUC-2026",
+      description: "Empowering educators in Cayman with preferred DCC lifestyle and retail discounts."
+    },
+    {
+      email: "case@engineers.ky",
+      name: "Cayman Society of Architects, Surveyors & Engineers",
+      associationType: "BUSINESS",
+      orgType: "Trade Union",
+      joinCode: "CASE-BUILD-2026",
+      description: "A professional body for construction, design, and engineering firms in the Cayman Islands."
+    },
+    {
+      email: "ciipa@ciipa.ky",
+      name: "Cayman Islands Institute of Professional Accountants",
+      associationType: "MEMBER",
+      orgType: "Professional Organization",
+      joinCode: "CIIPA-TAX-2026",
+      description: "Official accounting standard regulatory body, offering membership rewards on dining and travel."
+    },
+    {
+      email: "retailers@retail.ky",
+      name: "Cayman Islands Retailers Association",
+      associationType: "BUSINESS",
+      orgType: "Retail Alliance",
+      joinCode: "RETAILERS-DCC-2026",
+      description: "Uniting shopping centers, gift boutiques, and retail merchants across Grand Cayman."
+    },
+    {
+      email: "watersports@diving.ky",
+      name: "Cayman Watersports Association",
+      associationType: "BUSINESS",
+      orgType: "Hospitality Guild",
+      joinCode: "WATER-SPORTS-2026",
+      description: "Representing snorkeling, diving, jet ski, and private yacht charter operators."
+    },
+    {
+      email: "yachtclub@yachtclub.ky",
+      name: "Cayman Islands Yacht Club",
+      associationType: "BUSINESS",
+      orgType: "Marina Club",
+      joinCode: "YACHT-CLUB-2026",
+      description: "Premier boating and sailing harbor management, linking marine businesses and luxury services."
+    },
+    {
+      email: "brewers@brewery.ky",
+      name: "Cayman Brewery & Distributors Association",
+      associationType: "BUSINESS",
+      orgType: "Trade Union",
+      joinCode: "BREWERS-DRINK-2026",
+      description: "Representing craft beer brewers, spirit makers, and beverage distributors on the island."
     }
   ];
 

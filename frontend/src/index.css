@@ -261,23 +261,23 @@
   }
 
   /* Tables reset */
-  table {
+  table:not(.table-light) {
     border-color: rgba(255, 255, 255, 0.08) !important;
   }
 
-  table th {
+  table:not(.table-light) th {
     background-color: #161F3D !important;
     color: #FFFFFF !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
   }
 
-  table td {
+  table:not(.table-light) td {
     background-color: rgba(17, 25, 54, 0.3) !important;
     color: #B8C0D4 !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
   }
 
-  table tr:hover td {
+  table:not(.table-light) tr:hover td {
     background-color: rgba(212, 166, 42, 0.04) !important;
     color: #FFFFFF !important;
   }
