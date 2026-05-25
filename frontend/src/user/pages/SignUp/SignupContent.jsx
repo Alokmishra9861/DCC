@@ -76,10 +76,9 @@ const validatePassword = (p) =>
 const validateName = (n) => n.trim().length >= 2 && /^[a-zA-Z\s]+$/.test(n);
 
 const getInputCls = (hasError) =>
-  `w-full px-4 py-3 bg-[#0D1328]/60 border rounded-xl text-white placeholder-[#8D95A8] focus:outline-none transition-all text-sm shadow-inner ${
-    hasError
-      ? "border-rose-500/50 focus:border-rose-500 bg-rose-500/5"
-      : "border-white/8 focus:border-[#D4A62A] focus:ring-2 focus:ring-[#D4A62A]/10"
+  `w-full px-4 py-3 bg-[#0D1328]/60 border rounded-xl text-white placeholder-[#8D95A8] focus:outline-none transition-all text-sm shadow-inner ${hasError
+    ? "border-rose-500/50 focus:border-rose-500 bg-rose-500/5"
+    : "border-white/8 focus:border-[#D4A62A] focus:ring-2 focus:ring-[#D4A62A]/10"
   }`;
 
 const selectCls =
@@ -107,13 +106,12 @@ const StepDots = ({ total, current }) => (
     {Array.from({ length: total }).map((_, i) => (
       <div
         key={i}
-        className={`h-1.5 rounded-full transition-all duration-300 ${
-          i === current
+        className={`h-1.5 rounded-full transition-all duration-300 ${i === current
             ? "w-8 bg-[#D4A62A] shadow-[0_0_8px_#D4A62A]"
             : i < current
               ? "w-4 bg-[#D4A62A]/40"
               : "w-4 bg-white/10"
-        }`}
+          }`}
       />
     ))}
   </div>
@@ -793,11 +791,10 @@ const OrgSignupForm = ({ role }) => {
                   key={val}
                   type="button"
                   onClick={() => field("associationType", val)}
-                  className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
-                    formData.associationType === val
+                  className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${formData.associationType === val
                       ? "border-[#D4A62A] bg-[#D4A62A]/5"
                       : "border-white/8 hover:border-white/12 bg-[#0D1328]/60"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2 mb-1.5">
                     <span className="text-lg">{icon}</span>
@@ -1035,11 +1032,10 @@ const SignupContent = () => {
             <button
               key={key}
               onClick={() => setSelectedRole(key)}
-              className={`p-4 rounded-2xl border text-center transition-all duration-300 cursor-pointer ${
-                selectedRole === key
+              className={`p-4 rounded-2xl border text-center transition-all duration-300 cursor-pointer ${selectedRole === key
                   ? "bg-gradient-to-br from-[#D4A62A] to-[#E0B53A] text-[#0D1328] border-transparent shadow-lg shadow-[#D4A62A]/10 scale-[1.03]"
                   : "bg-[#111936]/50 border-white/8 text-[#8D95A8] hover:border-[#D4A62A]/30 hover:text-white"
-              }`}
+                }`}
             >
               <div className="flex flex-col items-center gap-2">
                 <Icon name={icon} size={20} />

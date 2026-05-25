@@ -59,7 +59,7 @@ exports.register = asyncHandler(async (req, res) => {
   const allowedRoles = ["MEMBER", "EMPLOYER", "ASSOCIATION", "BUSINESS", "B2B"];
   if (!allowedRoles.includes(role)) throw ApiError.badRequest("Invalid role");
 
-  const roleData = {}; 
+  const roleData = {};
 
   if (role === "MEMBER") {
     if (!profile?.firstName || !profile?.lastName) {
@@ -409,7 +409,7 @@ exports.googleLogin = asyncHandler(async (req, res) => {
 
   if (user) {
     if (!user.isActive) throw ApiError.unauthorized("Account is deactivated");
-    
+
     // Validate role match if role was specified in request
     if (role) {
       const selectedRole = role.toUpperCase();
@@ -463,7 +463,7 @@ exports.googleLogin = asyncHandler(async (req, res) => {
       // if we don't have a category. We will just find any category or fail.
       const firstCategory = await prisma.category.findFirst();
       if (!firstCategory) throw ApiError.badRequest("No categories exist in DB. Cannot create Business.");
-      
+
       roleData.business = {
         create: {
           name: name || "Business",
@@ -521,7 +521,7 @@ exports.googleLogin = asyncHandler(async (req, res) => {
     buildAuthResponse(
       { accessToken, refreshToken },
       user,
-      user.association, 
+      user.association,
       user.member?.membership,
     ),
     "Google Login successful",

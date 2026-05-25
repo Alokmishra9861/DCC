@@ -67,8 +67,8 @@ exports.listBusinesses = asyncHandler(async (req, res) => {
 exports.getBusinessProfile = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const business = await prisma.business.findFirst({
-    where: { id, status: "APPROVED" },
+  let business = await prisma.business.findFirst({
+    where: { id },
     include: {
       category: true,
       offers: {
@@ -77,6 +77,21 @@ exports.getBusinessProfile = asyncHandler(async (req, res) => {
       },
     },
   });
+
+  // Fallback to userId lookup if not found directly
+  if (!business) {
+    business = await prisma.business.findFirst({
+      where: { userId: id },
+      include: {
+        category: true,
+        offers: {
+          where: { isActive: true },
+          include: { certificates: { where: { status: "AVAILABLE" } } },
+        },
+      },
+    });
+  }
+
   if (!business) throw ApiError.notFound("Business not found");
 
   // ✨ Business users can't see competitor offers - only members can
@@ -95,9 +110,29 @@ exports.getBusinessProfile = asyncHandler(async (req, res) => {
     offersToShow = [];
   }
 
+  // Ensure there is at least one offer to track views (handles 0-offers placeholder view counting)
+  const offerCount = await prisma.offer.count({ where: { businessId: business.id } });
+  if (offerCount === 0) {
+    try {
+      await prisma.offer.create({
+        data: {
+          businessId: business.id,
+          title: "Profile Views Tracker",
+          description: "Hidden system placeholder to track profile views.",
+          type: "DISCOUNT",
+          isActive: false,
+          isSeeded: false,
+          views: 0,
+        }
+      });
+    } catch (err) {
+      console.warn("⚠️ Warning creating placeholder offer:", err.message);
+    }
+  }
+
   // Track view
   await prisma.offer.updateMany({
-    where: { businessId: id },
+    where: { businessId: business.id },
     data: { views: { increment: 1 } },
   });
 

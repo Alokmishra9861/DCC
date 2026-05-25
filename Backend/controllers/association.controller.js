@@ -981,9 +981,9 @@ exports.getDashboard = asyncHandler(async (req, res) => {
     const savingsAgg =
       memberIds.length > 0
         ? await prisma.member.aggregate({
-            where: { id: { in: memberIds } },
-            _sum: { totalSavings: true },
-          })
+          where: { id: { in: memberIds } },
+          _sum: { totalSavings: true },
+        })
         : { _sum: { totalSavings: 0 } };
 
     const totalSavings = savingsAgg._sum.totalSavings ?? 0;

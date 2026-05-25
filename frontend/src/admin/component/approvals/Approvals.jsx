@@ -117,9 +117,9 @@ const ApprovalCard = ({ item, type, onApprove, onReject, actionId }) => {
     item.district && `📍 ${item.district}`,
     item.phone && `📞 ${item.phone}`,
     item.servicesOffered &&
-      `🛠 ${item.servicesOffered.slice(0, 40)}${item.servicesOffered.length > 40 ? "…" : ""}`,
+    `🛠 ${item.servicesOffered.slice(0, 40)}${item.servicesOffered.length > 40 ? "…" : ""}`,
     item.website &&
-      `🌐 ${item.website.replace(/^https?:\/\//, "").slice(0, 30)}`,
+    `🌐 ${item.website.replace(/^https?:\/\//, "").slice(0, 30)}`,
   ].filter(Boolean);
 
   return (
@@ -248,7 +248,7 @@ const Approvals = () => {
       const label = TYPE_LABELS[type] || type;
       showToast("success", `${label} approved — now visible in the directory`);
 
-      const listKey = type === "b2bPartner" ? "b2bPartners" : `${type}s`;
+      const listKey = type === "b2bPartner" ? "b2bPartners" : (type === "business" ? "businesses" : `${type}s`);
       setData((prev) => ({
         ...prev,
         [listKey]: prev[listKey].filter((i) => i.id !== id),
@@ -276,7 +276,7 @@ const Approvals = () => {
       const label = TYPE_LABELS[type] || type;
       showToast("success", `${label} rejected`);
 
-      const listKey = type === "b2bPartner" ? "b2bPartners" : `${type}s`;
+      const listKey = type === "b2bPartner" ? "b2bPartners" : (type === "business" ? "businesses" : `${type}s`);
       setData((prev) => ({
         ...prev,
         [listKey]: prev[listKey].filter((i) => i.id !== item.id),
@@ -330,11 +330,10 @@ const Approvals = () => {
       {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed top-6 right-6 z-50 px-5 py-4 rounded-2xl shadow-xl border text-sm font-medium flex items-center gap-3 animate-in slide-in-from-top-4 fade-in duration-300 ${
-            toast.type === "success"
+          className={`fixed top-6 right-6 z-50 px-5 py-4 rounded-2xl shadow-xl border text-sm font-medium flex items-center gap-3 animate-in slide-in-from-top-4 fade-in duration-300 ${toast.type === "success"
               ? "bg-white/90 backdrop-blur-md border-emerald-200 text-emerald-800"
               : "bg-white/90 backdrop-blur-md border-red-200 text-red-800"
-          }`}
+            }`}
         >
           <div
             className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs ${toast.type === "success" ? "bg-emerald-500" : "bg-red-500"}`}
@@ -428,21 +427,19 @@ const Approvals = () => {
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
-              tab === key
+            className={`flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 whitespace-nowrap ${tab === key
                 ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/50"
                 : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
-            }`}
+              }`}
           >
             <span className="text-base opacity-80">{icon}</span>
             {label}
             {count > 0 && (
               <span
-                className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${
-                  tab === key
+                className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${tab === key
                     ? "bg-[#1C4D8D]/10 text-[#1C4D8D]"
                     : "bg-slate-200 text-slate-500"
-                }`}
+                  }`}
               >
                 {count}
               </span>
