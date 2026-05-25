@@ -412,8 +412,8 @@ exports.updateBusiness = asyncHandler(async (req, res) => {
   });
   if (!business) throw ApiError.notFound("Business not found");
 
-  // If categoryId is provided, verify it exists
-  if (categoryId) {
+  // If categoryId is provided and non-empty, verify it exists
+  if (categoryId && categoryId.trim()) {
     const category = await prisma.category.findUnique({
       where: { id: categoryId },
     });
@@ -424,7 +424,7 @@ exports.updateBusiness = asyncHandler(async (req, res) => {
     where: { id: business.id },
     data: {
       name,
-      categoryId,
+      categoryId: (categoryId && categoryId.trim()) ? categoryId : undefined,
       description,
       phone,
       address,

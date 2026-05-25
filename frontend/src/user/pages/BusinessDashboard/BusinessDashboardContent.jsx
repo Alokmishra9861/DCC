@@ -466,6 +466,7 @@ const BusinessDashboardContent = () => {
           setBusinessData({
             id: p.id || p._id,
             name: p.name || p.businessName || user?.email,
+            logoUrl: p.logoUrl || null,
             category: p.category?.name || p.category || "",
             profileViews: p.profileViews ?? 0,
             offerSaves: p.offerSaves ?? 0,
@@ -753,24 +754,35 @@ const BusinessDashboardContent = () => {
             <div className="absolute bottom-0 left-0 w-80 h-80 bg-black/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
 
             <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
-              <div className="flex-1">
-                <p className="text-blue-300/90 text-xs font-black uppercase tracking-[0.3em] mb-3">
-                  Business Dashboard
-                </p>
-                <h1
-                  className="text-4xl md:text-5xl font-bold text-white mb-3 tracking-tight drop-shadow-md"
-                  style={HEADING_FONT}
-                >
-                  Welcome,{" "}
-                  <span className="text-blue-200">{businessData?.name}</span>
-                </h1>
-                <p className="text-blue-100/90 text-lg font-medium">
-                  Your offers reached{" "}
-                  <span className="text-white font-black">
-                    {businessData?.profileViews}
-                  </span>{" "}
-                  members this month.
-                </p>
+              <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-6">
+                {businessData?.logoUrl && (
+                  <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 flex items-center justify-center p-1.5 shrink-0 shadow-lg">
+                    <img
+                      src={businessData.logoUrl}
+                      alt={businessData?.name || "Logo"}
+                      className="w-full h-full object-contain rounded-xl"
+                    />
+                  </div>
+                )}
+                <div>
+                  <p className="text-blue-300/90 text-xs font-black uppercase tracking-[0.3em] mb-2.5">
+                    Business Dashboard
+                  </p>
+                  <h1
+                    className="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight drop-shadow-md"
+                    style={HEADING_FONT}
+                  >
+                    Welcome,{" "}
+                    <span className="text-blue-200">{businessData?.name}</span>
+                  </h1>
+                  <p className="text-blue-100/90 text-lg font-medium">
+                    Your offers reached{" "}
+                    <span className="text-white font-black">
+                      {businessData?.profileViews}
+                    </span>{" "}
+                    members this month.
+                  </p>
+                </div>
               </div>
               {businessData?.id && (
                 <div className="flex flex-col items-start md:items-end gap-3">
