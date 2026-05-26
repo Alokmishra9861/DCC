@@ -11,6 +11,30 @@ const getMemberWithMembership = async (userId) => {
   });
 };
 
+const normalizeOfferType = (type) => {
+  if (!type) return "DISCOUNT";
+  const upper = type.toUpperCase().trim();
+  if (upper === "DISCOUNT" || upper === "STANDARD DISCOUNT") {
+    return "DISCOUNT";
+  }
+  if (upper === "VALUE_ADDED_CERTIFICATE" || upper === "VALUE ADDED CERTIFICATE") {
+    return "VALUE_ADDED_CERTIFICATE";
+  }
+  if (upper === "PREPAID_CERTIFICATE" || upper === "PREPAID CERTIFICATE") {
+    return "PREPAID_CERTIFICATE";
+  }
+  if (upper.includes("VALUE") && upper.includes("CERTIFICATE")) {
+    return "VALUE_ADDED_CERTIFICATE";
+  }
+  if (upper.includes("PREPAID")) {
+    return "PREPAID_CERTIFICATE";
+  }
+  if (upper.includes("DISCOUNT")) {
+    return "DISCOUNT";
+  }
+  return "DISCOUNT";
+};
+
 // ── GET /api/discounts ────────────────────────────────────────────────────────
 // All active DISCOUNT-type offers — visible to MEMBER and ADMIN only.
 // BUSINESS users see an empty list on browse (prevents seeing competitors)
@@ -220,6 +244,8 @@ exports.createDiscount = asyncHandler(async (req, res) => {
     categoryId,
   } = req.body;
 
+  const normalizedType = normalizeOfferType(type);
+
   if (!title) throw ApiError.badRequest("Title is required");
 
   const validTypes = [
@@ -227,14 +253,14 @@ exports.createDiscount = asyncHandler(async (req, res) => {
     "VALUE_ADDED_CERTIFICATE",
     "PREPAID_CERTIFICATE",
   ];
-  if (!validTypes.includes(type)) {
+  if (!validTypes.includes(normalizedType)) {
     throw ApiError.badRequest(`type must be one of: ${validTypes.join(", ")}`);
   }
 
   const offer = await prisma.offer.create({
     data: {
       businessId: business.id,
-      type,
+      type: normalizedType,
       title,
       description,
       imageUrl,

@@ -17,6 +17,30 @@ const parseOptionalDate = (value) => {
   return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 };
 
+const normalizeOfferType = (type) => {
+  if (!type) return "DISCOUNT";
+  const upper = type.toUpperCase().trim();
+  if (upper === "DISCOUNT" || upper === "STANDARD DISCOUNT") {
+    return "DISCOUNT";
+  }
+  if (upper === "VALUE_ADDED_CERTIFICATE" || upper === "VALUE ADDED CERTIFICATE") {
+    return "VALUE_ADDED_CERTIFICATE";
+  }
+  if (upper === "PREPAID_CERTIFICATE" || upper === "PREPAID CERTIFICATE") {
+    return "PREPAID_CERTIFICATE";
+  }
+  if (upper.includes("VALUE") && upper.includes("CERTIFICATE")) {
+    return "VALUE_ADDED_CERTIFICATE";
+  }
+  if (upper.includes("PREPAID")) {
+    return "PREPAID_CERTIFICATE";
+  }
+  if (upper.includes("DISCOUNT")) {
+    return "DISCOUNT";
+  }
+  return "DISCOUNT";
+};
+
 // ── Create offer ──────────────────────────────────────
 exports.createOffer = asyncHandler(async (req, res) => {
   const {
@@ -59,7 +83,7 @@ exports.createOffer = asyncHandler(async (req, res) => {
       title,
       description,
       imageUrl,
-      type,
+      type: normalizeOfferType(type),
       discountValue: parseOptionalNumber(discountValue),
       minSpend: parseOptionalNumber(minSpend),
       expiryDate: parseOptionalDate(expiryDate),
