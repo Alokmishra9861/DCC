@@ -4,6 +4,12 @@ const ctrl = require("../controllers/transaction.controller");
 const { protect, authorize } = require("../middlewares/auth.middleware");
 
 router.post("/scan", protect, authorize("BUSINESS"), ctrl.recordTransaction);
+router.post(
+  "/scan-details",
+  protect,
+  authorize("BUSINESS"),
+  ctrl.getScanDetails,
+);
 router.get(
   "/business",
   protect,
