@@ -79,20 +79,53 @@ const createNotification = async (userId, title, message, type = "INFO") => {
         if (userRecord?.email) {
           const subject = title;
           const html = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 16px; background-color: #ffffff;">
-              <div style="background-color: #1C4D8D; padding: 24px; border-radius: 12px 12px 0 0; text-align: center; color: #ffffff;">
-                <h1 style="margin: 0; font-size: 24px; font-weight: 800;">Discount Club Cayman</h1>
-                <p style="margin: 4px 0 0 0; font-size: 14px; opacity: 0.9;">Platform Alert Notification</p>
-              </div>
-              <div style="padding: 24px; color: #334155; line-height: 1.6;">
-                <h2 style="margin-top: 0; color: #1e293b; font-size: 18px; font-weight: 700;">${title}</h2>
-                <p style="font-size: 15px; margin-bottom: 24px;">${message}</p>
-                <a href="${process.env.CLIENT_URL || 'https://discountclubcayman.com'}" style="background-color: #1C4D8D; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: bold; font-size: 14px;">
-                  Open Dashboard
-                </a>
-              </div>
-              <div style="border-top: 1px solid #e5e7eb; padding: 20px; text-align: center; color: #64748b; font-size: 12px;">
-                <p style="margin: 0;">This is an automated system notification. You are receiving this because you registered an account with Discount Club Cayman.</p>
+            <div style="background-color: #f8fafc; padding: 40px 20px; font-family: 'Outfit', 'Helvetica Neue', Helvetica, Arial, sans-serif; min-height: 100%;">
+              <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 30px -10px rgba(28, 77, 141, 0.08); border: 1px solid #e2e8f0;">
+                
+                <!-- Top Decorative Header with Logo -->
+                <div style="background: linear-gradient(135deg, #1C4D8D 0%, #0F2854 100%); padding: 35px 40px; text-align: center; position: relative;">
+                  <div style="display: inline-block; background-color: rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 10px 18px; margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.15); backdrop-blur: 8px;">
+                    <span style="font-size: 20px; font-weight: 900; color: #ffffff; letter-spacing: 0.5px; text-transform: uppercase;">Discount Club Cayman</span>
+                  </div>
+                  <p style="margin: 0; font-size: 13px; color: #D4A62A; text-transform: uppercase; letter-spacing: 2px; font-weight: 800;">PLATFORM ALERT NOTIFICATION</p>
+                </div>
+
+                <!-- Main Message Card -->
+                <div style="padding: 40px 45px; background-color: #ffffff;">
+                  <!-- Bell Icon Badge Header -->
+                  <div style="display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; background-color: #f1f5f9; border-radius: 12px; padding: 8px 16px;">
+                    <span style="font-size: 16px; display: inline-block; transform: scaleX(-1);">🔔</span>
+                    <span style="font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Live Activity Alert</span>
+                  </div>
+
+                  <!-- Notification Title -->
+                  <h2 style="margin: 0 0 16px 0; color: #0f172a; font-size: 22px; font-weight: 800; line-height: 1.3;">
+                    \${title}
+                  </h2>
+
+                  <!-- Notification Content -->
+                  <p style="margin: 0 0 32px 0; font-size: 15px; color: #475569; line-height: 1.7; font-weight: 500;">
+                    \${message}
+                  </p>
+
+                  <!-- Action Button Group -->
+                  <div style="text-align: center; margin-bottom: 20px;">
+                    <a href="${process.env.CLIENT_URL || 'https://discountclubcayman.com'}" style="background-color: #1C4D8D; color: #ffffff; padding: 16px 36px; border-radius: 14px; text-decoration: none; display: inline-block; font-weight: 800; font-size: 15px; box-shadow: 0 8px 20px -6px rgba(28, 77, 141, 0.35);">
+                      Open Dashboard
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Decorative Footer Block -->
+                <div style="background-color: #f8fafc; border-top: 1px solid #f1f5f9; padding: 30px 40px; text-align: center;">
+                  <p style="margin: 0 0 10px 0; font-size: 11px; color: #94a3b8; line-height: 1.6; font-weight: 500;">
+                    This is an automated system notification from Discount Club Cayman. You are receiving this email because you hold an active account linked to this email address.
+                  </p>
+                  <div style="margin-top: 20px; font-size: 11px; color: #64748b; font-weight: 700;">
+                    © 2026 Discount Club Cayman. All Rights Reserved.
+                  </div>
+                </div>
+                
               </div>
             </div>
           `;
