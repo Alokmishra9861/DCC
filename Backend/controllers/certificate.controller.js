@@ -56,11 +56,10 @@ exports.checkRedeemEligibility = asyncHandler(async (req, res) => {
 });
 
 exports.getAvailableCertificates = asyncHandler(async (req, res) => {
-  // ✨ Different behavior for MEMBER vs BUSINESS
-  if (req.user.role === "MEMBER") {
-    // Members can view all certificates
-    const member = await getMemberFull(req.user.id);
-    if (!member) throw ApiError.notFound("Member profile not found");
+  // ✨ Different behavior for BUSINESS vs other roles (MEMBER, ADMIN, EMPLOYER, ASSOCIATION)
+  if (req.user.role !== "BUSINESS") {
+    // Non-business roles can view all certificates
+    const member = await getMemberFull(req.user.id).catch(() => null);
 
     const { businessId, page = 1, limit = 20 } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -104,8 +103,9 @@ exports.getAvailableCertificates = asyncHandler(async (req, res) => {
     return res.status(200).json({
       success: true,
       data: certificates,
-      membershipStatus: member.membership?.status ?? null,
-      canPurchase: hasActiveMembership(member),
+      certificates: certificates,
+      membershipStatus: member?.membership?.status ?? null,
+      canPurchase: member ? hasActiveMembership(member) : false,
       pagination: {
         total,
         page: parseInt(page),
@@ -156,6 +156,7 @@ exports.getAvailableCertificates = asyncHandler(async (req, res) => {
     return res.status(200).json({
       success: true,
       data: certificates,
+      certificates: certificates,
       businessId: business.id,
       message: "Business users can only view their own certificates",
       pagination: {

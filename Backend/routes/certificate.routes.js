@@ -14,7 +14,7 @@ const { protect, authorize } = require("../middlewares/auth.middleware");
 router.get(
   "/available",
   protect,
-  authorize("MEMBER", "BUSINESS"),
+  authorize("MEMBER", "BUSINESS", "EMPLOYER", "ASSOCIATION", "ADMIN"),
   ctrl.getAvailableCertificates,
 );
 
