@@ -12,6 +12,7 @@ const {
 const { generateMemberQR } = require("../services/qr.service");
 const { buildAuthResponse } = require("../utils/auth.redirect");
 const admin = require("../config/firebase");
+const notificationService = require("../services/notification.service");
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const generateToken = (id, secret, expiresIn) =>
@@ -175,6 +176,29 @@ exports.register = asyncHandler(async (req, res) => {
   sendWelcomeEmail(email, {
     name: profile.firstName || profile.companyName || profile.name || "Member",
   }).catch((err) => console.error("Welcome email failed:", err.message));
+
+  // Trigger Welcome Notification inside Dashboard
+  try {
+    let welcomeMsg = "Welcome to Discount Club Cayman! Explore our platform to start saving.";
+    if (role === "BUSINESS") {
+      welcomeMsg = `Welcome to Discount Club Cayman! 🏪 Your business profile "${profile.name || profile.businessName || "Unnamed Business"}" is now active. Start creating offers to attract members.`;
+    } else if (role === "MEMBER") {
+      welcomeMsg = `Welcome to Discount Club Cayman! 🎉 Start saving on Cayman's best dining, shopping, and experiences.`;
+    } else if (role === "EMPLOYER") {
+      welcomeMsg = `Welcome to Discount Club Cayman! 💼 Start managing employee memberships and track employer ROI statistics.`;
+    } else if (role === "ASSOCIATION") {
+      welcomeMsg = `Welcome to Discount Club Cayman! 🤝 Start inviting members and managing business partnerships.`;
+    }
+    
+    await notificationService.createNotification(
+      user.id,
+      "Welcome to DCC! 🎉",
+      welcomeMsg,
+      "INFO"
+    );
+  } catch (err) {
+    console.error("Welcome notification failed:", err.message);
+  }
 
   // Return a full auth response so the frontend can navigate immediately after signup
   // without needing a separate login call
@@ -504,6 +528,29 @@ exports.googleLogin = asyncHandler(async (req, res) => {
 
     sendWelcomeEmail(email, { name: name || "Member" })
       .catch((err) => console.error("Welcome email failed:", err.message));
+
+    // Trigger Welcome Notification inside Dashboard
+    try {
+      let welcomeMsg = "Welcome to Discount Club Cayman! Explore our platform to start saving.";
+      if (selectedRole === "BUSINESS") {
+        welcomeMsg = `Welcome to Discount Club Cayman! 🏪 Your business profile "${name || "Unnamed Business"}" is now active. Start creating offers to attract members.`;
+      } else if (selectedRole === "MEMBER") {
+        welcomeMsg = `Welcome to Discount Club Cayman! 🎉 Start saving on Cayman's best dining, shopping, and experiences.`;
+      } else if (selectedRole === "EMPLOYER") {
+        welcomeMsg = `Welcome to Discount Club Cayman! 💼 Start managing employee memberships and track employer ROI statistics.`;
+      } else if (selectedRole === "ASSOCIATION") {
+        welcomeMsg = `Welcome to Discount Club Cayman! 🤝 Start inviting members and managing business partnerships.`;
+      }
+      
+      await notificationService.createNotification(
+        user.id,
+        "Welcome to DCC! 🎉",
+        welcomeMsg,
+        "INFO"
+      );
+    } catch (err) {
+      console.error("Google welcome notification failed:", err.message);
+    }
   }
 
   // Generate tokens

@@ -460,6 +460,24 @@ export const travelAPI = {
     request("/travel/bookings", { method: "POST", body: JSON.stringify(data) }),
 };
 
+// ─── Notifications ────────────────────────────────────────────────────────────
+export const notificationAPI = {
+  getAll: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/notifications${qs ? `?${qs}` : ""}`);
+  },
+  getUnreadCount: () => request("/notifications/unread-count"),
+  markAsRead: (id) => request(`/notifications/${id}/read`, { method: "PATCH" }),
+  markAllAsRead: () => request("/notifications/read-all", { method: "PATCH" }),
+  delete: (id) => request(`/notifications/${id}`, { method: "DELETE" }),
+  clearAll: () => request("/notifications", { method: "DELETE" }),
+  getStream: () => {
+    const token = getToken();
+    const url = `${BASE_URL}/notifications/stream?token=${encodeURIComponent(token || "")}`;
+    return new EventSource(url);
+  },
+};
+
 // ─── Contact ──────────────────────────────────────────────────────────────────
 export const contactAPI = {
   submit: (data) =>

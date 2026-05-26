@@ -2,6 +2,7 @@ const { prisma } = require("../config/database");
 const { ApiResponse, ApiError } = require("../utils/ApiResponse");
 const { asyncHandler } = require("../middlewares/errorhandler");
 const { decodeQR } = require("../services/qr.service");
+const notificationService = require("../services/notification.service");
 const { calcDiscountSavings } = require("../utils/savingsCalculator");
 const { isMembershipActive } = require("../services/membership.service");
 
@@ -100,6 +101,27 @@ exports.recordTransaction = asyncHandler(async (req, res) => {
       where: { id: offer.id },
       data: { clicks: { increment: 1 } },
     });
+  }
+
+  // Trigger Notifications
+  try {
+    // 1. Notify the Member (Buyer)
+    await notificationService.createNotification(
+      member.userId,
+      "Transaction Logged! 💳",
+      `You saved $${savingsAmount.toFixed(2)} on a purchase of $${parseFloat(saleAmount).toFixed(2)} at "${business.name}".`,
+      "INFO"
+    );
+
+    // 2. Notify the Business Owner (Seller)
+    await notificationService.createNotification(
+      business.userId,
+      "Transaction Recorded! 💳",
+      `Logged a purchase of $${parseFloat(saleAmount).toFixed(2)} for ${member.firstName} ${member.lastName} (Member saved $${savingsAmount.toFixed(2)}).`,
+      "BOOKING"
+    );
+  } catch (notifErr) {
+    console.error("Transaction recording notification failed:", notifErr.message);
   }
 
   return ApiResponse.created(res, {

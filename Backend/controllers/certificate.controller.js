@@ -14,6 +14,7 @@ const {
   getStripeSession,
 } = require("../services/payment.service");
 const { sendCertificatePurchaseEmail } = require("../services/email.service");
+const notificationService = require("../services/notification.service");
 
 // ── Helper: get member + membership ──────────────────────────────────────────
 const getMemberFull = async (userId) =>
@@ -348,6 +349,32 @@ exports.createCertificate = asyncHandler(async (req, res) => {
     include: { offer: { select: { id: true, title: true } } },
   });
 
+  // Trigger Notifications
+  try {
+    // 1. Notify Business Owner
+    await notificationService.createNotification(
+      business.userId,
+      "New Voucher Created! 🎟️",
+      `Your voucher for "${offer.title}" (Face Value: $${faceValue}) is now active.`,
+      "INFO"
+    );
+
+    // 2. Notify all Admin Users
+    const admins = await prisma.user.findMany({
+      where: { role: "ADMIN" },
+    });
+    for (const admin of admins) {
+      await notificationService.createNotification(
+        admin.id,
+        "New Voucher Created! 🎟️",
+        `Business "${business.name}" created a new voucher for: "${offer.title}".`,
+        "SYSTEM"
+      );
+    }
+  } catch (err) {
+    console.error("Failed to send certificate creation notifications:", err.message);
+  }
+
   return res.status(201).json({
     success: true,
     data: certificate,
@@ -419,6 +446,27 @@ exports.redeemCertificate = asyncHandler(async (req, res) => {
           transactionDate: new Date(),
         },
       });
+
+      // Trigger Notifications
+      try {
+        // 1. Notify the Member (Voucher Owner)
+        await notificationService.createNotification(
+          purchase.member.userId,
+          "Voucher Redeemed! 🎉",
+          `Your $${certificate.faceValue} voucher at "${business.name}" has been successfully redeemed.`,
+          "INFO"
+        );
+
+        // 2. Notify the Business Owner
+        await notificationService.createNotification(
+          business.userId,
+          "Voucher Redeemed! 🎉",
+          `Successfully redeemed a $${certificate.faceValue} voucher for ${purchase.member.firstName} ${purchase.member.lastName}.`,
+          "BOOKING"
+        );
+      } catch (notifErr) {
+        console.error("Redemption notification failed:", notifErr.message);
+      }
     }
   } catch (transErr) {
     // Log but don't throw — redemption was already recorded
@@ -555,6 +603,27 @@ exports.handleCertificatePaymentWebhook = asyncHandler(async (req, res) => {
         data: { totalSavings: { increment: savingsAmount } },
       }),
     ]);
+
+    // ── Trigger Notifications ─────────────────────────────────────────────
+    try {
+      // 1. Notify the Member (Buyer)
+      await notificationService.createNotification(
+        member.userId,
+        "Voucher Purchased! 🎁",
+        `You purchased a $${certFaceValue} voucher from "${businessName || certificate.offer.business.name}" for $${certMemberPrice}.`,
+        "INFO"
+      );
+
+      // 2. Notify the Business Owner (Seller)
+      await notificationService.createNotification(
+        certificate.offer.business.userId,
+        "Voucher Sold! 💰",
+        `"${member.firstName} ${member.lastName}" purchased a $${certFaceValue} voucher from you.`,
+        "BOOKING"
+      );
+    } catch (notifErr) {
+      console.error("Webhook notification failed:", notifErr.message);
+    }
 
     // ── Send confirmation email (non-blocking) ─────────────────────────────
     try {
@@ -718,6 +787,27 @@ exports.verifyCertificateSession = asyncHandler(async (req, res) => {
                 totalSpent: { increment: stripeSession.amount_total / 100 },
               },
             });
+
+            // Trigger Notifications
+            try {
+              // 1. Notify the Member (Buyer)
+              await notificationService.createNotification(
+                member.userId || memberData.userId,
+                "Voucher Purchased! 🎁",
+                `You purchased a $${parseFloat(faceValue) || 0} voucher from "${businessName || business.offer.business.name}" for $${stripeSession.amount_total / 100}.`,
+                "INFO"
+              );
+
+              // 2. Notify the Business Owner (Seller)
+              await notificationService.createNotification(
+                business.offer.business.userId,
+                "Voucher Sold! 💰",
+                `"${memberData.firstName || member.firstName} ${memberData.lastName || member.lastName}" purchased a $${parseFloat(faceValue) || 0} voucher from you.`,
+                "BOOKING"
+              );
+            } catch (notifErr) {
+              console.error("Session verification notification failed:", notifErr.message);
+            }
           }
         } catch (transErr) {
           // Log but don't throw — purchase was already recorded
@@ -902,6 +992,27 @@ exports.redeemByCode = asyncHandler(async (req, res) => {
         transactionDate: new Date(),
       },
     });
+
+    // Trigger Notifications
+    try {
+      // 1. Notify the Member (Voucher Owner)
+      await notificationService.createNotification(
+        purchase.member.userId,
+        "Voucher Redeemed! 🎉",
+        `Your $${purchase.faceValue} voucher at "${business.name}" has been successfully redeemed.`,
+        "INFO"
+      );
+
+      // 2. Notify the Business Owner
+      await notificationService.createNotification(
+        business.userId,
+        "Voucher Redeemed! 🎉",
+        `Successfully redeemed a $${purchase.faceValue} voucher for ${purchase.member.firstName} ${purchase.member.lastName}.`,
+        "BOOKING"
+      );
+    } catch (notifErr) {
+      console.error("Redemption notification failed:", notifErr.message);
+    }
   } catch (transErr) {
     // Log but don't throw — redemption was already recorded
     console.error("Error creating redemption transaction:", transErr.message);

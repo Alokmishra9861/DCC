@@ -72,6 +72,7 @@ app.use("/api/payments", require("./routes/payment.routes"));
 app.use("/api/employer", require("./routes/employer.routes"));
 app.use("/api/association", require("./routes/association.routes"));
 app.use("/api/advertisements", require("./routes/advertisement.routes"));
+app.use("/api/notifications", require("./routes/notification.routes"));
 app.use("/api/analytics", require("./routes/analytics.routes"));
 app.use("/api/b2b", require("./routes/b2b.routes"));
 app.use("/api/upload", require("./routes/upload.routes"));

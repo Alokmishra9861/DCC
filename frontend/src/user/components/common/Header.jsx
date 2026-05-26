@@ -7,18 +7,66 @@ import {
   removeToken,
   removeUser,
   getAssociationType,
+  notificationAPI,
 } from "../../../services/api";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(getUser());
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
     setCurrentUser(getUser());
   }, [location.pathname]);
+
+  // Load and Subscribe to Notifications
+  useEffect(() => {
+    if (!currentUser) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
+
+    const loadNotifications = async () => {
+      try {
+        const list = await notificationAPI.getAll();
+        setNotifications(list.notifications || []);
+        
+        const countRes = await notificationAPI.getUnreadCount();
+        setUnreadCount(countRes.count || 0);
+      } catch (err) {
+        console.error("Failed to load notifications:", err.message);
+      }
+    };
+    loadNotifications();
+
+    let stream;
+    try {
+      stream = notificationAPI.getStream();
+      stream.onmessage = (event) => {
+        try {
+          const newNotif = JSON.parse(event.data);
+          if (newNotif && newNotif.id) {
+            setNotifications((prev) => [newNotif, ...prev]);
+            setUnreadCount((prev) => prev + 1);
+          }
+        } catch (e) {
+          // handshake/keep-alive logs ignored
+        }
+      };
+    } catch (err) {
+      console.error("SSE stream error:", err.message);
+    }
+
+    return () => {
+      if (stream) stream.close();
+    };
+  }, [currentUser]);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -168,6 +216,153 @@ const Header = () => {
           <div className="hidden lg:flex items-center gap-4">
             {currentUser ? (
               <div className="flex items-center gap-3">
+                {/* Dynamic Real-time Notification Bell */}
+                <div className="relative">
+                  <button
+                    onClick={() => setIsNotifOpen(!isNotifOpen)}
+                    className="relative p-2.5 bg-[#111936] border border-white/8 hover:border-[#D4A62A]/40 text-[#B8C0D4] hover:text-[#D4A62A] rounded-full transition-all shadow-inner flex items-center justify-center cursor-pointer"
+                  >
+                    <Icon name="BellIcon" size={18} />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#EF4444] text-[9px] font-black text-white ring-1 ring-[#0D1328] animate-bounce">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Dropdown list */}
+                  {isNotifOpen && (
+                    <div className="absolute right-0 mt-3 w-96 bg-[#0E1530] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="p-4 border-b border-white/8 bg-[#121B3D]/50 flex items-center justify-between">
+                        <span className="text-xs font-black text-white tracking-wide uppercase">Notifications</span>
+                        <div className="flex items-center gap-3">
+                          {unreadCount > 0 && (
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  await notificationAPI.markAllAsRead();
+                                  setUnreadCount(0);
+                                  setNotifications((prev) =>
+                                    prev.map((n) => ({ ...n, isRead: true }))
+                                  );
+                                } catch (err) {
+                                  console.error(err);
+                                }
+                              }}
+                              className="text-xs font-bold text-[#D4A62A] hover:text-white transition-colors cursor-pointer"
+                            >
+                              Mark read
+                            </button>
+                          )}
+                          {notifications.length > 0 && (
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  await notificationAPI.clearAll();
+                                  setNotifications([]);
+                                  setUnreadCount(0);
+                                } catch (err) {
+                                  console.error(err);
+                                }
+                              }}
+                              className="text-xs font-bold text-rose-450 hover:text-rose-300 transition-colors cursor-pointer"
+                            >
+                              Clear all
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsNotifOpen(false);
+                            }}
+                            className="p-1 hover:bg-white/10 rounded text-slate-400 hover:text-white transition-colors cursor-pointer flex items-center justify-center"
+                          >
+                            <Icon name="XMarkIcon" size={14} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="max-h-80 overflow-y-auto divide-y divide-white/4">
+                        {notifications.length === 0 ? (
+                          <div className="p-8 text-center text-slate-400">
+                            <Icon name="BellSlashIcon" size={24} className="mx-auto mb-2 opacity-30 text-[#B8C0D4]" />
+                            <p className="text-xs font-medium">No new notifications</p>
+                          </div>
+                        ) : (
+                          notifications.map((n) => (
+                            <div
+                              key={n.id}
+                              onClick={async () => {
+                                if (!n.isRead) {
+                                  try {
+                                    await notificationAPI.markAsRead(n.id);
+                                    setUnreadCount((c) => Math.max(0, c - 1));
+                                    setNotifications((prev) =>
+                                      prev.map((item) =>
+                                        item.id === n.id ? { ...item, isRead: true } : item
+                                      )
+                                    );
+                                  } catch (e) {
+                                    console.error(e);
+                                  }
+                                }
+                              }}
+                              className={`p-4 transition-all duration-300 hover:bg-[#121B3D] cursor-pointer flex gap-3 relative group/notif ${
+                                !n.isRead ? "bg-[#141E47]/30 border-l-2 border-[#D4A62A]" : ""
+                              }`}
+                            >
+                              <div className="shrink-0 mt-0.5">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                  n.type === "BOOKING" ? "bg-emerald-500/10 text-emerald-400" :
+                                  n.type === "SYSTEM" ? "bg-rose-500/10 text-rose-400" :
+                                  "bg-[#D4A62A]/10 text-[#D4A62A]"
+                                }`}>
+                                  <Icon name={
+                                    n.type === "BOOKING" ? "TicketIcon" :
+                                    n.type === "SYSTEM" ? "ExclamationTriangleIcon" :
+                                    "InformationCircleIcon"
+                                  } size={15} />
+                                </div>
+                              </div>
+                              <div className="min-w-0 flex-1 pr-6">
+                                <p className={`text-xs font-bold leading-tight ${n.isRead ? "text-slate-400" : "text-white"}`}>
+                                  {n.title}
+                                </p>
+                                <p className="text-[11px] text-slate-400 font-medium mt-0.5 leading-snug">
+                                  {n.message}
+                                </p>
+                                <p className="text-[9px] text-slate-500 font-black tracking-wider uppercase mt-1">
+                                  {new Date(n.createdAt).toLocaleDateString()} at {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                              </div>
+                              {/* Individual Delete Button */}
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    await notificationAPI.delete(n.id);
+                                    setNotifications((prev) => prev.filter((item) => item.id !== n.id));
+                                    if (!n.isRead) {
+                                      setUnreadCount((c) => Math.max(0, c - 1));
+                                    }
+                                  } catch (err) {
+                                    console.error(err);
+                                  }
+                                }}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 bg-white/5 border border-white/8 hover:bg-rose-500/20 hover:border-rose-500/40 text-slate-400 hover:text-rose-450 rounded-lg opacity-0 group-hover/notif:opacity-100 transition-all duration-200 cursor-pointer flex items-center justify-center"
+                                title="Delete notification"
+                              >
+                                <Icon name="TrashIcon" size={13} />
+                              </button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex items-center gap-2 px-4 py-2 bg-[#111936] border border-white/8 rounded-full shadow-inner">
                   <div className="w-7 h-7 bg-[#D4A62A] text-[#0D1328] rounded-full flex items-center justify-center shadow-md">
                     <span className="text-xs font-bold">

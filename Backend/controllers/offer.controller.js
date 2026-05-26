@@ -1,6 +1,7 @@
 const { prisma } = require("../config/database");
 const { ApiResponse, ApiError } = require("../utils/ApiResponse");
 const { asyncHandler } = require("../middlewares/errorhandler");
+const { createNotification } = require("../services/notification.service");
 
 const parseOptionalNumber = (value) => {
   if (value === null) return null;
@@ -68,6 +69,32 @@ exports.createOffer = asyncHandler(async (req, res) => {
       },
     },
   });
+
+  // Trigger Notifications
+  try {
+    // 1. Notify the Business Owner
+    await createNotification(
+      business.userId,
+      "New Offer Created! 📢",
+      `Your offer "${title}" is now active in the directory.`,
+      "INFO"
+    );
+
+    // 2. Notify all Admin Users
+    const admins = await prisma.user.findMany({
+      where: { role: "ADMIN" },
+    });
+    for (const admin of admins) {
+      await createNotification(
+        admin.id,
+        "New Offer Created! 📢",
+        `Business "${business.name}" created a new offer: "${title}".`,
+        "SYSTEM"
+      );
+    }
+  } catch (err) {
+    console.error("Failed to send offer creation notifications:", err.message);
+  }
 
   return ApiResponse.created(res, offer, "Offer created successfully");
 });
