@@ -68,7 +68,7 @@ const BrowseDiscountsPublic = () => {
           })),
         );
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 
@@ -347,8 +347,8 @@ const BrowseDiscountsPublic = () => {
                   <div className="absolute top-4 right-4 px-3.5 py-1.5 bg-white/95 backdrop-blur-md rounded-full text-[11px] font-black uppercase tracking-wider text-slate-700 shadow-lg border border-white/50">
                     {discount.categorySlug
                       ? categories.find(
-                          (c) => c.value === discount.categorySlug,
-                        )?.label || discount.categorySlug
+                        (c) => c.value === discount.categorySlug,
+                      )?.label || discount.categorySlug
                       : "General"}
                   </div>
 

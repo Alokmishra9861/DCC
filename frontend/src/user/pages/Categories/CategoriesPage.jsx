@@ -15,6 +15,108 @@ import {
 
 const HEADING_FONT = { fontFamily: "'Playfair Display', serif" };
 
+const CATEGORIES = [
+  {
+    name: "Automotive & Marine",
+    slug: "automotive-marine",
+    icon: "TruckIcon",
+    imageUrl:
+      "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=2070&auto=format&fit=crop",
+    description:
+      "Find the best deals on vehicle maintenance, parts, detailing, and marine services.",
+  },
+  {
+    name: "B2B Members",
+    slug: "b2b",
+    icon: "BriefcaseIcon",
+    imageUrl:
+      "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop",
+    description:
+      "Exclusive business-to-business services, wholesale opportunities, and corporate solutions.",
+  },
+  {
+    name: "Beauty Salon & Barber Shop",
+    slug: "beauty",
+    icon: "SparklesIcon",
+    imageUrl:
+      "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1974&auto=format&fit=crop",
+    description:
+      "Pamper yourself with discounts on haircuts, styling, spa treatments, and grooming.",
+  },
+  {
+    name: "Construction",
+    slug: "construction",
+    icon: "WrenchScrewdriverIcon",
+    imageUrl:
+      "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=2031&auto=format&fit=crop",
+    description:
+      "Save on building materials, contractors, renovation services, and heavy equipment.",
+  },
+  {
+    name: "Electronics & Office Supplies",
+    slug: "electronics",
+    icon: "ComputerDesktopIcon",
+    imageUrl:
+      "https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop",
+    description:
+      "Upgrade your tech and stock up on essential office supplies and furniture for less.",
+  },
+  {
+    name: "Recreational",
+    slug: "fashion",
+    icon: "ShoppingBagIcon",
+    imageUrl:
+      "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop",
+    description:
+      "Stay stylish with offers on apparel, accessories, footwear, and jewelry.",
+  },
+  {
+    name: "Food & Beverage",
+    slug: "food",
+    icon: "CakeIcon",
+    imageUrl:
+      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop",
+    description:
+      "Delicious dining experiences, cafes, and beverage deals across the island.",
+  },
+  {
+    name: "Health & Fitness",
+    slug: "health",
+    icon: "HeartIcon",
+    imageUrl:
+      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop",
+    description:
+      "Gym memberships, wellness centers, healthcare savings, and pharmacy deals.",
+  },
+  {
+    name: "Home & Garden",
+    slug: "home",
+    icon: "HomeIcon",
+    imageUrl:
+      "https://plus.unsplash.com/premium_photo-1678836292816-fdf0ac484cf1?fm=jpg&q=60&w=3000&auto=format&fit=crop",
+    description:
+      "Furniture, decor, gardening supplies, and home improvement services.",
+  },
+  {
+    name: "Kids & Fashion",
+    slug: "kids",
+    icon: "FaceSmileIcon",
+    imageUrl:
+      "https://trendyfashionguide.com/wp-content/uploads/2025/07/23-July-Feature-Image-3-Kids-Fashion.jpg",
+    description:
+      "Fun activities, toys, educational resources, and entertainment for children.",
+  },
+  {
+    name: "Retail",
+    slug: "retail",
+    icon: "TagIcon",
+    imageUrl:
+      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop",
+    description:
+      "General retail shopping for gifts, hobbies, pets, and everyday items.",
+  },
+];
+
 const CategoriesPage = () => {
   const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,10 +143,10 @@ const CategoriesPage = () => {
         const list = Array.isArray(res)
           ? res
           : Array.isArray(res?.businesses)
-          ? res.businesses
-          : Array.isArray(res?.data)
-          ? res.data
-          : [];
+            ? res.businesses
+            : Array.isArray(res?.data)
+              ? res.data
+              : [];
         setBusinesses(list);
       })
       .catch((err) => {
@@ -53,9 +155,31 @@ const CategoriesPage = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  const getBusinessCategorySlug = (b) => {
+    if (!b) return "";
+    if (typeof b.category === "object" && b.category !== null) {
+      return b.category.slug || "";
+    }
+    if (b.categorySlug) return b.categorySlug;
+    if (typeof b.category === "string") return b.category;
+    return "";
+  };
+
+  const availableCategories = CATEGORIES.filter((cat) => {
+    return businesses.some(
+      (b) => getBusinessCategorySlug(b).toLowerCase() === cat.slug.toLowerCase()
+    );
+  });
+
+  const getBusinessCountByCategory = (slug) => {
+    return businesses.filter(
+      (b) => getBusinessCategorySlug(b).toLowerCase() === slug.toLowerCase()
+    ).length;
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900">
-      
+
       {/* Hero Header */}
       <div className="bg-[#111936] text-white py-20 md:py-24 overflow-hidden relative border-b border-white/8">
         <div className="absolute inset-0 bg-[#D4A62A]/5 rounded-full blur-[120px] pointer-events-none" />
@@ -105,40 +229,61 @@ const CategoriesPage = () => {
         </div>
       )}
 
-      {/* Comparative Column Layout - Light Theme */}
-      <div className="py-16 bg-[#F5F2EB] border-b border-slate-200/60">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-12">
-            {/* Left Column */}
-            <div className="space-y-4">
-              <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest block">
-                Outside Your Control
-              </span>
-              <h4 className="text-2xl font-bold text-slate-900" style={HEADING_FONT}>
-                Costs Outside Your Control
-              </h4>
-              <ul className="list-disc pl-5 space-y-2 text-sm font-semibold text-slate-500">
-                <li>Global inflation driving local food index higher.</li>
-                <li>Import duties on transportation, auto fuel, and parts.</li>
-                <li>Unpredictable seasonal electricity and utility bills.</li>
-              </ul>
-            </div>
-            {/* Right Column */}
-            <div className="space-y-4">
-              <span className="text-[10px] font-black text-[#D4A62A] uppercase tracking-widest block">
-                Inside Your Control
-              </span>
-              <h4 className="text-2xl font-bold text-slate-900" style={HEADING_FONT}>
-                Savings You Can Plan
-              </h4>
-              <ul className="list-disc pl-5 space-y-2 text-sm font-semibold text-slate-600">
-                <li>Compounding weekly grocery and retail discounts.</li>
-                <li>Secured pre-paid value certificates for everyday dining.</li>
-                <li>Private, member-only global travel discount portal.</li>
-              </ul>
-            </div>
-          </div>
+      {/* ── Categories Grid Section ── */}
+      <div className="max-w-7xl mx-auto px-6 py-20 border-b border-slate-200/60">
+        <div className="mb-12">
+          <h2 className="text-3xl font-extrabold text-slate-900" style={HEADING_FONT}>
+            Browse By Category
+          </h2>
+          <p className="text-slate-500 text-sm font-semibold mt-1">
+            Click a category card below to view active local businesses and discount offers available in that category.
+          </p>
         </div>
+
+        {loading ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-48 bg-slate-200/50 rounded-3xl animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {availableCategories.map((cat) => {
+              const count = getBusinessCountByCategory(cat.slug);
+
+              return (
+                <Link
+                  key={cat.slug}
+                  to={`/categoriespage/${cat.slug}`}
+                  className="group relative h-52 rounded-[2rem] overflow-hidden border-2 border-slate-100/60 hover:border-[#D4A62A]/40 shadow-sm cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+                >
+                  <div className="absolute inset-0 bg-slate-900">
+                    <AppImage
+                      src={cat.imageUrl}
+                      alt={cat.name}
+                      className="w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-700 ease-out"
+                    />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                  <div className="absolute top-4 right-4 w-10 h-10 bg-white/10 backdrop-blur-md border border-white/20 text-[#D4A62A] rounded-2xl flex items-center justify-center">
+                    <Icon name={cat.icon} size={20} />
+                  </div>
+                  <div className="absolute inset-x-6 bottom-6 text-white flex flex-col justify-end">
+                    <span className="px-2.5 py-1 bg-[#D4A62A] text-[#111936] font-black text-[9px] tracking-wider uppercase rounded-md self-start mb-2 shadow">
+                      {count} {count === 1 ? "Partner" : "Partners"}
+                    </span>
+                    <h3 className="text-lg font-bold text-white leading-tight mb-1" style={HEADING_FONT}>
+                      {cat.name}
+                    </h3>
+                    <p className="text-white/80 text-[11px] font-semibold line-clamp-2 leading-relaxed">
+                      {cat.description}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* ── Featured Businesses Grid ── */}
@@ -148,7 +293,7 @@ const CategoriesPage = () => {
             className="text-3xl font-extrabold text-slate-900"
             style={HEADING_FONT}
           >
-            Featured Businesses
+            All Partner Businesses
           </h2>
           <p className="text-slate-500 text-sm font-semibold mt-1">
             Click on any partner store to view their exclusive discounts, active campaigns, and available prepaid value certificates.
@@ -161,6 +306,11 @@ const CategoriesPage = () => {
               <div key={i} className="h-64 bg-slate-200/50 rounded-3xl animate-pulse" />
             ))}
           </div>
+        ) : businesses.length === 0 ? (
+          <div className="text-center py-16 bg-white border border-slate-100 rounded-[2rem] shadow-sm">
+            <Icon name="BuildingStorefrontIcon" size={40} className="text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500 font-semibold text-base">No businesses found.</p>
+          </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {businesses.map((business) => {
@@ -171,7 +321,6 @@ const CategoriesPage = () => {
                   to={`/business-profile/${business.id || business._id}`}
                   className="group bg-white border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 rounded-[2rem] p-6 flex flex-col items-center text-center cursor-pointer"
                 >
-                  {/* Logo block */}
                   <div className="w-16 h-16 rounded-2xl mb-4 bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden p-1 shadow-inner group-hover:border-[#D4A62A]/40 transition-all duration-300">
                     {business.logoUrl ? (
                       <AppImage
@@ -187,21 +336,15 @@ const CategoriesPage = () => {
                       />
                     )}
                   </div>
-
-                  {/* Business Name */}
                   <h3
                     className="text-base font-extrabold text-slate-800 group-hover:text-[#1C4D8D] transition-colors line-clamp-1 w-full"
                     style={HEADING_FONT}
                   >
                     {business.name}
                   </h3>
-
-                  {/* Category breadcrumb */}
                   <p className="text-xs font-bold text-[#D4A62A] uppercase tracking-wider mt-1.5 truncate w-full">
                     {categoryLabel}
                   </p>
-
-                  {/* District / Address badge */}
                   <span className="mt-5 px-3 py-1 bg-slate-50 rounded-full text-[10px] font-black tracking-widest uppercase text-slate-500 border border-slate-200/40 truncate w-full">
                     {business.district || "Cayman Islands"}
                   </span>

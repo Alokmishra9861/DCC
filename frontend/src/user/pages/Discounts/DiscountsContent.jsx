@@ -173,11 +173,10 @@ const DiscountsContent = () => {
                     [position]: index,
                   }))
                 }
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  index === currentBannerIndex[position]
+                className={`h-2 rounded-full transition-all duration-300 ${index === currentBannerIndex[position]
                     ? "bg-[#1C4D8D] w-8"
                     : "bg-slate-300 w-2 hover:bg-slate-400"
-                }`}
+                  }`}
               />
             ))}
           </div>
@@ -211,22 +210,21 @@ const DiscountsContent = () => {
     const wrapperProps = canNavigate
       ? { to: `/business-profile/${businessId}` }
       : {
-          type: "button",
-          onClick: () => {
-            if (!user) {
-              navigate("/login", { state: { from: location } });
-              return;
-            }
-            navigate("/membership", { state: { reason: "subscribe" } });
-          },
-        };
+        type: "button",
+        onClick: () => {
+          if (!user) {
+            navigate("/login", { state: { from: location } });
+            return;
+          }
+          navigate("/membership", { state: { reason: "subscribe" } });
+        },
+      };
 
     return (
       <Wrapper
         {...wrapperProps}
-        className={`bg-white rounded-[2rem] overflow-hidden border border-slate-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_-12px_rgba(28,77,141,0.15)] transition-all duration-300 flex flex-col h-full group ${
-          !canNavigate ? "cursor-pointer" : ""
-        }`}
+        className={`bg-white rounded-[2rem] overflow-hidden border border-slate-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_-12px_rgba(28,77,141,0.15)] transition-all duration-300 flex flex-col h-full group ${!canNavigate ? "cursor-pointer" : ""
+          }`}
         aria-disabled={!canNavigate}
       >
         <div className="relative h-56 bg-slate-100 overflow-hidden">
@@ -347,11 +345,10 @@ const DiscountsContent = () => {
             <button
               key={cat.value}
               onClick={() => setSelectedCategory(cat.value)}
-              className={`px-6 py-3 rounded-full text-[13px] font-bold tracking-wide uppercase transition-all duration-300 shadow-sm ${
-                selectedCategory === cat.value
+              className={`px-6 py-3 rounded-full text-[13px] font-bold tracking-wide uppercase transition-all duration-300 shadow-sm ${selectedCategory === cat.value
                   ? "bg-gradient-to-r from-[#1C4D8D] to-indigo-600 text-white shadow-lg shadow-blue-900/20 scale-105"
                   : "bg-white text-slate-600 border border-slate-200/60 hover:border-slate-300 hover:bg-slate-50"
-              }`}
+                }`}
             >
               {cat.label}
             </button>
