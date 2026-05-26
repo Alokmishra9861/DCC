@@ -457,6 +457,7 @@ const BusinessDashboardContent = () => {
 
   useEffect(() => {
     loadCertificates();
+
     Promise.allSettled([businessAPI.getMyProfile()])
       .then(([profileRes]) => {
         if (profileRes.status === "fulfilled") {
@@ -526,6 +527,7 @@ const BusinessDashboardContent = () => {
       discountValue: offerForm.discountValue || null,
       minSpend: offerForm.minSpend || null,
       expiryDate: offerForm.expiryDate || null,
+      categoryId: businessData?.raw?.categoryId || businessData?.raw?.category?.id || businessData?.raw?.category?._id || null,
     };
     try {
       if (editingOffer) {
@@ -1675,6 +1677,14 @@ const BusinessDashboardContent = () => {
                           </p>
                         </div>
                       )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
+                      Offer Category
+                    </label>
+                    <div className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl font-bold text-slate-500 select-none">
+                      {businessData?.category || "General Category"}
                     </div>
                   </div>
                   <div className="grid md:grid-cols-2 gap-6">

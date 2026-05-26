@@ -27,6 +27,7 @@ exports.createOffer = asyncHandler(async (req, res) => {
     discountValue,
     minSpend,
     expiryDate,
+    categoryId,
   } = req.body;
 
   // Validate required fields
@@ -62,11 +63,13 @@ exports.createOffer = asyncHandler(async (req, res) => {
       discountValue: parseOptionalNumber(discountValue),
       minSpend: parseOptionalNumber(minSpend),
       expiryDate: parseOptionalDate(expiryDate),
+      categoryId: categoryId || business.categoryId,
     },
     include: {
       business: {
         include: { category: true },
       },
+      category: true,
     },
   });
 
@@ -110,6 +113,7 @@ exports.updateOffer = asyncHandler(async (req, res) => {
     minSpend,
     expiryDate,
     isActive,
+    categoryId,
   } = req.body;
 
   const business = await prisma.business.findUnique({
@@ -132,11 +136,13 @@ exports.updateOffer = asyncHandler(async (req, res) => {
       discountValue: parseOptionalNumber(discountValue),
       minSpend: parseOptionalNumber(minSpend),
       expiryDate: parseOptionalDate(expiryDate),
+      categoryId: categoryId !== undefined ? (categoryId || null) : undefined,
     },
     include: {
       business: {
         include: { category: true },
       },
+      category: true,
     },
   });
 
@@ -201,6 +207,7 @@ exports.getBusinessOffers = asyncHandler(async (req, res) => {
       business: {
         include: { category: true },
       },
+      category: true,
       certificates: { where: { status: "AVAILABLE" } },
     },
     orderBy: { createdAt: "desc" },

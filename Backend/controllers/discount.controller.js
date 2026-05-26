@@ -217,6 +217,7 @@ exports.createDiscount = asyncHandler(async (req, res) => {
     discountValue,
     minSpend,
     expiryDate,
+    categoryId,
   } = req.body;
 
   if (!title) throw ApiError.badRequest("Title is required");
@@ -241,9 +242,11 @@ exports.createDiscount = asyncHandler(async (req, res) => {
       minSpend: minSpend ? parseFloat(minSpend) : null,
       expiryDate: expiryDate ? new Date(expiryDate) : null,
       isActive: true,
+      categoryId: categoryId || business.categoryId,
     },
     include: {
       business: { select: { id: true, name: true, logoUrl: true } },
+      category: true,
     },
   });
 
@@ -277,6 +280,7 @@ exports.updateDiscount = asyncHandler(async (req, res) => {
     minSpend,
     expiryDate,
     isActive,
+    categoryId,
   } = req.body;
 
   const updated = await prisma.offer.update({
@@ -293,9 +297,13 @@ exports.updateDiscount = asyncHandler(async (req, res) => {
         expiryDate: expiryDate ? new Date(expiryDate) : null,
       }),
       ...(isActive !== undefined && { isActive }),
+      ...(categoryId !== undefined && {
+        categoryId: categoryId || null,
+      }),
     },
     include: {
       business: { select: { id: true, name: true, logoUrl: true } },
+      category: true,
     },
   });
 

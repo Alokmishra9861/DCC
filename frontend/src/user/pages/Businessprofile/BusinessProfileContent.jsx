@@ -8,6 +8,7 @@ import {
   offerAPI,
   getUser,
   uploadAPI,
+  categoryAPI,
 } from "../../../services/api";
 import { redirectToStripeCheckout } from "../../../services/stripeService";
 
@@ -321,6 +322,7 @@ const BusinessProfileContent = () => {
         setLoading(false);
         return;
       }
+
       const data = await businessAPI.getById(businessId);
       const businessData = data?.business || data;
       setBusiness(businessData);
@@ -476,6 +478,7 @@ const BusinessProfileContent = () => {
       discountValue: offerForm.discountValue || null,
       minSpend: offerForm.minSpend || null,
       expiryDate: offerForm.expiryDate || null,
+      categoryId: business?.categoryId || business?.category?.id || business?.category?._id || null,
     };
     try {
       if (editingOffer) {
@@ -1184,6 +1187,14 @@ const BusinessProfileContent = () => {
                   }
                   className="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] font-semibold text-sm"
                 />
+              </div>
+              <div>
+                <label className="text-xs font-black uppercase text-slate-500 tracking-wider">
+                  Offer Category
+                </label>
+                <div className="mt-1 w-full rounded-2xl bg-slate-100 border border-slate-200 px-4 py-3 font-semibold text-sm text-slate-500 select-none">
+                  {business?.category?.name || (typeof business?.category === "string" ? business?.category : "") || "General Category"}
+                </div>
               </div>
               <div>
                 <label className="text-xs font-black uppercase text-slate-500 tracking-wider">

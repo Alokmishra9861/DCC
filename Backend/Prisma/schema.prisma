@@ -555,6 +555,9 @@ model Offer {
   views         Int @default(0)
   clicks        Int @default(0)
 
+  categoryId    String?   @db.ObjectId
+  category      Category? @relation(fields: [categoryId], references: [id])
+
   certificates  Certificate[]
   transactions  Transaction[]
 
@@ -733,6 +736,7 @@ model Category {
   icon          String?
 
   businesses    Business[]
+  offers        Offer[]
 
   isSeeded      Boolean  @default(false)
   createdAt     DateTime @default(now())
