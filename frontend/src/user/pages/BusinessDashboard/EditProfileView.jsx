@@ -348,16 +348,18 @@ const EditProfileView = ({ businessData, onBack, onSaved }) => {
                 <label className="block text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
                   Category
                 </label>
-                <select
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1C4D8D]/10 focus:border-[#1C4D8D] focus:bg-white transition-all cursor-pointer appearance-none"
-                >
-                  <option value="">Select Category...</option>
-                  {categories.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+                 <input
+                  type="text"
+                  value={
+                    categories.find(c => String(c.id) === String(categoryId))?.name ||
+                    (typeof businessData?.raw?.category === "object"
+                      ? businessData?.raw?.category?.name
+                      : businessData?.raw?.category) ||
+                    "Retail"
+                  }
+                  disabled
+                  className="w-full px-4 py-3.5 bg-slate-50/50 border border-slate-200/60 rounded-2xl text-sm font-bold text-slate-400 cursor-not-allowed select-none"
+                />
               </div>
 
               <div>

@@ -135,7 +135,8 @@ exports.register = asyncHandler(async (req, res) => {
         address: normalizeString(profile.address),
         district: normalizeString(profile.district),
         website: normalizeString(profile.website),
-        status: "PENDING",
+        status: "APPROVED",
+        isApproved: true,
       },
     };
   } else if (role === "B2B") {
@@ -469,7 +470,8 @@ exports.googleLogin = asyncHandler(async (req, res) => {
           name: name || "Business",
           email: email,
           categoryId: firstCategory.id,
-          status: "PENDING",
+          status: "APPROVED",
+          isApproved: true,
         },
       };
     } else if (selectedRole === "B2B") {

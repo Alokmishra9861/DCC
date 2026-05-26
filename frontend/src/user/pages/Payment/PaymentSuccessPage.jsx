@@ -59,7 +59,7 @@ const PaymentSuccessPage = () => {
           if (data && (data.accessToken || data.token)) {
             saveAuthData(data);
           }
-          setRedirectPath("/member-dashboard/certificates");
+          setRedirectPath("/member-dashboard");
           if (cancelled) return;
           setStatus("success");
         } else if (paymentProvider === "paypal" || paypalToken) {
@@ -113,14 +113,17 @@ const PaymentSuccessPage = () => {
       setCountdown((c) => {
         if (c <= 1) {
           clearInterval(interval);
-          navigate(redirectPath, { replace: true });
+          navigate(redirectPath, {
+            replace: true,
+            state: isCertificatePayment ? { openCertificates: true } : undefined,
+          });
           return 0;
         }
         return c - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [status, navigate, redirectPath]);
+  }, [status, navigate, redirectPath, isCertificatePayment]);
 
   // ── Verifying ─────────────────────────────────────────────────────────────
   if (status === "verifying") {
@@ -444,7 +447,12 @@ const PaymentSuccessPage = () => {
         </div>
 
         <button
-          onClick={() => navigate(redirectPath, { replace: true })}
+          onClick={() =>
+            navigate(redirectPath, {
+              replace: true,
+              state: isCertificatePayment ? { openCertificates: true } : undefined,
+            })
+          }
           className="w-full py-3.5 bg-[#1C4D8D] text-white rounded-xl font-bold text-sm hover:bg-[#163d71] transition-colors"
         >
           {isCertificatePayment
