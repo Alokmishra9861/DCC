@@ -189,7 +189,7 @@ exports.register = asyncHandler(async (req, res) => {
     } else if (role === "ASSOCIATION") {
       welcomeMsg = `Welcome to Discount Club Cayman! 🤝 Start inviting members and managing business partnerships.`;
     }
-    
+
     await notificationService.createNotification(
       user.id,
       "Welcome to DCC! 🎉",
@@ -541,7 +541,7 @@ exports.googleLogin = asyncHandler(async (req, res) => {
       } else if (selectedRole === "ASSOCIATION") {
         welcomeMsg = `Welcome to Discount Club Cayman! 🤝 Start inviting members and managing business partnerships.`;
       }
-      
+
       await notificationService.createNotification(
         user.id,
         "Welcome to DCC! 🎉",

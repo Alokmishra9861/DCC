@@ -64,6 +64,9 @@ const createNotification = async (userId, title, message, type = "INFO") => {
       for (const res of userSet) {
         try {
           res.write(payload);
+          if (typeof res.flush === "function") {
+            res.flush();
+          }
         } catch (err) {
           console.error(`Failed to push notification to user ${userId}:`, err.message);
         }

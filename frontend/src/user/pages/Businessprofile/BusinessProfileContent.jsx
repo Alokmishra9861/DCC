@@ -20,15 +20,15 @@ const PremiumMockMap = ({ address }) => {
       <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
         {/* Deep ocean background */}
         <rect width="400" height="300" fill="#C5DDFC" />
-        
+
         {/* Soft coastal land representation */}
         <path d="M -20 160 Q 90 90 190 120 T 330 150 T 430 170 L 430 330 L -20 330 Z" fill="#F8FAFC" />
-        
+
         {/* Island green parks */}
         <rect x="30" y="180" width="70" height="50" rx="16" fill="#D2F4D2" opacity="0.9" />
         <rect x="190" y="140" width="110" height="70" rx="20" fill="#D2F4D2" opacity="0.9" />
         <rect x="310" y="190" width="60" height="40" rx="12" fill="#D2F4D2" opacity="0.9" />
-        
+
         {/* Roads network */}
         <path d="M -30 220 C 110 200 210 250 430 230" fill="none" stroke="#FFFFFF" strokeWidth="10" strokeLinecap="round" />
         <path d="M -30 220 C 110 200 210 250 430 230" fill="none" stroke="#E2E8F0" strokeWidth="6" strokeLinecap="round" />
@@ -128,15 +128,15 @@ const PurchaseModal = ({ cert, onConfirm, onClose, loading, error }) => {
             <ul className="space-y-2.5">
               {(isPrepaid
                 ? [
-                    "You'll receive a unique redemption code instantly",
-                    "Redeem full face-value ($" + cert.faceValue + ") inside store",
-                    "Track transactions live in your Member Dashboard",
-                  ]
+                  "You'll receive a unique redemption code instantly",
+                  "Redeem full face-value ($" + cert.faceValue + ") inside store",
+                  "Track transactions live in your Member Dashboard",
+                ]
                 : [
-                    "Your certificate activates immediately",
-                    "Present the code at checkout for verified savings",
-                    "Single-use only, backed by DCC safety guidelines",
-                  ]
+                  "Your certificate activates immediately",
+                  "Present the code at checkout for verified savings",
+                  "Single-use only, backed by DCC safety guidelines",
+                ]
               ).map((text, idx) => (
                 <li key={idx} className="flex items-start gap-2 text-xs font-semibold text-slate-600">
                   <Icon name="CheckCircleIcon" size={16} className="text-emerald-500 shrink-0 mt-0.5" />
@@ -155,9 +155,8 @@ const PurchaseModal = ({ cert, onConfirm, onClose, loading, error }) => {
           <button
             onClick={onConfirm}
             disabled={loading}
-            className={`w-full py-4 rounded-2xl font-black text-white text-base flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed ${
-              isPrepaid ? "bg-[#1C4D8D] hover:bg-blue-800" : "bg-emerald-600 hover:bg-emerald-700"
-            }`}
+            className={`w-full py-4 rounded-2xl font-black text-white text-base flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed ${isPrepaid ? "bg-[#1C4D8D] hover:bg-blue-800" : "bg-emerald-600 hover:bg-emerald-700"
+              }`}
           >
             {loading ? (
               <>
@@ -189,10 +188,10 @@ const DiscountDetailModal = ({ discount, onClose, businessName }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-md" onClick={onClose} />
-      
+
       {/* Modal Container */}
       <div className="relative bg-white rounded-[2rem] shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in duration-200">
-        
+
         {/* Banner with solid background or image */}
         <div className="relative h-44 bg-gradient-to-br from-[#1C4D8D] to-indigo-800 flex items-center justify-center p-6 text-white text-center">
           {discount.imageUrl && (
@@ -216,7 +215,7 @@ const DiscountDetailModal = ({ discount, onClose, businessName }) => {
           <h3 className="font-extrabold text-slate-900 text-lg leading-snug">
             {discount.title}
           </h3>
-          
+
           {discount.description && (
             <p className="text-slate-600 text-xs font-semibold leading-relaxed mt-3">
               {discount.description}
@@ -562,10 +561,10 @@ const BusinessProfileContent = () => {
   const galleryImages = business.imageUrls && business.imageUrls.length > 0
     ? business.imageUrls
     : [
-        "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800",
-        "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?q=80&w=800",
-        "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800"
-      ];
+      "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800",
+      "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?q=80&w=800",
+      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800"
+    ];
 
   // Dynamic Cover Image Banner selection: prioritize custom banner, fallback to first gallery image, then beautiful scenery fallback
   const coverImage = business.coverBannerUrl || (business.imageUrls && business.imageUrls[0]) || "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800";
@@ -585,7 +584,7 @@ const BusinessProfileContent = () => {
         </div>
         <span className="text-[10px] font-extrabold tracking-wide uppercase">Call</span>
       </button>
-      
+
       <button
         onClick={handleDirections}
         className="flex flex-col items-center gap-1.5 py-2.5 rounded-2xl hover:bg-slate-50 active:scale-95 transition-all text-slate-600 hover:text-[#1C4D8D]"
@@ -595,7 +594,7 @@ const BusinessProfileContent = () => {
         </div>
         <span className="text-[10px] font-extrabold tracking-wide uppercase">Directions</span>
       </button>
-      
+
       <button
         onClick={handleWebsite}
         className="flex flex-col items-center gap-1.5 py-2.5 rounded-2xl hover:bg-slate-50 active:scale-95 transition-all text-slate-600 hover:text-[#1C4D8D]"
@@ -620,11 +619,10 @@ const BusinessProfileContent = () => {
         onClick={handleSaveToggle}
         className="flex flex-col items-center gap-1.5 py-2.5 rounded-2xl hover:bg-slate-50 active:scale-95 transition-all text-slate-600 hover:text-[#1C4D8D]"
       >
-        <div className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${
-          isSaved 
-            ? "bg-amber-500/10 border-amber-300 text-amber-500 animate-bounce-short" 
-            : "border-slate-100 text-slate-600 bg-blue-50/20"
-        }`}>
+        <div className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${isSaved
+          ? "bg-amber-500/10 border-amber-300 text-amber-500 animate-bounce-short"
+          : "border-slate-100 text-slate-600 bg-blue-50/20"
+          }`}>
           <Icon name="BookmarkIcon" size={18} className={isSaved ? "fill-amber-500" : ""} />
         </div>
         <span className="text-[10px] font-extrabold tracking-wide uppercase">
@@ -655,13 +653,13 @@ const BusinessProfileContent = () => {
 
       {/* ── Outer wrapper targeting premium screen widths ── */}
       <div className="max-w-6xl mx-auto px-4 md:px-6 pt-6 pb-24">
-        
+
         {/* ── 1. Responsive Grid System: Stacks perfectly on mobile, forms 2-column layout on Desktop ── */}
         <div className="grid lg:grid-cols-[1.8fr_1.2fr] gap-8 items-start">
-          
+
           {/* ────────────────── LEFT COLUMN: Core Content ────────────────── */}
           <div className="space-y-6">
-            
+
             {/* ── Profile Hero Header Card (Fades dark-theme backdrop) ── */}
             <div className="relative rounded-[2rem] overflow-hidden bg-gradient-to-b from-slate-800 to-slate-950 h-56 md:h-64 shadow-lg border border-slate-900/10 transition-all duration-300">
               {/* Fully visible background banner from database */}
@@ -676,7 +674,7 @@ const BusinessProfileContent = () => {
               )}
               {/* Premium dark gradient overlay for text readability */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10 pointer-events-none" />
-              
+
               {/* Alignment context for logo + profile details */}
               <div className="absolute bottom-6 left-6 right-6 flex items-end gap-4 md:gap-5">
                 {/* Overlapping Business Logo box */}
@@ -702,7 +700,7 @@ const BusinessProfileContent = () => {
                       <Icon name="CheckIcon" size={12} className="text-white" variant="solid" />
                     </span>
                   </div>
-                  
+
                   {/* Category labels and links */}
                   <div className="flex flex-wrap items-center gap-2 mt-1 text-white/95 text-[11px] md:text-sm font-semibold">
                     <span>{business.district || "Cayman Islands"}</span>
@@ -806,7 +804,7 @@ const BusinessProfileContent = () => {
                             <Icon name="CalendarIcon" size={13} className="shrink-0" />
                             <span>EXPIRES: {discount.expiryDate ? new Date(discount.expiryDate).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' }) : "N/A"}</span>
                           </div>
-                          
+
                           <div className="flex items-center gap-2">
                             {isOwner && (
                               <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
@@ -867,7 +865,7 @@ const BusinessProfileContent = () => {
                     const price = cert.memberPrice || 0;
                     const savings = face - price;
                     const pct = face > 0 ? Math.round((savings / face) * 100) : 0;
-                    
+
                     return (
                       <div
                         key={cert.id}
@@ -1009,7 +1007,7 @@ const BusinessProfileContent = () => {
 
           {/* ────────────────── RIGHT COLUMN: Desktop Sidebar ────────────────── */}
           <div className="hidden lg:block space-y-6">
-            
+
             {/* Desktop Actions Block */}
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
               <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider mb-4">
@@ -1023,7 +1021,7 @@ const BusinessProfileContent = () => {
               <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">
                 Location & Details
               </h3>
-              
+
               <div className="space-y-4 font-semibold text-sm text-slate-700">
                 {business.phone && (
                   <div className="flex items-start gap-3">
@@ -1140,7 +1138,7 @@ const BusinessProfileContent = () => {
                 <Icon name="XMarkIcon" size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleOfferSubmit} className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>

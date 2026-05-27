@@ -114,15 +114,21 @@ exports.streamNotifications = asyncHandler(async (req, res) => {
 
   // Send initial handshake success data
   res.write(`data: ${JSON.stringify({ connected: true, userId })}\n\n`);
+  if (typeof res.flush === "function") {
+    res.flush();
+  }
 
-  // Send an ongoing keep-alive comment pin (ping) every 40 seconds to prevent connection drops by proxies/firewalls
+  // Send an ongoing keep-alive comment pin (ping) every 15 seconds to prevent connection drops by proxies/firewalls
   const keepAlive = setInterval(() => {
     try {
       res.write(":\n\n");
+      if (typeof res.flush === "function") {
+        res.flush();
+      }
     } catch (e) {
       clearInterval(keepAlive);
     }
-  }, 40000);
+  }, 15000);
 
   // 2. Add connection to notification service broadcast pool
   notificationService.addStream(userId, res);

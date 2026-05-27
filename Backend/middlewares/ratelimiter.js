@@ -3,8 +3,11 @@ const rateLimit = require("express-rate-limit");
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 200,
-  skip: () =>
-    process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test",
+  skip: (req) =>
+    process.env.NODE_ENV === "development" ||
+    process.env.NODE_ENV === "test" ||
+    req.path === "/api/notifications/stream" ||
+    req.originalUrl?.includes("/api/notifications/stream"),
   message: {
     success: false,
     message: "Too many requests, please try again later.",
