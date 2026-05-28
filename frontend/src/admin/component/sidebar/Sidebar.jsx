@@ -3,7 +3,7 @@
 
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { getUser, removeToken, removeUser } from "../../../../src/services/api";
+import { getUser, removeToken, removeUser, authAPI } from "../../../../src/services/api";
 
 const BLUE = "#1C4D8D";
 const BLUE_L = "#EEF4FF";
@@ -157,6 +157,7 @@ const Sidebar = ({ pendingCount = 0, isOpen = false, onClose = () => {} }) => {
   const initial = name.charAt(0).toUpperCase();
 
   const handleLogout = () => {
+    authAPI.logout().catch((err) => console.error("Logout API error:", err));
     removeToken();
     removeUser();
     navigate("/login");

@@ -387,6 +387,15 @@ exports.refreshToken = asyncHandler(async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// POST /api/auth/logout
+// ─────────────────────────────────────────────────────────────────────────────
+exports.logout = asyncHandler(async (req, res) => {
+  // Since we are using stateless JWT, we simply return a successful response.
+  // This allows frontend clients to perform corresponding local cleanup.
+  return ApiResponse.success(res, {}, "Logout successful");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // GET /api/auth/me
 // ─────────────────────────────────────────────────────────────────────────────
 exports.getMe = asyncHandler(async (req, res) => {

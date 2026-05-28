@@ -103,6 +103,10 @@ export const authAPI = {
       body: JSON.stringify({ token, password }),
     }),
   verifyEmail: (token) => request(`/auth/verify/${token}`),
+  logout: () =>
+    request("/auth/logout", {
+      method: "POST",
+    }),
 };
 
 // ─── Role → dashboard route mapping ──────────────────────────────────────────

@@ -8,6 +8,7 @@ import {
   removeUser,
   getAssociationType,
   notificationAPI,
+  authAPI,
 } from "../../../services/api";
 
 const Header = () => {
@@ -75,6 +76,7 @@ const Header = () => {
   }, []);
 
   const handleLogout = () => {
+    authAPI.logout().catch((err) => console.error("Logout API error:", err));
     removeToken();
     removeUser();
     setCurrentUser(null);
