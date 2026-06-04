@@ -31,14 +31,17 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
     totalSavingsAgg,
     recentMembers,
     recentBusinesses,
+    retailMembers,
+    employerMembers,
+    associationMembers,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.member.count(),
     prisma.membership.count({ where: { status: "ACTIVE" } }),
     prisma.business.count({ where: { status: "APPROVED" } }),
     prisma.business.count({ where: { status: "PENDING" } }),
-    prisma.employer.count({ where: { isApproved: false } }),
-    prisma.association.count({ where: { isApproved: false } }),
+    prisma.employer.count({ where: { status: "PENDING" } }),
+    prisma.association.count({ where: { status: "PENDING" } }),
     prisma.transaction.count(),
     prisma.transaction.aggregate({ _sum: { savingsAmount: true } }),
     prisma.member.findMany({
@@ -66,6 +69,9 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
         createdAt: true,
       },
     }),
+    prisma.member.count({ where: { employerId: null, associationId: null } }),
+    prisma.member.count({ where: { employerId: { not: null } } }),
+    prisma.member.count({ where: { associationId: { not: null } } }),
   ]);
 
   return ApiResponse.success(res, {
@@ -81,6 +87,9 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
     totalPending: pendingBusinesses + pendingEmployers + pendingAssociations,
     recentMembers,
     recentBusinesses,
+    retailMembers,
+    employerMembers,
+    associationMembers,
   });
 });
 
@@ -542,18 +551,41 @@ exports.rejectEmployer = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, {}, "Employer rejected");
 });
 
+
 // ── Approve association ───────────────────────────────────────────────────────
 exports.approveAssociation = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const association = await prisma.association.findUnique({ where: { id } });
   if (!association) throw ApiError.notFound("Association not found");
 
+  // BUG 1 FIX: must set status:"APPROVED" so loadAssociation() guard passes
   await prisma.association.update({
     where: { id },
-    data: { isApproved: true },
+    data: { isApproved: true, status: "APPROVED" },
   });
+
+  // MINOR 1: send approval email (non-fatal)
+  try {
+    const { sendAssociationApprovalEmail } = require("../services/association.email.service");
+    const user = await prisma.user.findUnique({
+      where: { id: association.userId },
+      select: { email: true },
+    });
+    if (user?.email) {
+      await sendAssociationApprovalEmail({
+        associationEmail: user.email,
+        associationName: association.name,
+        associationType: association.associationType, // required by email template
+      });
+    }
+  } catch (emailErr) {
+    console.error("Association approval email failed:", emailErr.message);
+  }
+
   return ApiResponse.success(res, {}, "Association approved");
 });
+
+
 
 // ── Approve business ──────────────────────────────────────────────────────────
 exports.approveBusiness = asyncHandler(async (req, res) => {

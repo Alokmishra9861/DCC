@@ -8,6 +8,7 @@ const {
   stripeWebhook,
   capturePayPal,
   verifyStripeSession,
+  verifyBannerSession,
 } = require("../controllers/payment.controller");
 const {
   verifyCertificateSession,
@@ -30,8 +31,12 @@ router.get("/verify-session", verifyStripeSession);
 router.get(
   "/stripe/verify",
   asyncHandler(async (req, res, next) => {
-    if (String(req.query.type || "").toLowerCase() === "certificate") {
+    const type = String(req.query.type || "").toLowerCase();
+    if (type === "certificate") {
       return verifyCertificateSession(req, res, next);
+    }
+    if (type === "banner") {
+      return verifyBannerSession(req, res, next);
     }
     return verifyStripeSession(req, res, next);
   }),
@@ -107,7 +112,7 @@ router.post(
 router.post(
   "/stripe/manual-banner-create",
   protect,
-  authorize("ADMIN"),
+  authorize("ADMIN", "BUSINESS"),
   asyncHandler(async (req, res) => {
     const { sessionId } = req.body;
     if (!sessionId) throw ApiError.badRequest("sessionId is required");

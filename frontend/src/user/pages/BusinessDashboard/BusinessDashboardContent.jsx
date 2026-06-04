@@ -394,6 +394,18 @@ const RedemptionPanel = () => {
 };
 
 
+const isVideoUrl = (url) => {
+  if (!url) return false;
+  return (
+    url.endsWith(".mp4") ||
+    url.endsWith(".mov") ||
+    url.endsWith(".webm") ||
+    url.includes("/video/upload/") ||
+    url.includes(".mp4?") ||
+    url.includes(".mov?")
+  );
+};
+
 // ─── Main BusinessDashboardContent ───────────────────────────────────────────
 const BusinessDashboardContent = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -406,6 +418,7 @@ const BusinessDashboardContent = () => {
   const [bannerLinkUrl, setBannerLinkUrl] = useState("");
   const [paymentStep, setPaymentStep] = useState("details");
   const [myBanners, setMyBanners] = useState([]);
+  const [bannerPricesList, setBannerPricesList] = useState([]);
   const [businessData, setBusinessData] = useState(null);
   const [activeOffers, setActiveOffers] = useState([]);
   const [activeCertificates, setActiveCertificates] = useState([]);
@@ -455,8 +468,30 @@ const BusinessDashboardContent = () => {
       })
       .catch(() => {});
 
+  const loadBanners = () =>
+    advertisementAPI
+      .getMyBanners()
+      .then((data) => {
+        const list = Array.isArray(data)
+          ? data
+          : data?.banners || data?.items || [];
+        setMyBanners(list);
+      })
+      .catch(() => {});
+
+  const loadBannerPrices = () =>
+    advertisementAPI
+      .getPrices()
+      .then((data) => {
+        const list = Array.isArray(data) ? data : data?.prices || data?.items || [];
+        setBannerPricesList(list);
+      })
+      .catch(() => {});
+
   useEffect(() => {
     loadCertificates();
+    loadBanners();
+    loadBannerPrices();
 
     Promise.allSettled([businessAPI.getMyProfile()])
       .then(([profileRes]) => {
@@ -614,6 +649,10 @@ const BusinessDashboardContent = () => {
   const calculateBannerPrice = () => {
     const position = selectedPosition || "top";
     const duration = selectedDuration || "monthly";
+    const rateRecord = bannerPricesList.find((r) => r.position === position);
+    if (rateRecord) {
+      return rateRecord[duration] || 0;
+    }
     return BANNER_PRICING[position]?.[duration] || 0;
   };
 
@@ -1561,17 +1600,100 @@ const BusinessDashboardContent = () => {
                 </button>
               </div>
 
-              <div className="text-center py-20 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
-                  <Icon name="PhotoIcon" size={28} className="text-slate-300" />
+              {myBanners.length === 0 ? (
+                <div className="text-center py-20 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
+                    <Icon name="PhotoIcon" size={28} className="text-slate-300" />
+                  </div>
+                  <p className="text-lg font-bold text-slate-700">
+                    No active campaigns
+                  </p>
+                  <p className="text-sm font-medium text-slate-500 mt-1">
+                    Purchase a banner to feature your business here.
+                  </p>
                 </div>
-                <p className="text-lg font-bold text-slate-700">
-                  No active campaigns
-                </p>
-                <p className="text-sm font-medium text-slate-500 mt-1">
-                  Purchase a banner to feature your business here.
-                </p>
-              </div>
+              ) : (
+                <div className="overflow-x-auto rounded-2xl border border-slate-200/60 shadow-sm">
+                  <table className="w-full text-left table-light">
+                    <thead className="bg-slate-50/80 border-b border-slate-200/60">
+                      <tr>
+                        {[
+                          "Banner",
+                          "Title",
+                          "Placement",
+                          "Duration",
+                          "Price Paid",
+                          "Status",
+                        ].map((h) => (
+                          <th
+                            key={h}
+                            className="py-4 px-6 text-[11px] font-black uppercase tracking-wider text-slate-800 whitespace-nowrap"
+                          >
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100/80">
+                      {myBanners.map((banner) => (
+                        <tr
+                          key={banner.id}
+                          className="hover:bg-slate-50/50 transition-colors group"
+                        >
+                          <td className="py-4 px-6">
+                            {banner.image ? (
+                              isVideoUrl(banner.image) ? (
+                                <video
+                                  src={banner.image}
+                                  muted
+                                  className="w-20 h-10 object-cover rounded-lg border border-slate-200"
+                                />
+                              ) : (
+                                <img
+                                  src={banner.image}
+                                  alt={banner.title}
+                                  className="w-20 h-10 object-cover rounded-lg border border-slate-200"
+                                />
+                              )
+                            ) : (
+                              <div className="w-20 h-10 bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 text-xs">
+                                No Image
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-4 px-6 font-bold text-slate-950">
+                            {banner.title}
+                          </td>
+                          <td className="py-4 px-6 text-sm font-bold text-slate-800 uppercase tracking-wider">
+                            {banner.position}
+                          </td>
+                          <td className="py-4 px-6 text-sm font-bold text-slate-800 capitalize">
+                            {banner.duration}
+                          </td>
+                          <td className="py-4 px-6 text-sm font-bold text-slate-900">
+                            ${banner.pricePaid ? banner.pricePaid.toFixed(2) : "0.00"}
+                          </td>
+                          <td className="py-4 px-6">
+                            <span
+                              className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider whitespace-nowrap ${
+                                banner.status === "ACTIVE"
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                                  : banner.status === "PENDING"
+                                    ? "bg-yellow-50 text-yellow-700 border border-yellow-100"
+                                    : banner.status === "REJECTED"
+                                      ? "bg-rose-50 text-rose-700 border border-rose-100"
+                                      : "bg-slate-50 text-slate-700 border border-slate-100"
+                              }`}
+                            >
+                              {banner.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1999,7 +2121,7 @@ const BusinessDashboardContent = () => {
                         <div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center hover:bg-slate-50 hover:border-indigo-400 transition-colors relative cursor-pointer group">
                           <input
                             type="file"
-                            accept="image/*"
+                            accept="image/*,video/*"
                             onChange={(e) => {
                               if (e.target.files?.[0])
                                 handleBannerImageUpload(e.target.files[0]);
@@ -2009,11 +2131,20 @@ const BusinessDashboardContent = () => {
                           />
                           {bannerImageUrl ? (
                             <div className="relative">
-                              <img
-                                src={bannerImageUrl}
-                                alt="Preview"
-                                className="w-full h-32 object-cover rounded-xl shadow-sm"
-                              />
+                              {isVideoUrl(bannerImageUrl) ? (
+                                <video
+                                  src={bannerImageUrl}
+                                  controls
+                                  muted
+                                  className="w-full h-32 object-cover rounded-xl shadow-sm"
+                                />
+                              ) : (
+                                <img
+                                  src={bannerImageUrl}
+                                  alt="Preview"
+                                  className="w-full h-32 object-cover rounded-xl shadow-sm"
+                                />
+                              )}
                               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
                                 <span className="text-white font-bold text-sm bg-black/50 px-4 py-2 rounded-lg backdrop-blur-sm">
                                   Replace image
@@ -2078,6 +2209,7 @@ const BusinessDashboardContent = () => {
                           ].map((pos) => (
                             <label
                               key={pos.id}
+                              onClick={() => setSelectedPosition(pos.id)}
                               className={`flex items-center gap-3 p-3.5 rounded-xl cursor-pointer border-2 transition-all ${selectedPosition === pos.id ? "border-indigo-600 bg-indigo-50/50" : "border-slate-100 hover:border-slate-300"}`}
                             >
                               <div
@@ -2108,6 +2240,7 @@ const BusinessDashboardContent = () => {
                           {["daily", "weekly", "monthly"].map((dur) => (
                             <label
                               key={dur}
+                              onClick={() => setSelectedDuration(dur)}
                               className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer border-2 transition-all ${selectedDuration === dur ? "border-slate-900 bg-slate-50" : "border-slate-100 hover:border-slate-300"}`}
                             >
                               <div

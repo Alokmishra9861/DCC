@@ -24,16 +24,60 @@ router.get(
         status: "ACTIVE",
         ...(placement && { placement }),
         ...(position && { position }),
-        OR: [{ startDate: null }, { startDate: { lte: now } }],
-        AND: [{ OR: [{ endDate: null }, { endDate: { gte: now } }] }],
       },
       include: { business: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
     });
 
-    // Rotate: pick random subset for display
-    const shuffled = ads.sort(() => Math.random() - 0.5);
-    return ApiResponse.success(res, shuffled.slice(0, 5));
+    // Filter by start and end dates in JS memory to bypass MongoDB $expr query bugs with null/missing fields
+    const activeAds = ads.filter((ad) => {
+      const startOk = !ad.startDate || new Date(ad.startDate) <= now;
+      const endOk = !ad.endDate || new Date(ad.endDate) >= now;
+      return startOk && endOk;
+    });
+
+    // Rotate: return all active ads for frontend-driven rotation
+    const shuffled = activeAds.sort(() => Math.random() - 0.5);
+    return ApiResponse.success(res, shuffled);
+  }),
+);
+
+// GET /api/advertisements/prices — Get all banner prices
+router.get(
+  "/prices",
+  asyncHandler(async (req, res) => {
+    const prices = await prisma.bannerPrice.findMany();
+    return ApiResponse.success(res, prices);
+  }),
+);
+
+// PUT /api/advertisements/prices — Admin: update banner prices
+router.put(
+  "/prices",
+  protect,
+  authorize("ADMIN"),
+  asyncHandler(async (req, res) => {
+    const { position, daily, weekly, monthly } = req.body;
+    if (!position || daily === undefined || weekly === undefined || monthly === undefined) {
+      throw ApiError.badRequest("position, daily, weekly, and monthly rates are required");
+    }
+
+    const updatedPrice = await prisma.bannerPrice.upsert({
+      where: { position },
+      update: {
+        daily: parseFloat(daily),
+        weekly: parseFloat(weekly),
+        monthly: parseFloat(monthly),
+      },
+      create: {
+        position,
+        daily: parseFloat(daily),
+        weekly: parseFloat(weekly),
+        monthly: parseFloat(monthly),
+      },
+    });
+
+    return ApiResponse.success(res, updatedPrice, "Banner pricing updated successfully");
   }),
 );
 
@@ -66,14 +110,16 @@ router.post(
 
     const result = await uploadToCloudinary(req.file.buffer, "advertisements");
 
-    const { title, linkUrl, placement, startDate, endDate } = req.body;
+    const { title, linkUrl, placement, position, startDate, endDate } = req.body;
+    // BUG 2 FIX: schema fields are "image" and "position" (not "imageUrl"/"placement")
+    const adPosition = position || placement || "top";
     const ad = await prisma.advertisement.create({
       data: {
         businessId: business.id,
         title,
-        imageUrl: result.secure_url,
-        linkUrl,
-        placement: placement || "header",
+        image: result.secure_url,      // schema field is "image", not "imageUrl"
+        link: linkUrl || null,          // schema field is "link", not "linkUrl"
+        position: adPosition,           // schema field is "position", not "placement"
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
         status: "PENDING", // New banners need admin approval
@@ -194,6 +240,25 @@ router.get(
     });
     console.log("[DEBUG] Total businesses:", allBusinesses.length);
     return ApiResponse.success(res, allBusinesses);
+  }),
+);
+
+// Business: get own advertisements
+router.get(
+  "/my/banners",
+  protect,
+  authorize("BUSINESS"),
+  asyncHandler(async (req, res) => {
+    const business = await prisma.business.findUnique({
+      where: { userId: req.user.id },
+    });
+    if (!business) throw ApiError.notFound("Business profile not found");
+
+    const ads = await prisma.advertisement.findMany({
+      where: { businessId: business.id },
+      orderBy: { createdAt: "desc" },
+    });
+    return ApiResponse.success(res, ads);
   }),
 );
 

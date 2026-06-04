@@ -188,13 +188,14 @@ const CSVModal = ({ onClose, onAdded }) => {
   const [result, setResult] = useState(null);
 
   const parseCSV = (text) => {
-    const lines = text.trim().split("\n").slice(1);
+    const lines = text.trim().split("\n");
     return lines
-      .map((l) => {
+      .slice(1)
+      .map((l, i) => {
         const [name, email] = l
           .split(",")
           .map((s) => s.trim().replace(/^"|"$/g, ""));
-        return { name, email };
+        return { name, email, row: i + 2 };
       })
       .filter((r) => r.name && r.email);
   };
@@ -254,6 +255,24 @@ const CSVModal = ({ onClose, onAdded }) => {
               <p className="text-sm font-medium text-slate-500 bg-slate-50 px-3 py-1 rounded-lg inline-block">
                 {result.skipped} already existed (skipped)
               </p>
+            )}
+            {result.skipped > 0 && result.skippedEmails?.length > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 my-4 text-left max-h-32 overflow-y-auto">
+                <p className="text-xs font-semibold text-amber-700 mb-2">
+                  Skipped (already invited):
+                </p>
+                <ul className="text-xs text-amber-600 space-y-1">
+                  {result.skippedEmails.map((item) => {
+                    const emailStr = typeof item === "string" ? item : item.email;
+                    const rowNumber = typeof item === "string" ? null : item.row;
+                    return (
+                      <li key={emailStr}>
+                        {rowNumber ? `Row ${rowNumber}: ` : ""}{emailStr}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             )}
             <button
               onClick={onClose}
@@ -663,13 +682,20 @@ const AssociationMemberDashboard = () => {
                   Association Dashboard
                 </h1>
                 {dashboard && (
-                  <p className="text-blue-100/90 text-lg font-medium">
-                    Managing{" "}
-                    <span className="text-white font-black">
-                      {dashboard.memberCounts?.active ?? 0}
-                    </span>{" "}
-                    active members.
-                  </p>
+                  <div>
+                    <p className="text-blue-100/90 text-lg font-medium">
+                      Managing{" "}
+                      <span className="text-white font-black">
+                        {dashboard.memberCounts?.active ?? 0}
+                      </span>{" "}
+                      active members.
+                    </p>
+                    {dashboard.planExpiryDate && (
+                      <p className="text-blue-200/80 text-xs font-bold uppercase tracking-wider mt-2">
+                        Renewal Date: {new Date(dashboard.planExpiryDate).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
               {tab === "members" && (

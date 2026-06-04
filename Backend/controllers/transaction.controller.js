@@ -28,9 +28,10 @@ exports.recordTransaction = asyncHandler(async (req, res) => {
   if (!active)
     throw ApiError.forbidden("Member does not have an active membership");
 
-  // 4. Get business (from authenticated business user)
+  // 4. Get business (from authenticated business user) — include category for snapshot
   const business = await prisma.business.findUnique({
     where: { userId: req.user.id },
+    include: { category: { select: { name: true } } },
   });
   if (!business)
     throw ApiError.forbidden(
@@ -64,9 +65,10 @@ exports.recordTransaction = asyncHandler(async (req, res) => {
       memberDistrict: member.district,
       memberSalaryLevel: member.salaryLevel,
 
-      // Snapshot business info
-      businessCategory: business.category,
+      // Snapshot business info — store the category NAME string for analytics groupBy
+      businessCategory: business.category?.name || null,
       businessDistrict: business.district,
+
 
       status: "COMPLETED",
     },
@@ -85,13 +87,32 @@ exports.recordTransaction = asyncHandler(async (req, res) => {
   if (member.employerId) {
     await prisma.employer.update({
       where: { id: member.employerId },
-      data: { totalSavings: { increment: savingsAmount } },
+      data: {
+        totalSavings: { increment: savingsAmount },
+        totalRedemptions: { increment: 1 },
+      },
+    });
+    // BUG 3 FIX: also update the individual Employee record savings
+    await prisma.employee.updateMany({
+      where: { memberId: member.id, employerId: member.employerId },
+      data: {
+        totalSavings: { increment: savingsAmount },
+        totalRedemptions: { increment: 1 },
+      },
     });
   }
   if (member.associationId) {
     await prisma.association.update({
       where: { id: member.associationId },
       data: { totalSavings: { increment: savingsAmount } },
+    });
+    // ISSUE 9 FIX: also update AssociationMember record savings
+    await prisma.associationMember.updateMany({
+      where: { memberId: member.id, associationId: member.associationId },
+      data: {
+        totalSavings: { increment: savingsAmount },
+        totalRedemptions: { increment: 1 },
+      },
     });
   }
 
@@ -403,4 +424,123 @@ exports.getScanDetails = asyncHandler(async (req, res) => {
   }
 
   return ApiResponse.success(res, responsePayload);
+});
+
+/**
+ * GET /api/transactions/my
+ * ISSUE 10: Member sees their own transaction history
+ */
+exports.getMemberTransactions = asyncHandler(async (req, res) => {
+  const member = await prisma.member.findUnique({
+    where: { userId: req.user.id },
+    include: { membership: true },
+  });
+  if (!member) throw ApiError.notFound("Member profile not found");
+
+  const { page = 1, limit = 20, period } = req.query;
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  // Optional period filter
+  let dateFilter = {};
+  if (period && period !== "lifetime") {
+    const days = { week: 7, month: 30, "3months": 90, year: 365 }[period];
+    if (days) dateFilter = { transactionDate: { gte: new Date(Date.now() - days * 86400000) } };
+  }
+
+  const [transactions, total] = await Promise.all([
+    prisma.transaction.findMany({
+      where: { memberId: member.id, ...dateFilter },
+      include: {
+        business: {
+          select: { name: true, category: { select: { name: true } }, district: true, logoUrl: true },
+        },
+        offer: { select: { title: true, type: true, discountValue: true } },
+      },
+      orderBy: { transactionDate: "desc" },
+      skip,
+      take: parseInt(limit),
+    }),
+    prisma.transaction.count({ where: { memberId: member.id, ...dateFilter } }),
+  ]);
+
+  // Aggregate savings for the filtered period
+  const periodSavings = await prisma.transaction.aggregate({
+    _sum: { savingsAmount: true },
+    where: { memberId: member.id, ...dateFilter },
+  });
+
+  return ApiResponse.success(res, {
+    transactions,
+    totalLifetimeSavings: member.totalSavings,
+    totalLifetimeSpent: member.totalSpent,
+    periodSavings: periodSavings._sum.savingsAmount || 0,
+    membership: member.membership,
+    pagination: { page: parseInt(page), limit: parseInt(limit), total },
+  });
+});
+
+/**
+ * PATCH /api/transactions/:id/cancel
+ * ISSUE 7: Admin cancels a transaction and reverses all stat increments
+ */
+exports.cancelTransaction = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const txn = await prisma.transaction.findUnique({ where: { id } });
+  if (!txn) throw ApiError.notFound("Transaction not found");
+  if (txn.status === "CANCELLED") throw ApiError.badRequest("Transaction is already cancelled");
+
+  // Mark as cancelled
+  await prisma.transaction.update({ where: { id }, data: { status: "CANCELLED" } });
+
+  const { savingsAmount, memberId } = txn;
+
+  // Reverse member savings
+  await prisma.member.update({
+    where: { id: memberId },
+    data: {
+      totalSavings: { decrement: savingsAmount },
+      totalSpent: { decrement: txn.saleAmount },
+    },
+  });
+
+  // Fetch member to check employer/association linkage
+  const member = await prisma.member.findUnique({ where: { id: memberId } });
+
+  if (member?.employerId) {
+    await prisma.employer.update({
+      where: { id: member.employerId },
+      data: {
+        totalSavings: { decrement: savingsAmount },
+        totalRedemptions: { decrement: 1 },
+      },
+    });
+    await prisma.employee.updateMany({
+      where: { memberId, employerId: member.employerId },
+      data: {
+        totalSavings: { decrement: savingsAmount },
+        totalRedemptions: { decrement: 1 },
+      },
+    });
+  }
+
+  if (member?.associationId) {
+    await prisma.association.update({
+      where: { id: member.associationId },
+      data: { totalSavings: { decrement: savingsAmount } },
+    });
+    await prisma.associationMember.updateMany({
+      where: { memberId, associationId: member.associationId },
+      data: {
+        totalSavings: { decrement: savingsAmount },
+        totalRedemptions: { decrement: 1 },
+      },
+    });
+  }
+
+  return ApiResponse.success(
+    res,
+    { id, status: "CANCELLED", savingsReversed: savingsAmount },
+    `Transaction cancelled. $${savingsAmount.toFixed(2)} savings reversed across all dashboards.`,
+  );
 });

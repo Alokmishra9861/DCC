@@ -15,7 +15,8 @@ router.post(
   upload.single("file"),
   asyncHandler(async (req, res) => {
     if (!req.file) throw ApiError.badRequest("No file uploaded");
-    const result = await uploadToCloudinary(req.file.buffer, "general");
+    const resourceType = req.file.mimetype && req.file.mimetype.startsWith("video/") ? "video" : "image";
+    const result = await uploadToCloudinary(req.file.buffer, "general", resourceType);
     return ApiResponse.success(
       res,
       { url: result.secure_url },

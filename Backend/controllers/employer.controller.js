@@ -342,7 +342,7 @@ exports.bulkAddEmployees = asyncHandler(async (req, res) => {
     {
       created: toCreate.length,
       skipped: skipped.length,
-      skippedEmails: skipped.map((e) => e.email),
+      skippedEmails: skipped.map((e) => ({ email: e.email, row: e.row || null })),
     },
     `${toCreate.length} employee(s) invited successfully`,
   );

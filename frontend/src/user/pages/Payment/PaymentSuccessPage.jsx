@@ -49,8 +49,12 @@ const PaymentSuccessPage = () => {
     const verify = async () => {
       try {
         if (isBannerPayment) {
-          // Banner payment — webhook handles creation, just confirm success
-          // The banner is created with PENDING status and needs admin approval
+          // Banner payment — call verification endpoint to ensure advertisement is created
+          const data = await paymentAPI.verifyBannerSession(sessionId);
+          if (data && (data.accessToken || data.token)) {
+            saveAuthData(data);
+          }
+          setRedirectPath("/business-dashboard");
           if (cancelled) return;
           setStatus("success");
         } else if (isCertificatePayment) {

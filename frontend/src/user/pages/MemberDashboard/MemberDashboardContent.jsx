@@ -16,6 +16,7 @@ import {
 import MemberStatsBlock from "../../components/ui/MemberStatsBlock";
 import MyCertificatesSection from "../../components/ui/MyCertificatesSection";
 import JoinAssociationModal from "../../components/ui/JoinAssociationModal";
+import AdBanner from "../../components/ui/AdBanner";
 
 // ─── Premium UI Tokens ──────────────────────────────────────────────────────
 const HEADING_FONT = { fontFamily: "'Playfair Display', serif" };
@@ -429,6 +430,8 @@ const MemberDashboardContent = () => {
           </div>
         )}
 
+        <AdBanner position="top" />
+
         {/* ═══════════════════════════════════════════════════════════════
             MEMBERSHIP IDENTITY CARD (COMPACT HERO)
         ═══════════════════════════════════════════════════════════════ */}
@@ -564,6 +567,8 @@ const MemberDashboardContent = () => {
             </div>
           </div>
         </div>
+
+        <AdBanner position="middle" />
 
         {/* ═══════════════════════════════════════════════════════════════
             STATS BLOCK
@@ -1047,6 +1052,7 @@ const MemberDashboardContent = () => {
             )}
           </div>
         )}
+        <AdBanner position="bottom" />
       </div>
 
       {/* ── Modals ──────────────────────────────────────────────────────── */}

@@ -225,7 +225,8 @@ exports.exportReport = asyncHandler(async (req, res) => {
       where: dateFilter ? { transactionDate: dateFilter } : {},
       include: {
         member: { select: { firstName: true, lastName: true, district: true } },
-        business: { select: { name: true, category: true } },
+        // ISSUE 8 FIX: category is a relation, must select nested name
+        business: { select: { name: true, category: { select: { name: true } } } },
       },
       orderBy: { transactionDate: "desc" },
       take: 10000,
@@ -247,12 +248,14 @@ exports.exportReport = asyncHandler(async (req, res) => {
         member: `${t.member.firstName} ${t.member.lastName}`,
         district: t.member.district,
         business: t.business.name,
-        category: t.business.category,
+        // Use nested category name; fall back to denormalized businessCategory field
+        category: t.business.category?.name || t.businessCategory || "Unknown",
         saleAmount: t.saleAmount,
         savings: t.savingsAmount,
       });
     });
   }
+
 
   res.setHeader(
     "Content-Type",

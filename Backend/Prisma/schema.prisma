@@ -925,3 +925,20 @@ model Message {
 
   @@map("messages")
 }
+
+// ─────────────────────────────────────────
+// BANNER PRICES (NEW MODEL)
+// ─────────────────────────────────────────
+
+model BannerPrice {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  position  String   // top, middle, bottom
+  daily     Float
+  weekly    Float
+  monthly   Float
+  updatedAt DateTime @updatedAt
+
+  @@unique([position])
+  @@map("banner_prices")
+}
+

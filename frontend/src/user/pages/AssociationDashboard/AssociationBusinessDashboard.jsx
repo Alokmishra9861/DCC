@@ -429,13 +429,20 @@ const AssociationBusinessDashboard = () => {
                   Association Dashboard
                 </h1>
                 {dashboard && (
-                  <p className="text-blue-100/90 text-lg font-medium">
-                    Managing{" "}
-                    <span className="text-white font-black">
-                      {dashboard.businessCounts?.linked ?? 0}
-                    </span>{" "}
-                    linked businesses.
-                  </p>
+                  <div>
+                    <p className="text-blue-100/90 text-lg font-medium">
+                      Managing{" "}
+                      <span className="text-white font-black">
+                        {dashboard.businessCounts?.linked ?? 0}
+                      </span>{" "}
+                      linked businesses.
+                    </p>
+                    {dashboard.planExpiryDate && (
+                      <p className="text-blue-200/80 text-xs font-bold uppercase tracking-wider mt-2">
+                        Renewal Date: {new Date(dashboard.planExpiryDate).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
               {tab === "businesses" && (

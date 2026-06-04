@@ -177,9 +177,10 @@ export const memberAPI = {
     request("/member/profile", { method: "PUT", body: JSON.stringify(data) }),
   getMyQR: () => request("/member/qr"),
   getSavings: (period) => request(`/member/savings?period=${period}`),
+  // Member transaction history — now calls the dedicated endpoint (ISSUE 10 backend fix)
   getTransactions: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
-    return request(`/member/transactions${qs ? `?${qs}` : ""}`);
+    return request(`/transactions/my${qs ? `?${qs}` : ""}`);
   },
 
   // Self-link to a member association via join code
@@ -530,6 +531,14 @@ export const paymentAPI = {
       `/payments/verify-certificate-session?session_id=${encodeURIComponent(sessionId)}`,
     ),
 
+  // Verify banner advertisement purchase after Stripe redirect
+  // Called by PaymentSuccessPage after banner purchase
+  // Returns: { success: true, banner: { ... }, accessToken, ... }
+  verifyBannerSession: (sessionId) =>
+    request(
+      `/payments/stripe/verify?session_id=${encodeURIComponent(sessionId)}&type=banner`,
+    ),
+
   // [DEV ONLY] Manually create banner from Stripe session (for webhook debugging)
   // Admin calls this when webhook doesn't trigger
   manualBannerCreate: (sessionId) =>
@@ -624,10 +633,18 @@ export const analyticsAPI = {
 
 // ─── Advertisements ───────────────────────────────────────────────────────────
 export const advertisementAPI = {
-  getActive: (placement) => {
-    const qs = placement ? `?placement=${placement}` : "";
+  // BUG 2 fix: backend uses 'position' not 'placement'
+  getActive: (position) => {
+    const qs = position ? `?position=${position}` : "";
     return request(`/advertisements${qs}`);
   },
+  getMyBanners: () => request("/advertisements/my/banners"),
+  getPrices: () => request("/advertisements/prices"),
+  updatePrice: (data) =>
+    request("/advertisements/prices", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
   create: (data) =>
     request("/advertisements", {
       method: "POST",

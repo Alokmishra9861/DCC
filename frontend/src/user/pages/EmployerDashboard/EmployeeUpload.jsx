@@ -54,7 +54,7 @@ const parseCSV = (text) => {
       errors.push(`Row ${i + 2}: invalid email "${email}"`);
       return;
     }
-    rows.push({ name, email: email.toLowerCase() });
+    rows.push({ name, email: email.toLowerCase(), row: i + 2 });
   });
 
   return { rows, errors };
@@ -221,9 +221,15 @@ const EmployeeUpload = () => {
                 Skipped (already invited):
               </p>
               <ul className="text-xs text-amber-600 space-y-1">
-                {result.skippedEmails.map((e) => (
-                  <li key={e}>{e}</li>
-                ))}
+                {result.skippedEmails.map((item) => {
+                  const emailStr = typeof item === "string" ? item : item.email;
+                  const rowNumber = typeof item === "string" ? null : item.row;
+                  return (
+                    <li key={emailStr}>
+                      {rowNumber ? `Row ${rowNumber}: ` : ""}{emailStr}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}

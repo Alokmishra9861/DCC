@@ -9,7 +9,8 @@ const {
 } = require("../services/payment.service");
 const { activateMembership } = require("../services/membership.service");
 
-const MEMBERSHIP_PRICE_USD = 89.99; // Individual membership price
+const MEMBERSHIP_PRICE_USD = 119.99; // ISSUE 5 FIX: Individual membership price (QA spec: $119.99)
+
 
 // ── Create membership or banner checkout (Stripe) ───────────────
 exports.createStripeCheckout = asyncHandler(async (req, res) => {
@@ -563,3 +564,111 @@ exports.verifyStripeSession = asyncHandler(async (req, res) => {
     "Membership verified and user authenticated successfully",
   );
 });
+
+// NEW: verifyBannerSession
+// GET /api/payments/stripe/verify?session_id=xxx&type=banner
+exports.verifyBannerSession = asyncHandler(async (req, res) => {
+  const sessionId = req.query.session_id;
+  if (!sessionId) throw ApiError.badRequest("Missing session_id");
+
+  const session = await getStripeSession(sessionId);
+  if (!session || session.payment_status !== "paid") {
+    throw ApiError.badRequest("Payment not completed");
+  }
+
+  const {
+    businessId,
+    bannerTitle,
+    bannerImageUrl,
+    bannerLinkUrl,
+    bannerPosition,
+    bannerDuration,
+  } = session.metadata || {};
+
+  if (!businessId) {
+    throw ApiError.badRequest("Missing businessId in Stripe session metadata");
+  }
+
+  // Find business and user
+  const business = await prisma.business.findUnique({
+    where: { id: businessId },
+    include: { user: true },
+  });
+  if (!business || !business.user) {
+    throw ApiError.notFound("Business profile not found");
+  }
+
+  // Check if banner already exists
+  let banner = await prisma.advertisement.findFirst({
+    where: { stripeSessionId: sessionId },
+  });
+
+  if (!banner) {
+    // Create advertisement
+    banner = await prisma.advertisement.create({
+      data: {
+        businessId: businessId,
+        title: bannerTitle,
+        image: bannerImageUrl,
+        link: bannerLinkUrl || null,
+        position: bannerPosition,
+        status: "PENDING",
+        startDate: new Date(),
+        duration: bannerDuration,
+        paymentStatus: "COMPLETED",
+        stripeSessionId: session.id,
+        stripePaymentId: session.payment_intent,
+        pricePaid: session.amount_total / 100,
+      },
+    });
+    console.log("[VERIFY-BANNER] Banner created successfully:", banner.id);
+  }
+
+  // Generate JWT Tokens for seamless auto-login
+  const jwt = require("jsonwebtoken");
+  const generateToken = (id, secret, expiresIn) =>
+    jwt.sign({ id }, secret, { expiresIn });
+
+  const accessToken = generateToken(
+    business.user.id,
+    process.env.JWT_SECRET,
+    process.env.JWT_EXPIRES_IN || "7d",
+  );
+  const refreshToken = generateToken(
+    business.user.id,
+    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+    process.env.JWT_REFRESH_EXPIRES_IN || "30d",
+  );
+
+  const { buildAuthResponse } = require("../utils/auth.redirect");
+
+  // Fetch full user with role includes to match buildAuthResponse structure
+  const fullUser = await prisma.user.findUnique({
+    where: { id: business.user.id },
+    include: {
+      member: { include: { membership: true } },
+      employer: true,
+      association: true,
+      business: true,
+      b2bPartner: true,
+    },
+  });
+
+  const authData = buildAuthResponse(
+    { accessToken, refreshToken },
+    fullUser,
+    fullUser.association,
+    fullUser.member?.membership
+  );
+
+  return ApiResponse.success(
+    res,
+    {
+      ...authData,
+      type: "banner",
+      banner,
+    },
+    "Banner verified and user authenticated successfully",
+  );
+});
+

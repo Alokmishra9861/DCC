@@ -73,76 +73,90 @@ const Dashboard = () => {
           <p>Failed to load statistics: {error}</p>
         </div>
       ) : stats ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 mb-8\">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 mb-8">
           {/* Total Members */}
-          <div className=\"bg-white rounded-2xl border border-slate-100 shadow-sm p-4 md:p-6\">
-            <div className=\"flex items-start justify-between gap-3\">
-              <div className=\"min-w-0 flex-1\">
-                <p className=\"text-xs font-bold uppercase tracking-widest text-slate-400 mb-2\">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 md:p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
                   Total Members
                 </p>
-                <p className=\"text-2xl md:text-3xl font-black text-slate-900\">
+                <p className="text-2xl md:text-3xl font-black text-slate-900">
                   {stats.totalMembers || 0}
                 </p>
-                <p className=\"text-xs text-slate-500 mt-3\">
+                <p className="text-xs text-slate-500 mt-2">
                   {stats.activeMembers || 0} active
                 </p>
+                <div className="text-[10px] text-slate-500 mt-2 border-t border-slate-100 pt-2 space-y-1">
+                  <div className="flex justify-between">
+                    <span>Retail:</span>
+                    <span className="font-bold text-slate-700">{stats.retailMembers || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Employer:</span>
+                    <span className="font-bold text-slate-700">{stats.employerMembers || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Association:</span>
+                    <span className="font-bold text-slate-700">{stats.associationMembers || 0}</span>
+                  </div>
+                </div>
               </div>
-              <div className=\"w-10 h-10 md:w-12 md:h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0\">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0">
                 <svg
-                  className=\"w-5 h-5 md:w-6 md:h-6\"
-                  fill=\"currentColor\"
-                  viewBox=\"0 0 20 20\"
+                  className="w-5 h-5 md:w-6 md:h-6"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
                 >
-                  <path d=\"M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z\" />
+                  <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
                 </svg>
               </div>
             </div>
           </div>
 
           {/* Active Businesses */}
-          <div className=\"bg-white rounded-2xl border border-slate-100 shadow-sm p-4 md:p-6\">
-            <div className=\"flex items-start justify-between gap-3\">
-              <div className=\"min-w-0 flex-1\">
-                <p className=\"text-xs font-bold uppercase tracking-widest text-slate-400 mb-2\">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 md:p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
                   Active Businesses
                 </p>
-                <p className=\"text-2xl md:text-3xl font-black text-slate-900\">
+                <p className="text-2xl md:text-3xl font-black text-slate-900">
                   {stats.totalBusinesses || 0}
                 </p>
-                <p className=\"text-xs text-slate-500 mt-3\">Approved listings</p>
+                <p className="text-xs text-slate-500 mt-3">Approved listings</p>
               </div>
-              <div className=\"w-10 h-10 md:w-12 md:h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 flex-shrink-0\">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 flex-shrink-0">
                 <svg
-                  className=\"w-5 h-5 md:w-6 md:h-6\"
-                  fill=\"currentColor\"
-                  viewBox=\"0 0 20 20\"
+                  className="w-5 h-5 md:w-6 md:h-6"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
                 >
-                  <path d=\"M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z\" />
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
                 </svg>
               </div>
             </div>
           </div>
 
-          {/* Total Revenue */}
-          <div className=\"bg-white rounded-2xl border border-slate-100 shadow-sm p-4 md:p-6\">
-            <div className=\"flex items-start justify-between gap-3\">
-              <div className=\"min-w-0 flex-1\">
-                <p className=\"text-xs font-bold uppercase tracking-widest text-slate-400 mb-2\">
+          {/* Total Savings */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 md:p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
                   Total Savings
                 </p>
-                <p className=\"text-2xl md:text-3xl font-black text-emerald-600\">
+                <p className="text-2xl md:text-3xl font-black text-emerald-600">
                   ${Number(stats.totalSavings || 0).toLocaleString()}
                 </p>
-                <p className=\"text-xs text-slate-500 mt-3\">Member benefits</p>
+                <p className="text-xs text-slate-500 mt-3">Member benefits</p>
               </div>
-              <div className=\"w-10 h-10 md:w-12 md:h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 flex-shrink-0\">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 flex-shrink-0">
                 <svg
-                  className=\"w-5 h-5 md:w-6 md:h-6\"
-                  fill=\"currentColor\"
-                  viewBox=\"0 0 20 20\"
+                  className="w-5 h-5 md:w-6 md:h-6"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
                 >
-                  <path d=\"M8.16 2.75a.75.75 0 00-1.32 0l-1.422 3.75H1.75a.75.75 0 00-.728.546l-.818 3.269a.75.75 0 00.364.925l3.067 1.616-1.209 3.205a.75.75 0 00.965.928l3.067-1.616 3.067 1.616a.75.75 0 00.965-.928l-1.21-3.205 3.068-1.616a.75.75 0 00.364-.925l-.818-3.27a.75.75 0 00-.728-.545H10.904l-1.422-3.75z\" />
+                  <path d="M8.16 2.75a.75.75 0 00-1.32 0l-1.422 3.75H1.75a.75.75 0 00-.728.546l-.818 3.269a.75.75 0 00.364.925l3.067 1.616-1.209 3.205a.75.75 0 00.965.928l3.067-1.616 3.067 1.616a.75.75 0 00.965-.928l-1.21-3.205 3.068-1.616a.75.75 0 00.364-.925l-.818-3.27a.75.75 0 00-.728-.545H10.904l-1.422-3.75z" />
                 </svg>
               </div>
             </div>
@@ -160,7 +174,7 @@ const Dashboard = () => {
                 </p>
                 <p className="text-xs text-slate-500 mt-3">This month</p>
               </div>
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-violet-50 flex items-center justify-center text-violet-600 flex-shrink-0\">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-violet-50 flex items-center justify-center text-violet-600 flex-shrink-0">
                 <svg
                   className="w-5 h-5 md:w-6 md:h-6"
                   fill="currentColor"

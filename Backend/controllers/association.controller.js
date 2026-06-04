@@ -256,7 +256,7 @@ exports.bulkAddMembers = asyncHandler(async (req, res) => {
     {
       created: toCreate.length,
       skipped: skipped.length,
-      skippedEmails: skipped.map((m) => m.email),
+      skippedEmails: skipped.map((m) => ({ email: m.email, row: m.row || null })),
     },
     `${toCreate.length} member(s) invited successfully`,
   );
@@ -1058,3 +1058,110 @@ exports.getDashboard = asyncHandler(async (req, res) => {
     totalActiveOffers,
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/association/dashboard
+// BUG 4 FIX: Missing association dashboard endpoint — QA section 14
+// Returns aggregate stats, member/business counts, savings, ROI
+// ─────────────────────────────────────────────────────────────────────────────
+exports.getDashboard = asyncHandler(async (req, res) => {
+  const assoc = await loadAssociation(req.user.id);
+
+  // Fetch full association with counts
+  const assocWithCounts = await prisma.association.findUnique({
+    where: { id: assoc.id },
+    include: {
+      _count: {
+        select: {
+          associationMembers: true,
+          associationBusinesses: true,
+          members: true,
+        },
+      },
+    },
+  });
+
+  // Member status breakdown (MEMBER-type associations)
+  const [activeMembers, invitedMembers, removedMembers] = await Promise.all([
+    prisma.associationMember.count({ where: { associationId: assoc.id, status: "ACTIVE" } }),
+    prisma.associationMember.count({ where: { associationId: assoc.id, status: "INVITED" } }),
+    prisma.associationMember.count({ where: { associationId: assoc.id, status: "REMOVED" } }),
+  ]);
+
+  // Business status breakdown (BUSINESS-type associations)
+  const [linkedBusinesses, pendingBusinesses] = await Promise.all([
+    prisma.associationBusiness.count({ where: { associationId: assoc.id, status: "LINKED" } }),
+    prisma.associationBusiness.count({ where: { associationId: assoc.id, status: "PENDING" } }),
+  ]);
+
+  // Monthly savings trend (last 6 months)
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+  const memberIds = (
+    await prisma.member.findMany({
+      where: { associationId: assoc.id },
+      select: { id: true },
+    })
+  ).map((m) => m.id);
+
+  const monthlySavingsRaw =
+    memberIds.length > 0
+      ? await prisma.transaction.findMany({
+          where: {
+            memberId: { in: memberIds },
+            transactionDate: { gte: sixMonthsAgo },
+            status: "COMPLETED",
+          },
+          select: { transactionDate: true, savingsAmount: true },
+          orderBy: { transactionDate: "asc" },
+        })
+      : [];
+
+  // Group by month
+  const monthlyMap = new Map();
+  monthlySavingsRaw.forEach((t) => {
+    const key = `${t.transactionDate.getFullYear()}-${String(t.transactionDate.getMonth() + 1).padStart(2, "0")}`;
+    monthlyMap.set(key, (monthlyMap.get(key) || 0) + t.savingsAmount);
+  });
+  const monthlySavings = Array.from(monthlyMap.entries())
+    .sort(([a], [b]) => (a > b ? 1 : -1))
+    .map(([month, totalSavings]) => ({ month, totalSavings }));
+
+  // ROI calculation
+  const roiPercent =
+    assocWithCounts.totalMembershipCost > 0
+      ? parseFloat(
+          ((assocWithCounts.totalSavings / assocWithCounts.totalMembershipCost) * 100).toFixed(1)
+        )
+      : 0;
+
+  return ApiResponse.success(res, {
+    associationType: assoc.associationType,
+    totalSavings: assocWithCounts.totalSavings,
+    totalMembershipCost: assocWithCounts.totalMembershipCost,
+    roiPercent,
+    planExpiryDate: new Date(new Date(assoc.createdAt).setFullYear(new Date(assoc.createdAt).getFullYear() + 1)),
+    joinCode: assoc.joinCode,
+    joinCodeEnabled: assoc.joinCodeEnabled,
+
+    // MEMBER-type breakdown
+    memberCounts: {
+      total: assocWithCounts._count.associationMembers,
+      active: activeMembers,
+      invited: invitedMembers,
+      removed: removedMembers,
+      linked: assocWithCounts._count.members, // direct Member table links
+    },
+
+    // BUSINESS-type breakdown
+    businessCounts: {
+      total: assocWithCounts._count.associationBusinesses,
+      linked: linkedBusinesses,
+      pending: pendingBusinesses,
+    },
+
+    monthlySavings,
+  });
+});
+

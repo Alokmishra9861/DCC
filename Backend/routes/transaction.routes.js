@@ -16,5 +16,10 @@ router.get(
   authorize("BUSINESS"),
   ctrl.getBusinessTransactions,
 );
+// ISSUE 10: Member transaction history
+router.get("/my", protect, authorize("MEMBER"), ctrl.getMemberTransactions);
+// ISSUE 7: Admin cancel transaction with stat reversal
+router.patch("/:id/cancel", protect, authorize("ADMIN"), ctrl.cancelTransaction);
 
 module.exports = router;
+
