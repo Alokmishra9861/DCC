@@ -70,9 +70,18 @@ exports.trackAdClick = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, {});
 });
 
-// Business: create ad with file upload (legacy)
+// Business: create ad with file upload (legacy) or pre-uploaded image URL
 exports.createAd = asyncHandler(async (req, res) => {
-  if (!req.file) throw ApiError.badRequest("Ad image is required");
+  let imageUrl = req.body.image;
+
+  if (req.file) {
+    const result = await uploadToCloudinary(req.file.buffer, "advertisements");
+    imageUrl = result.secure_url;
+  }
+
+  if (!imageUrl) {
+    throw ApiError.badRequest("Ad image is required");
+  }
 
   const business = await prisma.business.findUnique({
     where: { userId: req.user.id },
@@ -80,17 +89,17 @@ exports.createAd = asyncHandler(async (req, res) => {
   if (!business?.isApproved)
     throw ApiError.forbidden("Business must be approved to create ads");
 
-  const result = await uploadToCloudinary(req.file.buffer, "advertisements");
-
-  const { title, linkUrl, placement, position, startDate, endDate } = req.body;
-  // BUG 2 FIX: schema fields are "image" and "position" (not "imageUrl"/"placement")
+  const { title, link, linkUrl, placement, position, startDate, endDate } = req.body;
+  // schema fields are "image" and "position" (not "imageUrl"/"placement")
   const adPosition = position || placement || "top";
+  const adLink = linkUrl || link || null;
+
   const ad = await prisma.advertisement.create({
     data: {
       businessId: business.id,
       title,
-      image: result.secure_url,      // schema field is "image", not "imageUrl"
-      link: linkUrl || null,          // schema field is "link", not "linkUrl"
+      image: imageUrl,                // schema field is "image", not "imageUrl"
+      link: adLink,                   // schema field is "link", not "linkUrl"
       position: adPosition,           // schema field is "position", not "placement"
       startDate: startDate ? new Date(startDate) : null,
       endDate: endDate ? new Date(endDate) : null,
