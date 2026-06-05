@@ -86,4 +86,21 @@ router.get(
   advertisementController.getMyBanners
 );
 
+// Business: edit own advertisement
+router.put(
+  "/:id",
+  protect,
+  authorize("BUSINESS"),
+  upload.single("image"),
+  advertisementController.updateMyAd
+);
+
+// Business: delete own advertisement
+router.delete(
+  "/:id",
+  protect,
+  authorize("BUSINESS"),
+  advertisementController.deleteMyAd
+);
+
 module.exports = router;

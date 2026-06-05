@@ -211,3 +211,68 @@ exports.getMyBanners = asyncHandler(async (req, res) => {
   });
   return ApiResponse.success(res, ads);
 });
+
+// Business: edit own advertisement
+exports.updateMyAd = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const business = await prisma.business.findUnique({
+    where: { userId: req.user.id },
+  });
+  if (!business) throw ApiError.notFound("Business profile not found");
+
+  const ad = await prisma.advertisement.findUnique({
+    where: { id },
+  });
+  if (!ad) throw ApiError.notFound("Advertisement not found");
+  if (ad.businessId !== business.id) {
+    throw ApiError.forbidden("You do not own this advertisement");
+  }
+
+  let imageUrl = req.body.image;
+  if (req.file) {
+    const result = await uploadToCloudinary(req.file.buffer, "advertisements");
+    imageUrl = result.secure_url;
+  }
+
+  const { title, link, linkUrl, placement, position, startDate, endDate } = req.body;
+  const adPosition = position || placement || undefined;
+  const adLink = linkUrl || link || undefined;
+
+  const updatedAd = await prisma.advertisement.update({
+    where: { id },
+    data: {
+      ...(title && { title }),
+      ...(imageUrl && { image: imageUrl }),
+      ...(adLink !== undefined && { link: adLink }),
+      ...(adPosition && { position: adPosition }),
+      ...(startDate && { startDate: new Date(startDate) }),
+      ...(endDate && { endDate: new Date(endDate) }),
+      status: "PENDING", // Edited banners need admin re-approval
+    },
+  });
+
+  return ApiResponse.success(res, updatedAd, "Advertisement updated and pending approval");
+});
+
+// Business: delete own advertisement
+exports.deleteMyAd = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const business = await prisma.business.findUnique({
+    where: { userId: req.user.id },
+  });
+  if (!business) throw ApiError.notFound("Business profile not found");
+
+  const ad = await prisma.advertisement.findUnique({
+    where: { id },
+  });
+  if (!ad) throw ApiError.notFound("Advertisement not found");
+  if (ad.businessId !== business.id) {
+    throw ApiError.forbidden("You do not own this advertisement");
+  }
+
+  await prisma.advertisement.delete({
+    where: { id },
+  });
+
+  return ApiResponse.success(res, {}, "Advertisement deleted successfully");
+});
