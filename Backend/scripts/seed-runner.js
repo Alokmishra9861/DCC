@@ -20,57 +20,24 @@ async function runSeed() {
   console.log("🚀 Starting Discount Club Cayman Database Demo Seeder...");
 
   // 1. CLEANUP / ROLLBACK PHASE
-  console.log("\n🧹 Phase 1: Cleaning up previously seeded records...");
-  const deleteModel = async (modelName) => {
-    try {
-      const res = await prisma[modelName].deleteMany({ where: { isSeeded: true } });
-      return res.count || 0;
-    } catch (err) {
-      console.warn(`  ⚠️ Warning clearing ${modelName}:`, err.message);
-      return 0;
-    }
-  };
-
-  let wipedCounts = {};
-  wipedCounts.reviews = await deleteModel("review");
-  wipedCounts.referrals = await deleteModel("referral");
-  wipedCounts.commissions = await deleteModel("commission");
-  wipedCounts.payouts = await deleteModel("payout");
-  wipedCounts.invoices = await deleteModel("invoice");
-  wipedCounts.notifications = await deleteModel("notification");
-  wipedCounts.messages = await deleteModel("message");
-  wipedCounts.travelBookings = await deleteModel("travelBooking");
-  wipedCounts.transactions = await deleteModel("transaction");
-  wipedCounts.purchases = await deleteModel("certificatePurchase");
-  wipedCounts.certificates = await deleteModel("certificate");
-  wipedCounts.offers = await deleteModel("offer");
-  wipedCounts.ads = await deleteModel("advertisement");
-  wipedCounts.assocBusinesses = await deleteModel("associationBusiness");
-  wipedCounts.assocMembers = await deleteModel("associationMember");
-  wipedCounts.employees = await deleteModel("employee");
-
-  // Clear relations in member before deleting employers/associations
+  console.log("\n🧹 Phase 1: Wiping database collections raw via Mongoose to bypass relation constraints...");
+  const mongoose = require("mongoose");
   try {
-    await prisma.member.updateMany({
-      where: { isSeeded: true },
-      data: { employerId: null, associationId: null }
-    });
+    await mongoose.connect(process.env.DATABASE_URL);
+    const db = mongoose.connection.db;
+    const collections = await db.listCollections().toArray();
+    for (const col of collections) {
+      if (col.name !== "system.views") {
+        const res = await db.collection(col.name).deleteMany({});
+        console.log(`    ✓ Cleared collection: ${col.name} (${res.deletedCount} documents)`);
+      }
+    }
+    await mongoose.disconnect();
+    console.log("  ✓ Cleanup complete.");
   } catch (err) {
-    console.warn("  ⚠️ Warning clearing member relations:", err.message);
+    console.error("  ❌ Database wipe failed:", err.message);
+    throw err;
   }
-
-  wipedCounts.memberships = await deleteModel("membership");
-  wipedCounts.plans = await deleteModel("membershipPlan");
-  wipedCounts.members = await deleteModel("member");
-  wipedCounts.businesses = await deleteModel("business");
-  wipedCounts.partners = await deleteModel("b2BPartner");
-  wipedCounts.employers = await deleteModel("employer");
-  wipedCounts.associations = await deleteModel("association");
-  wipedCounts.users = await deleteModel("user");
-  wipedCounts.categories = await deleteModel("category");
-
-  console.log("  ✓ Cleanup complete.");
-  console.log(`    Wiped: ${wipedCounts.users} Users, ${wipedCounts.members} Members, ${wipedCounts.businesses} Businesses, ${wipedCounts.employers} Employers, ${wipedCounts.associations} Associations, ${wipedCounts.transactions} Transactions, ${wipedCounts.reviews} Reviews.`);
 
   // 2. SEEDING PHASE
   console.log("\n🌱 Phase 2: Running relational seeding...");

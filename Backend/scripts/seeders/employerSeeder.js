@@ -210,8 +210,40 @@ async function seed(prisma, faker, seededUsers) {
       employers.push(user.employer);
       console.log(`  ✓ Created Employer: ${empData.companyName}`);
     } else {
-      const employer = await prisma.employer.findUnique({ where: { userId: existing.id } });
-      if (employer) employers.push(employer);
+      let employer = await prisma.employer.findUnique({ where: { userId: existing.id } });
+      if (!employer) {
+        const district = faker.helpers.arrayElement(districts);
+        const phone = faker.phone.number({ style: 'international' });
+        const logoUrl = `https://logo.clearbit.com/${empData.email.split("@")[1]}`;
+
+        employer = await prisma.employer.create({
+          data: {
+            userId: existing.id,
+            companyName: empData.companyName,
+            industry: empData.industry,
+            district,
+            phone,
+            logoUrl,
+            isApproved: true,
+            status: "APPROVED",
+            planType: empData.planType,
+            seatsPurchased: empData.seatsPurchased,
+            seatsUsed: empData.seatsUsed,
+            planStartDate: new Date(),
+            planExpiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+            bulkPaymentProvider: "STRIPE",
+            bulkPaymentId: `cs_test_${faker.string.alphanumeric(20)}`,
+            bulkPaymentStatus: "COMPLETED",
+            bulkPriceUSD: empData.bulkPriceUSD,
+            totalMembershipCost: empData.bulkPriceUSD,
+            totalSavings: faker.number.float({ min: 100, max: 2000, fractionDigits: 2 }),
+            totalRedemptions: faker.number.int({ min: 5, max: 60 }),
+            isSeeded: true
+          }
+        });
+        console.log(`  ✓ Created missing Employer profile for: ${empData.companyName}`);
+      }
+      employers.push(employer);
     }
   }
 

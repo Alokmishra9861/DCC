@@ -133,8 +133,27 @@ async function seed(prisma, faker) {
       partners.push(user.b2bPartner);
       console.log(`  ✓ Created B2B Partner: ${partnerData.companyName}`);
     } else {
-      const partner = await prisma.b2BPartner.findUnique({ where: { userId: existing.id } });
-      if (partner) partners.push(partner);
+      let partner = await prisma.b2BPartner.findUnique({ where: { userId: existing.id } });
+      if (!partner) {
+        const phone = faker.phone.number({ style: 'international' });
+        const logoUrl = `https://logo.clearbit.com/${partnerData.email.split("@")[1]}`;
+
+        partner = await prisma.b2BPartner.create({
+          data: {
+            userId: existing.id,
+            companyName: partnerData.companyName,
+            servicesOffered: partnerData.servicesOffered,
+            phone,
+            email: partnerData.email,
+            website: partnerData.website,
+            logoUrl,
+            isApproved: true,
+            isSeeded: true
+          }
+        });
+        console.log(`  ✓ Created missing B2B Partner profile for: ${partnerData.companyName}`);
+      }
+      partners.push(partner);
     }
   }
 

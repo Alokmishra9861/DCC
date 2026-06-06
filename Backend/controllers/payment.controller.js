@@ -46,6 +46,9 @@ exports.createStripeCheckout = asyncHandler(async (req, res) => {
   }
 
   // ── MEMBERSHIP PURCHASE FLOW ────────────────────────────────────────
+  if (req.user.role !== "MEMBER") {
+    throw ApiError.forbidden("Only members can purchase memberships");
+  }
   const { planId } = req.body;
   const member = await prisma.member.findUnique({
     where: { userId: req.user.id },
@@ -111,6 +114,9 @@ exports.createStripeCheckout = asyncHandler(async (req, res) => {
 
 // ── Create membership order (PayPal) ──────────────────
 exports.createPayPalCheckout = asyncHandler(async (req, res) => {
+  if (req.user.role !== "MEMBER") {
+    throw ApiError.forbidden("Only members can purchase memberships");
+  }
   const { planId } = req.body;
   const member = await prisma.member.findUnique({
     where: { userId: req.user.id },

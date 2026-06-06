@@ -182,8 +182,36 @@ async function seed(prisma, faker) {
       associations.push(user.association);
       console.log(`  ✓ Created Association: ${assocData.name} (${assocData.associationType} Type)`);
     } else {
-      const association = await prisma.association.findUnique({ where: { userId: existing.id } });
-      if (association) associations.push(association);
+      let association = await prisma.association.findUnique({ where: { userId: existing.id } });
+      if (!association) {
+        const district = faker.helpers.arrayElement(districts);
+        const phone = faker.phone.number({ style: 'international' });
+        const logoUrl = `https://logo.clearbit.com/${assocData.email.split("@")[1] || "chamber.ky"}`;
+
+        association = await prisma.association.create({
+          data: {
+            userId: existing.id,
+            name: assocData.name,
+            associationType: assocData.associationType,
+            orgType: assocData.orgType,
+            district,
+            phone,
+            email: assocData.email,
+            website: `https://www.${assocData.email.split("@")[1]}`,
+            logoUrl,
+            description: assocData.description,
+            isApproved: true,
+            status: "APPROVED",
+            joinCode: assocData.joinCode,
+            joinCodeEnabled: true,
+            totalMembershipCost: faker.number.float({ min: 100, max: 1000, fractionDigits: 2 }),
+            totalSavings: faker.number.float({ min: 50, max: 800, fractionDigits: 2 }),
+            isSeeded: true
+          }
+        });
+        console.log(`  ✓ Created missing Association profile for: ${assocData.name}`);
+      }
+      associations.push(association);
     }
   }
 

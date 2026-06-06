@@ -146,6 +146,16 @@ exports.getPlans = asyncHandler(async (req, res) => {
 // No redirect logic here — that's handled on the frontend at the redeem point.
 // ─────────────────────────────────────────────────────────────────────────────
 exports.getMyMembership = asyncHandler(async (req, res) => {
+  if (req.user.role !== "MEMBER") {
+    return res.status(200).json({
+      success: true,
+      data: null,
+      isActive: false,
+      membershipStatus: null,
+      canRedeem: false,
+    });
+  }
+
   const member = await prisma.member.findUnique({
     where: { userId: req.user.id },
     include: { membership: true },
@@ -172,6 +182,9 @@ exports.getMyMembership = asyncHandler(async (req, res) => {
 // Body: { planId, planType, paymentProvider, paymentId }
 // ─────────────────────────────────────────────────────────────────────────────
 exports.subscribe = asyncHandler(async (req, res) => {
+  if (req.user.role !== "MEMBER") {
+    throw ApiError.forbidden("Only members can subscribe to memberships");
+  }
   const { planId, planType, paymentProvider, paymentId } = req.body;
 
   if (!paymentProvider || !paymentId) {
@@ -271,6 +284,9 @@ exports.subscribe = asyncHandler(async (req, res) => {
 // PUT /api/membership/:id/cancel
 // ─────────────────────────────────────────────────────────────────────────────
 exports.cancelMembership = asyncHandler(async (req, res) => {
+  if (req.user.role !== "MEMBER") {
+    throw ApiError.forbidden("Only members can cancel memberships");
+  }
   const member = await prisma.member.findUnique({
     where: { userId: req.user.id },
   });
