@@ -712,7 +712,7 @@ model Advertisement {
 
   // Banner purchase fields
   paymentStatus String?        // PENDING, COMPLETED, FAILED
-  stripeSessionId String?      @unique
+  stripeSessionId String?
   stripePaymentId String?
   pricePaid     Float?
 
