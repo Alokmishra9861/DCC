@@ -16,17 +16,26 @@ const MEMBERSHIP_PRICE_USD = 119.99; // ISSUE 5 FIX: Individual membership price
 exports.createStripeCheckout = asyncHandler(async (req, res) => {
   const { type, items, metadata } = req.body;
 
+  const isBanner =
+    String(type || "").toLowerCase() === "banner" ||
+    String(metadata?.type || "").toLowerCase() === "banner" ||
+    req.user.role === "BUSINESS";
+
   // ── BANNER PURCHASE FLOW ────────────────────────────────────────────
-  if (type === "banner") {
+  if (isBanner) {
     const business = await prisma.business.findUnique({
       where: { userId: req.user.id },
       include: { user: true },
     });
     if (!business) throw ApiError.notFound("Business profile not found");
 
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      throw ApiError.badRequest("Items array is required for banner purchase");
+    }
+
     // Calculate total price from items (already in cents)
     const totalPriceUSD =
-      items.reduce((sum, item) => sum + item.price * item.quantity, 0) / 100;
+      items.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0) / 100;
 
     const session = await createStripeCheckoutSession({
       businessId: business.id,
