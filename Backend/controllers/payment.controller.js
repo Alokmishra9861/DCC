@@ -217,7 +217,19 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
         bannerLinkUrl,
         bannerPosition,
         bannerDuration,
+        image,
+        imageUrl,
+        link,
+        linkUrl,
+        position,
+        duration,
       } = session.metadata || {};
+
+      const finalTitle = bannerTitle || title || "Ad Campaign";
+      const finalImage = bannerImageUrl || image || imageUrl || "";
+      const finalLink = bannerLinkUrl || link || linkUrl || null;
+      const finalPosition = bannerPosition || position || "top";
+      const finalDuration = bannerDuration || duration || "monthly";
 
       console.log("[WEBHOOK] Session metadata:", session.metadata);
       console.log("[WEBHOOK] Type from metadata:", type);
@@ -236,11 +248,11 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
         console.log("[WEBHOOK] 🎯 Processing BANNER...");
         console.log("[WEBHOOK] Banner data:", {
           businessId,
-          bannerTitle,
-          bannerImageUrl,
-          bannerLinkUrl,
-          bannerPosition,
-          bannerDuration,
+          finalTitle,
+          finalImage,
+          finalLink,
+          finalPosition,
+          finalDuration,
         });
 
         if (!businessId) {
@@ -253,13 +265,13 @@ exports.stripeWebhook = asyncHandler(async (req, res) => {
           const createdAd = await prisma.advertisement.create({
             data: {
               businessId: businessId,
-              title: bannerTitle,
-              image: bannerImageUrl,
-              link: bannerLinkUrl || null,
-              position: bannerPosition,
+              title: finalTitle,
+              image: finalImage,
+              link: finalLink,
+              position: finalPosition,
               status: "PENDING",
               startDate: new Date(),
-              duration: bannerDuration,
+              duration: finalDuration,
               paymentStatus: "COMPLETED",
               stripeSessionId: session.id,
               stripePaymentId: session.payment_intent,
@@ -594,11 +606,24 @@ exports.verifyBannerSession = asyncHandler(async (req, res) => {
   const {
     businessId,
     bannerTitle,
+    title,
     bannerImageUrl,
+    image,
+    imageUrl,
     bannerLinkUrl,
+    link,
+    linkUrl,
     bannerPosition,
+    position,
     bannerDuration,
+    duration,
   } = session.metadata || {};
+
+  const finalTitle = bannerTitle || title || "Ad Campaign";
+  const finalImage = bannerImageUrl || image || imageUrl || "";
+  const finalLink = bannerLinkUrl || link || linkUrl || null;
+  const finalPosition = bannerPosition || position || "top";
+  const finalDuration = bannerDuration || duration || "monthly";
 
   if (!businessId) {
     throw ApiError.badRequest("Missing businessId in Stripe session metadata");
@@ -623,13 +648,13 @@ exports.verifyBannerSession = asyncHandler(async (req, res) => {
     banner = await prisma.advertisement.create({
       data: {
         businessId: businessId,
-        title: bannerTitle,
-        image: bannerImageUrl,
-        link: bannerLinkUrl || null,
-        position: bannerPosition,
+        title: finalTitle,
+        image: finalImage,
+        link: finalLink,
+        position: finalPosition,
         status: "PENDING",
         startDate: new Date(),
-        duration: bannerDuration,
+        duration: finalDuration,
         paymentStatus: "COMPLETED",
         stripeSessionId: session.id,
         stripePaymentId: session.payment_intent,
