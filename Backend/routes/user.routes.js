@@ -1,4 +1,4 @@
-﻿const express = require("express");
+const express = require("express");
 const router = express.Router();
 const { prisma } = require("../config/db");
 const { ApiResponse, ApiError } = require("../utils/ApiResponse");
@@ -51,7 +51,17 @@ router.put("/:id", protect, asyncHandler(async (req, res) => {
   if (req.user.role !== "ADMIN" && req.user.id !== req.params.id) {
     throw ApiError.forbidden("Not authorized");
   }
-  const { password, role, ...updateData } = req.body;
+  
+  let updateData = {};
+  if (req.user.role === "ADMIN") {
+    const { password, role, isSeeded, ...rest } = req.body;
+    updateData = rest;
+  } else {
+    // Regular users can only update their email address through this endpoint
+    const { email } = req.body;
+    if (email) updateData.email = email;
+  }
+
   const user = await prisma.user.update({
     where: { id: req.params.id },
     data: updateData,

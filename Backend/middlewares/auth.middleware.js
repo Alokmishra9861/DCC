@@ -6,8 +6,10 @@ const { asyncHandler } = require("./errorhandler");
 
 const protect = asyncHandler(async (req, res, next) => {
   if (req.isMasterAdmin) return next();
+  const masterSecret = process.env.MASTER_ADMIN_SECRET;
   if (
-    req.headers["x-master-admin-secret"] === process.env.MASTER_ADMIN_SECRET
+    masterSecret &&
+    req.headers["x-master-admin-secret"] === masterSecret
   ) {
     req.isMasterAdmin = true;
     req.user = { id: "master-admin", role: "ADMIN", isActive: true };
@@ -44,8 +46,10 @@ const protect = asyncHandler(async (req, res, next) => {
 const authorize = (...roles) => {
   return (req, res, next) => {
     if (req.isMasterAdmin) return next();
+    const masterSecret = process.env.MASTER_ADMIN_SECRET;
     if (
-      req.headers["x-master-admin-secret"] === process.env.MASTER_ADMIN_SECRET
+      masterSecret &&
+      req.headers["x-master-admin-secret"] === masterSecret
     ) {
       req.isMasterAdmin = true;
       req.user = { id: "master-admin", role: "ADMIN", isActive: true };

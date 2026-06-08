@@ -13,9 +13,10 @@
 
 const allowAdminOrMaster = (req, res, next) => {
   const secret = req.headers["x-master-admin-secret"];
+  const masterSecret = process.env.MASTER_ADMIN_SECRET;
 
   // Not a master admin request — go to normal auth
-  if (!secret || secret !== process.env.MASTER_ADMIN_SECRET) {
+  if (!secret || !masterSecret || secret !== masterSecret) {
     return next();
   }
 
