@@ -371,13 +371,13 @@ const LoginContent = () => {
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-white/8" />
               </div>
-              <div className="relative flex justify-center text-sm">
+              {/* <div className="relative flex justify-center text-sm">
                 <span className="px-4 bg-[#111936] text-[#8D95A8] font-bold">
                   Or continue with
                 </span>
-              </div>
+              </div> */}
             </div>
-            <button 
+            {/* <button 
               type="button"
               onClick={handleGoogleLogin}
               disabled={loading}
@@ -402,7 +402,7 @@ const LoginContent = () => {
                 />
               </svg>
               Continue with Google
-            </button>
+            </button> */}
           </div>
 
           <p className="mt-8 text-center text-sm text-[#B8C0D4] font-bold">
