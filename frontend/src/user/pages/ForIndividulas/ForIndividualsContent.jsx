@@ -45,7 +45,7 @@ const ForIndividualsContent = () => {
     { category: "Dining Out", monthly: 55, annual: 660 },
     { category: "Auto Services", monthly: 8, annual: 96 },
     { category: "Wellness & Spa", monthly: 25, annual: 300 },
-    { category: "Travel (Annual)", monthly: 0, annual: 150 },
+    { category: "Travel (Annual)", monthly: 0, annual: 750 },
     { category: "Misc", monthly: 35, annual: 420 },
   ];
 

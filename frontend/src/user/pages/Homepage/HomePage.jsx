@@ -12,7 +12,7 @@ const HomePage = () => {
     <>
       <HeroSection />
       <div className="px-4 md:px-8 lg:px-12 py-8">
-        <BannerCarousel />
+        {/* <BannerCarousel /> */}
       </div>
       <TravelSavings />
       <LocalSavings />
