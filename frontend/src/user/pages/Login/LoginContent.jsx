@@ -41,6 +41,25 @@ const LoginContent = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
+  // Forgot Password state variables
+  const [view, setView] = useState("login"); // 'login' or 'forgot'
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotStep, setForgotStep] = useState(1); // 1: input email, 2: success confirmation
+
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      await authAPI.forgotPassword(forgotEmail);
+      setForgotStep(2);
+    } catch (err) {
+      setError(err.message || "Failed to send reset link. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("dcc_saved_logins")) || [];
     setSuggestions(saved);
@@ -159,261 +178,342 @@ const LoginContent = () => {
             />
           </div>
           <h1 className="font-heading text-3xl md:text-4xl font-extrabold text-white mb-2 tracking-tight">
-            Welcome Back
+            {view === "login" ? "Welcome Back" : "Password Recovery"}
           </h1>
-          <p className="text-[#B8C0D4] font-medium text-sm">Log in to access your account</p>
+          <p className="text-[#B8C0D4] font-medium text-sm">
+            {view === "login" ? "Log in to access your account" : "Reset your password with your email address"}
+          </p>
         </div>
 
-        {/* Role toggle — 3+3 grid in modern navy container */}
-        <div className="bg-[#111936] rounded-2xl p-1.5 mb-1.5 border border-white/8 shadow-2xl animate-fade-up">
-          <div className="grid grid-cols-3 gap-1 sm:grid-cols-6">
-            {ROLE_TABS.map(({ key, label }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => {
-                  setSelectedRole(key);
-                  setError("");
-                }}
-                className={`py-2.5 px-1 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
-                  selectedRole === key
-                    ? "bg-[#D4A62A] text-[#0D1328] shadow-md shadow-[#D4A62A]/10 font-extrabold"
-                    : "text-[#8D95A8] hover:text-white hover:bg-[#161F3D]"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Role hint line */}
-        <p className="text-center text-xs text-[#8D95A8] font-bold mb-4 min-h-[1.25rem]">
-          {ROLE_HINTS[selectedRole]}
-        </p>
-
-        {/* B2B callout — only shown when B2B tab is selected */}
-        {selectedRole === "b2b" && (
-          <div className="mb-4 p-4 bg-[#161F3D]/80 border border-white/8 rounded-2xl flex items-start gap-3 shadow-inner">
-            <span className="text-xl flex-shrink-0 mt-0.5">🤝</span>
-            <div>
-              <p className="font-bold text-[#D4A62A] text-sm">
-                B2B Partner Portal
-              </p>
-              <p className="text-xs text-[#B8C0D4] mt-0.5 leading-relaxed font-semibold">
-                Manage your directory listing, services profile, and member
-                enquiries. Not registered yet?{" "}
-                <Link
-                  to="/sign-up"
-                  className="text-[#D4A62A] font-bold hover:underline"
-                >
-                  Sign up as a B2B Partner →
-                </Link>
-              </p>
+        {view === "login" && (
+          <>
+            {/* Role toggle — 3+3 grid in modern navy container */}
+            <div className="bg-[#111936] rounded-2xl p-1.5 mb-1.5 border border-white/8 shadow-2xl animate-fade-up">
+              <div className="grid grid-cols-3 gap-1 sm:grid-cols-6">
+                {ROLE_TABS.map(({ key, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => {
+                      setSelectedRole(key);
+                      setError("");
+                    }}
+                    className={`py-2.5 px-1 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+                      selectedRole === key
+                        ? "bg-[#D4A62A] text-[#0D1328] shadow-md shadow-[#D4A62A]/10 font-extrabold"
+                        : "text-[#8D95A8] hover:text-white hover:bg-[#161F3D]"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+
+            {/* Role hint line */}
+            <p className="text-center text-xs text-[#8D95A8] font-bold mb-4 min-h-[1.25rem]">
+              {ROLE_HINTS[selectedRole]}
+            </p>
+
+            {/* B2B callout — only shown when B2B tab is selected */}
+            {selectedRole === "b2b" && (
+              <div className="mb-4 p-4 bg-[#161F3D]/80 border border-white/8 rounded-2xl flex items-start gap-3 shadow-inner">
+                <span className="text-xl flex-shrink-0 mt-0.5">🤝</span>
+                <div>
+                  <p className="font-bold text-[#D4A62A] text-sm">
+                    B2B Partner Portal
+                  </p>
+                  <p className="text-xs text-[#B8C0D4] mt-0.5 leading-relaxed font-semibold">
+                    Manage your directory listing, services profile, and member
+                    enquiries. Not registered yet?{" "}
+                    <Link
+                      to="/sign-up"
+                      className="text-[#D4A62A] font-bold hover:underline"
+                    >
+                      Sign up as a B2B Partner →
+                    </Link>
+                  </p>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Main card */}
         <div className="glass-panel bg-[#111936]/80 rounded-3xl p-8 md:p-10 border border-white/8 shadow-2xl animate-fade-up animation-delay-100">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <p className="text-sm text-[#B8C0D4] font-bold">
-              Signing in as{" "}
-              <span className="text-[#D4A62A] font-black">
-                {ROLE_TABS.find((r) => r.key === selectedRole)?.label}
-              </span>
-            </p>
+          {view === "login" ? (
+            <>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <p className="text-sm text-[#B8C0D4] font-bold">
+                  Signing in as{" "}
+                  <span className="text-[#D4A62A] font-black">
+                    {ROLE_TABS.find((r) => r.key === selectedRole)?.label}
+                  </span>
+                </p>
 
-            {error && (
-              <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-start gap-3">
-                <Icon
-                  name="ExclamationCircleIcon"
-                  size={20}
-                  className="text-rose-400 mt-0.5 flex-shrink-0"
-                />
-                <p className="text-sm text-rose-400 font-bold leading-tight">{error}</p>
-              </div>
-            )}
-
-            {/* Email */}
-            <div className="space-y-2">
-              <label className="block text-sm font-bold text-[#B8C0D4] ml-1">
-                Email Address
-              </label>
-              <div className="relative">
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={handleEmailChange}
-                  onFocus={() => {
-                    const saved =
-                      JSON.parse(localStorage.getItem("dcc_saved_logins")) ||
-                      [];
-                    setSuggestions(saved);
-                    setShowSuggestions(saved.length > 0);
-                  }}
-                  onBlur={() =>
-                    setTimeout(() => setShowSuggestions(false), 200)
-                  }
-                  className="input-premium w-full"
-                  placeholder="your@email.com"
-                  autoComplete="off"
-                />
-                {showSuggestions && suggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-[#111936] border border-white/8 rounded-xl shadow-2xl z-50 overflow-hidden">
-                    {suggestions.map((login, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          selectSuggestion(login);
-                        }}
-                        className="w-full px-5 py-3 text-left hover:bg-[#161F3D] border-b border-white/4 last:border-b-0 transition-colors flex items-center justify-between group cursor-pointer"
-                      >
-                        <div>
-                          <p className="text-sm font-bold text-white">
-                            {login.email}
-                          </p>
-                          <p className="text-xs text-[#8D95A8] font-bold">
-                            Click to auto-fill
-                          </p>
-                        </div>
-                        <Icon
-                          name="ChevronRightIcon"
-                          size={16}
-                          className="text-[#8D95A8] group-hover:text-[#D4A62A] transition-colors"
-                        />
-                      </button>
-                    ))}
+                {error && (
+                  <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-start gap-3">
+                    <Icon
+                      name="ExclamationCircleIcon"
+                      size={20}
+                      className="text-rose-400 mt-0.5 flex-shrink-0"
+                    />
+                    <p className="text-sm text-rose-400 font-bold leading-tight">{error}</p>
                   </div>
                 )}
-              </div>
-            </div>
 
-            {/* Password */}
-            <div className="space-y-2">
-              <label className="block text-sm font-bold text-[#B8C0D4] ml-1">
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input-premium w-full"
-                placeholder="••••••••"
-              />
-            </div>
+                {/* Email */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold text-[#B8C0D4] ml-1">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={handleEmailChange}
+                      onFocus={() => {
+                        const saved =
+                          JSON.parse(localStorage.getItem("dcc_saved_logins")) ||
+                          [];
+                        setSuggestions(saved);
+                        setShowSuggestions(saved.length > 0);
+                      }}
+                      onBlur={() =>
+                        setTimeout(() => setShowSuggestions(false), 200)
+                      }
+                      className="input-premium w-full"
+                      placeholder="your@email.com"
+                      autoComplete="off"
+                    />
+                    {showSuggestions && suggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-[#111936] border border-white/8 rounded-xl shadow-2xl z-50 overflow-hidden">
+                        {suggestions.map((login, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              selectSuggestion(login);
+                            }}
+                            className="w-full px-5 py-3 text-left hover:bg-[#161F3D] border-b border-white/4 last:border-b-0 transition-colors flex items-center justify-between group cursor-pointer"
+                          >
+                            <div>
+                              <p className="text-sm font-bold text-white">
+                                {login.email}
+                              </p>
+                              <p className="text-xs text-[#8D95A8] font-bold">
+                                Click to auto-fill
+                              </p>
+                            </div>
+                            <Icon
+                              name="ChevronRightIcon"
+                              size={16}
+                              className="text-[#8D95A8] group-hover:text-[#D4A62A] transition-colors"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-            {/* Remember + Forgot */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={handleRememberMeChange}
-                  className="w-4 h-4 accent-[#D4A62A] bg-[#0D1328] border-white/10 rounded focus:ring-0"
-                />
-                <span className="text-sm text-[#B8C0D4] group-hover:text-white transition-colors font-bold">
-                  Remember me
-                </span>
-              </label>
-              <Link
-                to="#"
-                className="text-sm text-[#D4A62A] hover:text-[#E0B53A] font-bold transition-colors"
-              >
-                Forgot password?
-              </Link>
-            </div>
+                {/* Password */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold text-[#B8C0D4] ml-1">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="input-premium w-full"
+                    placeholder="••••••••"
+                  />
+                </div>
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-premium-gold w-full py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 text-lg font-bold disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-            >
-              {loading ? (
-                <>
-                  <svg
-                    className="animate-spin w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
+                {/* Remember + Forgot */}
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={handleRememberMeChange}
+                      className="w-4 h-4 accent-[#D4A62A] bg-[#0D1328] border-white/10 rounded focus:ring-0"
+                    />
+                    <span className="text-sm text-[#B8C0D4] group-hover:text-white transition-colors font-bold">
+                      Remember me
+                    </span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setView("forgot");
+                      setForgotStep(1);
+                      setForgotEmail("");
+                      setError("");
+                    }}
+                    className="text-sm text-[#D4A62A] hover:text-[#E0B53A] font-bold transition-colors cursor-pointer bg-transparent border-none outline-none"
                   >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                    />
-                  </svg>
-                  Logging in...
-                </>
-              ) : (
-                <>
-                  Log In <Icon name="ArrowRightIcon" size={20} />
-                </>
-              )}
-            </button>
-          </form>
+                    Forgot password?
+                  </button>
+                </div>
 
-          {/* Google SSO */}
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/8" />
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-premium-gold w-full py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 text-lg font-bold disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                >
+                  {loading ? (
+                    <>
+                      <svg
+                        className="animate-spin w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        />
+                      </svg>
+                      Logging in...
+                    </>
+                  ) : (
+                    <>
+                      Log In <Icon name="ArrowRightIcon" size={20} />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {/* Google SSO */}
+              <div className="mt-8">
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-white/8" />
+                  </div>
+                </div>
               </div>
-              {/* <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-[#111936] text-[#8D95A8] font-bold">
-                  Or continue with
-                </span>
-              </div> */}
-            </div>
-            {/* <button 
-              type="button"
-              onClick={handleGoogleLogin}
-              disabled={loading}
-              className="mt-6 w-full px-6 py-3 border border-white/8 rounded-xl font-bold text-white bg-[#161F3D]/50 hover:border-[#D4A62A] hover:text-[#D4A62A] hover:bg-[#161F3D] transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path
-                  fill="currentColor"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="currentColor"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="currentColor"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  fill="currentColor"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
-              </svg>
-              Continue with Google
-            </button> */}
-          </div>
 
-          <p className="mt-8 text-center text-sm text-[#B8C0D4] font-bold">
-            Don't have an account?{" "}
-            <Link
-              to="/sign-up"
-              className="text-[#D4A62A] hover:underline font-black"
-            >
-              Join now
-            </Link>
-          </p>
+              <p className="mt-8 text-center text-sm text-[#B8C0D4] font-bold">
+                Don't have an account?{" "}
+                <Link
+                  to="/sign-up"
+                  className="text-[#D4A62A] hover:underline font-black"
+                >
+                  Join now
+                </Link>
+              </p>
+            </>
+          ) : (
+            <div className="space-y-6">
+              {forgotStep === 1 ? (
+                <form onSubmit={handleForgotSubmit} className="space-y-6 animate-fade-up">
+                  <div className="text-left">
+                    <h2 className="text-xl font-bold text-white mb-2">Forgot Password</h2>
+                    <p className="text-sm text-[#B8C0D4]">
+                      Enter your email address and we will send you a secure link to reset your password.
+                    </p>
+                  </div>
+
+                  {error && (
+                    <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-start gap-3">
+                      <Icon
+                        name="ExclamationCircleIcon"
+                        size={20}
+                        className="text-rose-400 mt-0.5 flex-shrink-0"
+                      />
+                      <p className="text-sm text-rose-400 font-bold leading-tight">{error}</p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-[#B8C0D4] ml-1">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      className="input-premium w-full"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn-premium-gold w-full py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 text-lg font-bold disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {loading ? "Sending link..." : "Send Reset Link"}
+                  </button>
+
+                  <div className="text-center mt-6">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setView("login");
+                        setError("");
+                      }}
+                      className="text-sm text-[#D4A62A] hover:underline font-bold bg-transparent border-0 cursor-pointer outline-none"
+                    >
+                      Back to Log In
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="space-y-6 text-center animate-fade-up">
+                  <div className="mx-auto w-16 h-16 bg-[#D4A62A]/10 text-[#D4A62A] rounded-full flex items-center justify-center text-3xl">
+                    ✉️
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white mb-2">Check Your Email</h2>
+                    <p className="text-sm text-[#B8C0D4] leading-relaxed">
+                      We have sent a password reset link to <strong className="text-white">{forgotEmail}</strong> if it is registered in our platform. Please check your inbox and follow the steps.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setView("login");
+                      setForgotEmail("");
+                      setForgotStep(1);
+                      setError("");
+                    }}
+                    className="btn-premium-gold w-full py-3.5 px-6 rounded-xl text-lg font-bold"
+                  >
+                    Back to Log In
+                  </button>
+
+                  <p className="text-xs text-[#8D95A8]">
+                    Didn't receive the email?{" "}
+                    <button
+                      type="button"
+                      onClick={handleForgotSubmit}
+                      disabled={loading}
+                      className="text-[#D4A62A] hover:underline font-bold bg-transparent border-0 cursor-pointer disabled:opacity-50"
+                    >
+                      Click to resend
+                    </button>
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

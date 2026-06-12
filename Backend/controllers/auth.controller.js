@@ -302,7 +302,17 @@ exports.verifyEmail = asyncHandler(async (req, res) => {
 exports.forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({
+    where: { email },
+    include: {
+      member: true,
+      employer: true,
+      association: true,
+      business: true,
+      b2bPartner: true,
+    },
+  });
+
   // Always return the same message to avoid email enumeration
   if (!user) {
     return ApiResponse.success(
@@ -320,14 +330,15 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
     data: { resetToken, resetTokenExpiry: resetExpiry },
   });
 
-  // Resolve the user's display name without three separate queries
-  const profile =
-    (await prisma.member.findUnique({ where: { userId: user.id } })) ||
-    (await prisma.employer.findUnique({ where: { userId: user.id } })) ||
-    (await prisma.association.findUnique({ where: { userId: user.id } }));
-
+  // Resolve the user's display name for all roles (Member, Employer, Association, Business, B2B)
   const name =
-    profile?.firstName || profile?.companyName || profile?.name || "User";
+    user.member?.firstName ||
+    user.employer?.companyName ||
+    user.association?.name ||
+    user.business?.name ||
+    user.b2bPartner?.companyName ||
+    "User";
+
   await sendPasswordResetEmail(email, name, resetToken);
 
   return ApiResponse.success(
@@ -341,7 +352,10 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
 // POST /api/auth/reset-password
 // ─────────────────────────────────────────────────────────────────────────────
 exports.resetPassword = asyncHandler(async (req, res) => {
-  const { token, newPassword } = req.body;
+  const { token } = req.body;
+  const newPassword = req.body.newPassword || req.body.password;
+
+  if (!newPassword) throw ApiError.badRequest("Password is required");
 
   const user = await prisma.user.findFirst({
     where: { resetToken: token, resetTokenExpiry: { gt: new Date() } },

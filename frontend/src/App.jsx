@@ -30,6 +30,7 @@ import ForAssociationsContent from "./user/pages/ForAssociations/ForAssociations
 import EmployerDashboardContent from "./user/pages/EmployerDashboard/EmployerDashboardContent";
 import PricingContent from "./user/pages/Pricing/PricingContent";
 import LoginContent from "./user/pages/Login/LoginContent";
+import ResetPassword from "./user/pages/Login/ResetPassword";
 import SignupContent from "./user/pages/SignUp/SignupContent";
 import MemberShipFormContent from "./user/pages/Membership/MemberShipFormContent";
 import VerifyEmailPage from "./user/pages/VerifyEmail/VerifyEmailPage";
@@ -133,6 +134,7 @@ const UserLayout = () => (
         <Route path="/about" element={<AboutContent />} />
         <Route path="/pricing" element={<PricingContent />} />
         <Route path="/login" element={<LoginContent />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/sign-up" element={<SignupContent />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/members" element={<ForIndividualsContent />} />
