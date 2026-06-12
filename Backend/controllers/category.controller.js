@@ -217,3 +217,136 @@ exports.getCategoryBySlug = asyncHandler(async (req, res) => {
     },
   });
 });
+
+// ── POST /api/categories (Admin only) ─────────────────────────────────────────
+exports.createCategory = asyncHandler(async (req, res) => {
+  const { name, description, imageUrl, icon } = req.body;
+
+  if (!name) {
+    throw ApiError.badRequest("Category name is required");
+  }
+
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+
+  // Check if name or slug already exists
+  const existing = await prisma.category.findFirst({
+    where: {
+      OR: [
+        { name: { equals: name, mode: "insensitive" } },
+        { slug: { equals: slug, mode: "insensitive" } }
+      ]
+    }
+  });
+
+  if (existing) {
+    throw ApiError.badRequest(`Category with name "${name}" or slug "${slug}" already exists`);
+  }
+
+  const category = await prisma.category.create({
+    data: {
+      name,
+      slug,
+      description,
+      imageUrl,
+      icon: icon || "TagIcon",
+      isSeeded: false
+    }
+  });
+
+  return res.status(201).json({
+    success: true,
+    message: "Category created successfully",
+    data: category
+  });
+});
+
+// ── PUT /api/categories/:id (Admin only) ────────────────────────────────────────
+exports.updateCategory = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { name, description, imageUrl, icon } = req.body;
+
+  const category = await prisma.category.findUnique({
+    where: { id }
+  });
+
+  if (!category) {
+    throw ApiError.notFound("Category not found");
+  }
+
+  const updateData = {
+    description,
+    imageUrl,
+    icon
+  };
+
+  if (name && name !== category.name) {
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+
+    // Check if another category has the same name or slug
+    const existing = await prisma.category.findFirst({
+      where: {
+        id: { not: id },
+        OR: [
+          { name: { equals: name, mode: "insensitive" } },
+          { slug: { equals: slug, mode: "insensitive" } }
+        ]
+      }
+    });
+
+    if (existing) {
+      throw ApiError.badRequest(`Category with name "${name}" or slug "${slug}" already exists`);
+    }
+
+    updateData.name = name;
+    updateData.slug = slug;
+  }
+
+  const updatedCategory = await prisma.category.update({
+    where: { id },
+    data: updateData
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Category updated successfully",
+    data: updatedCategory
+  });
+});
+
+// ── DELETE /api/categories/:id (Admin only) ─────────────────────────────────────
+exports.deleteCategory = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const category = await prisma.category.findUnique({
+    where: { id }
+  });
+
+  if (!category) {
+    throw ApiError.notFound("Category not found");
+  }
+
+  // Check if there are businesses or offers associated with this category
+  const businessCount = await prisma.business.count({
+    where: { categoryId: id }
+  });
+
+  const offerCount = await prisma.offer.count({
+    where: { categoryId: id }
+  });
+
+  if (businessCount > 0 || offerCount > 0) {
+    throw ApiError.badRequest(
+      `Cannot delete category "${category.name}". It is associated with ${businessCount} business(es) and ${offerCount} offer(s).`
+    );
+  }
+
+  await prisma.category.delete({
+    where: { id }
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Category deleted successfully"
+  });
+});
+

@@ -448,11 +448,10 @@ const MemberDashboardContent = () => {
                   Discount Club Cayman
                 </span>
                 <span
-                  className={`px-2.5 py-1 rounded-md text-[9px] sm:text-[10px] font-black tracking-widest uppercase ${
-                    isMembershipActive
+                  className={`px-2.5 py-1 rounded-md text-[9px] sm:text-[10px] font-black tracking-widest uppercase ${isMembershipActive
                       ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                       : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
-                  }`}
+                    }`}
                 >
                   {membershipStatus}
                 </span>
@@ -488,11 +487,11 @@ const MemberDashboardContent = () => {
                   <p className="m-0 text-sm md:text-base font-extrabold text-white">
                     {memberProfile?.membership?.startDate
                       ? new Date(
-                          memberProfile.membership.startDate,
-                        ).toLocaleDateString("en-US", {
-                          month: "short",
-                          year: "numeric",
-                        })
+                        memberProfile.membership.startDate,
+                      ).toLocaleDateString("en-US", {
+                        month: "short",
+                        year: "numeric",
+                      })
                       : "—"}
                   </p>
                 </div>
@@ -503,12 +502,12 @@ const MemberDashboardContent = () => {
                   <p className="m-0 text-sm md:text-base font-extrabold text-white">
                     {memberProfile?.membership?.expiryDate
                       ? new Date(
-                          memberProfile.membership.expiryDate,
-                        ).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })
+                        memberProfile.membership.expiryDate,
+                      ).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })
                       : "—"}
                   </p>
                 </div>
@@ -524,11 +523,10 @@ const MemberDashboardContent = () => {
                 <button
                   onClick={() => setShowQRModal(true)}
                   disabled={!isMembershipActive}
-                  className={`relative group rounded-2xl p-3 transition-all duration-300 ${
-                    isMembershipActive
+                  className={`relative group rounded-2xl p-3 transition-all duration-300 ${isMembershipActive
                       ? "bg-white cursor-pointer hover:scale-105 hover:shadow-[0_0_30px_rgba(212,166,42,0.25)]"
                       : "bg-white/20 cursor-not-allowed opacity-50"
-                  }`}
+                    }`}
                 >
                   {isMembershipActive ? (
                     <QRCodeSVG
@@ -588,11 +586,10 @@ const MemberDashboardContent = () => {
                 activeView === "certificates" ? "dashboard" : "certificates",
               )
             }
-            className={`relative rounded-[2rem] p-8 text-left transition-all duration-300 border cursor-pointer ${
-              activeView === "certificates"
+            className={`relative rounded-[2rem] p-8 text-left transition-all duration-300 border cursor-pointer ${activeView === "certificates"
                 ? "border-[#D4A62A] bg-[#D4A62A]/5 shadow-2xl -translate-y-1 shadow-[#D4A62A]/5"
                 : "border-white/8 bg-[#111936]/80 hover:border-[#D4A62A]/30 hover:shadow-2xl hover:-translate-y-1"
-            }`}
+              }`}
           >
             <div className="flex items-start justify-between mb-6">
               <div

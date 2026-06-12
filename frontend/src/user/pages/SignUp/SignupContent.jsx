@@ -2,12 +2,14 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Icon from "../../components/ui/AppIcon";
+import AppImage from "../../components/ui/AppImage";
 import {
   authAPI,
   saveAuthData,
   ROLE_ROUTES,
   getAssociationRoute,
   categoryAPI,
+  uploadAPI,
 } from "../../../services/api";
 
 // ── Role tabs — B2B Partner added ─────────────────────────────────────────────
@@ -506,6 +508,8 @@ const OrgSignupForm = ({ role }) => {
     website: "",
     password: "",
     confirmPassword: "",
+    logoUrl: "",
+    coverBannerUrl: "",
   });
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
@@ -515,6 +519,55 @@ const OrgSignupForm = ({ role }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const field = (key, value) => setFormData((p) => ({ ...p, [key]: value }));
+
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [coverUploading, setCoverUploading] = useState(false);
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) {
+      setError("Please select a valid image file (JPEG, PNG, WEBP, GIF).");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image size should be less than 5MB.");
+      return;
+    }
+    setLogoUploading(true);
+    setError("");
+    try {
+      const { url } = await uploadAPI.image(file);
+      field("logoUrl", url);
+    } catch (err) {
+      setError(err.message || "Failed to upload logo.");
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
+  const handleCoverUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) {
+      setError("Please select a valid image file (JPEG, PNG, WEBP, GIF).");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image size should be less than 5MB.");
+      return;
+    }
+    setCoverUploading(true);
+    setError("");
+    try {
+      const { url } = await uploadAPI.image(file);
+      field("coverBannerUrl", url);
+    } catch (err) {
+      setError(err.message || "Failed to upload cover banner.");
+    } finally {
+      setCoverUploading(false);
+    }
+  };
 
   const handleCategoryChange = (e) => {
     const selectedId = e.target.value;
@@ -600,6 +653,8 @@ const OrgSignupForm = ({ role }) => {
           servicesOffered: formData.servicesOffered.trim(),
           phone: formData.phone,
           website: formData.website || "",
+          logoUrl: formData.logoUrl || null,
+          coverBannerUrl: formData.coverBannerUrl || null,
         };
       }
 
@@ -751,21 +806,90 @@ const OrgSignupForm = ({ role }) => {
 
         {/* ── B2B: Services Offered textarea ────────────────────────────────── */}
         {roleUpper === "B2B" && (
-          <div>
-            <Label required>Services Offered</Label>
-            <p className="text-xs text-[#8D95A8] font-bold mb-1.5">
-              Describe what services your business provides to other DCC
-              businesses, employers, or associations.
-            </p>
-            <textarea
-              required
-              value={formData.servicesOffered}
-              onChange={(e) => field("servicesOffered", e.target.value)}
-              rows={4}
-              className={`${getInputCls(false)} resize-none`}
-              placeholder="e.g. Digital marketing, SEO, social media management, content creation, office supplies..."
-            />
-          </div>
+          <>
+            <div>
+              <Label required>Services Offered</Label>
+              <p className="text-xs text-[#8D95A8] font-bold mb-1.5">
+                Describe what services your business provides to other DCC
+                businesses, employers, or associations.
+              </p>
+              <textarea
+                required
+                value={formData.servicesOffered}
+                onChange={(e) => field("servicesOffered", e.target.value)}
+                rows={4}
+                className={`${getInputCls(false)} resize-none`}
+                placeholder="e.g. Digital marketing, SEO, social media management, content creation, office supplies..."
+              />
+            </div>
+
+            {/* ── B2B: Logo and Cover Uploaders ────────────────────────────────── */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Business Logo</Label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  disabled={logoUploading}
+                  className="block w-full text-xs text-[#8D95A8] file:mr-4 file:rounded-xl file:border-0 file:bg-[#1C4D8D]/20 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#D4A62A] hover:file:bg-[#1C4D8D]/30 cursor-pointer"
+                />
+                {logoUploading && (
+                  <p className="text-xs text-[#8D95A8] mt-1 animate-pulse">Uploading logo...</p>
+                )}
+                {formData.logoUrl && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-lg border border-white/10 overflow-hidden bg-[#0D1328] flex items-center justify-center">
+                      <AppImage
+                        src={formData.logoUrl}
+                        alt="Logo Preview"
+                        className="w-full h-full object-contain p-1"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => field("logoUrl", "")}
+                      className="text-xs text-rose-400 font-bold hover:underline cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <Label>Cover Banner Image</Label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCoverUpload}
+                  disabled={coverUploading}
+                  className="block w-full text-xs text-[#8D95A8] file:mr-4 file:rounded-xl file:border-0 file:bg-[#1C4D8D]/20 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#D4A62A] hover:file:bg-[#1C4D8D]/30 cursor-pointer"
+                />
+                {coverUploading && (
+                  <p className="text-xs text-[#8D95A8] mt-1 animate-pulse">Uploading banner...</p>
+                )}
+                {formData.coverBannerUrl && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="w-20 h-10 rounded-lg border border-white/10 overflow-hidden bg-[#0D1328] flex items-center justify-center">
+                      <AppImage
+                        src={formData.coverBannerUrl}
+                        alt="Cover Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => field("coverBannerUrl", "")}
+                      className="text-xs text-rose-400 font-bold hover:underline cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
         )}
 
         {/* ── ASSOCIATION: Type selector ─────────────────────────────────────── */}
@@ -983,13 +1107,6 @@ const OrgSignupForm = ({ role }) => {
           )}
         </button>
       </form>
-
-      <p className="mt-6 text-center text-sm text-[#B8C0D4] font-bold">
-        Already have an account?{" "}
-        <Link to="/login" className="text-[#D4A62A] hover:underline font-black">
-          Log in
-        </Link>
-      </p>
     </div>
   );
 };

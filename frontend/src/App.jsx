@@ -320,7 +320,7 @@ const UserLayout = () => (
           path="/b2b-directory"
           element={
             <ProtectedRoute
-              roles={["BUSINESS", "EMPLOYER", "ASSOCIATION", "B2B"]}
+              roles={["BUSINESS", "EMPLOYER", "ASSOCIATION", "B2B", "MEMBER"]}
             >
               <B2BDirectoryPage />
             </ProtectedRoute>

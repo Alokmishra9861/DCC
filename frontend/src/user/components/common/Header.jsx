@@ -102,6 +102,7 @@ const Header = () => {
     { href: "/discounts", label: "Discounts" },
     { href: "/certification", label: "Certificates" },
     { href: "/categories", label: "Categories" },
+    { href: "/b2b-directory", label: "B2B Directory" },
     { href: "/about", label: "About Us" },
     { href: "/contact", label: "Contact Us" },
   ];

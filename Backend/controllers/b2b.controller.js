@@ -23,6 +23,7 @@ exports.getProfile = asyncHandler(async (req, res) => {
     phone: b2b.phone,
     email: b2b.email,
     logoUrl: b2b.logoUrl,
+    coverBannerUrl: b2b.coverBannerUrl,
     website: b2b.website,
     isApproved: b2b.isApproved,
     userEmail: b2b.user.email,
@@ -33,7 +34,7 @@ exports.getProfile = asyncHandler(async (req, res) => {
 // ── PUT /api/b2b/profile ──────────────────────────────────────────────────────
 // Update the authenticated B2B partner's profile
 exports.updateProfile = asyncHandler(async (req, res) => {
-  const { companyName, servicesOffered, phone, email, website, logoUrl } =
+  const { companyName, servicesOffered, phone, email, website, logoUrl, coverBannerUrl } =
     req.body;
 
   if (!companyName?.trim())
@@ -55,6 +56,7 @@ exports.updateProfile = asyncHandler(async (req, res) => {
       email: email?.trim() || null,
       website: website?.trim() || null,
       logoUrl: logoUrl?.trim() || null,
+      coverBannerUrl: coverBannerUrl?.trim() || null,
     },
   });
 
@@ -136,6 +138,7 @@ exports.getDirectory = asyncHandler(async (req, res) => {
         email: true,
         logoUrl: true,
         website: true,
+        coverBannerUrl: true,
       },
       orderBy: { companyName: "asc" },
     }),

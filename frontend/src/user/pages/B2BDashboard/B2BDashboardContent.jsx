@@ -932,11 +932,13 @@ const ProfileTab = ({ profile, onSave }) => {
     email: profile?.email || "",
     website: profile?.website || "",
     logoUrl: profile?.logoUrl || "",
+    coverBannerUrl: profile?.coverBannerUrl || "",
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [coverUploading, setCoverUploading] = useState(false);
 
   const handle = (f) => (e) => setForm((p) => ({ ...p, [f]: e.target.value }));
 
@@ -957,6 +959,26 @@ const ProfileTab = ({ profile, onSave }) => {
     } catch {
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleCoverUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (
+      !["image/jpeg", "image/png", "image/webp", "image/gif"].includes(
+        file.type,
+      )
+    )
+      return;
+    if (file.size > 5 * 1024 * 1024) return;
+    setCoverUploading(true);
+    try {
+      const { url } = await uploadAPI.image(file);
+      setForm((f) => ({ ...f, coverBannerUrl: url }));
+    } catch {
+    } finally {
+      setCoverUploading(false);
     }
   };
 
@@ -1232,37 +1254,74 @@ const ProfileTab = ({ profile, onSave }) => {
           </div>
         </div>
       )}
-      <div>
-        <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">
-          Business Logo
-        </label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleLogoUpload}
-          disabled={uploading}
-          className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[#1C4D8D] hover:file:bg-blue-100"
-        />
-        {uploading && (
-          <p className="text-xs text-slate-400 mt-1">Uploading...</p>
-        )}
-        {form.logoUrl && (
-          <div className="mt-3 flex items-center gap-3">
-            <div className="w-14 h-14 rounded-xl border border-slate-200 overflow-hidden bg-slate-50">
-              <AppImage
-                src={form.logoUrl}
-                alt="Logo"
-                className="w-full h-full object-contain p-1"
-              />
+      <div className="grid sm:grid-cols-2 gap-5 pt-2">
+        <div>
+          <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+            Business Logo
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleLogoUpload}
+            disabled={uploading}
+            className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[#1C4D8D] hover:file:bg-blue-100 cursor-pointer"
+          />
+          {uploading && (
+            <p className="text-xs text-slate-400 mt-1 animate-pulse">Uploading...</p>
+          )}
+          {form.logoUrl && (
+            <div className="mt-3 flex items-center gap-3">
+              <div className="w-14 h-14 rounded-xl border border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center">
+                <AppImage
+                  src={form.logoUrl}
+                  alt="Logo"
+                  className="w-full h-full object-contain p-1"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setForm((f) => ({ ...f, logoUrl: "" }))}
+                className="text-xs text-red-500 font-bold hover:underline"
+              >
+                Remove
+              </button>
             </div>
-            <button
-              onClick={() => setForm((f) => ({ ...f, logoUrl: "" }))}
-              className="text-xs text-red-500 font-bold hover:underline"
-            >
-              Remove
-            </button>
-          </div>
-        )}
+          )}
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+            Cover Banner Image
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleCoverUpload}
+            disabled={coverUploading}
+            className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[#1C4D8D] hover:file:bg-blue-100 cursor-pointer"
+          />
+          {coverUploading && (
+            <p className="text-xs text-slate-400 mt-1 animate-pulse">Uploading...</p>
+          )}
+          {form.coverBannerUrl && (
+            <div className="mt-3 flex items-center gap-3">
+              <div className="w-28 h-14 rounded-xl border border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center">
+                <AppImage
+                  src={form.coverBannerUrl}
+                  alt="Cover Banner"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setForm((f) => ({ ...f, coverBannerUrl: "" }))}
+                className="text-xs text-red-500 font-bold hover:underline"
+              >
+                Remove
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       <button
         onClick={submit}
@@ -1306,10 +1365,24 @@ const PreviewTab = ({ profile }) => {
       <div className="max-w-sm mx-auto">
         <div className="bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-100 hover:shadow-3xl transition-all duration-300">
           {/* Premium Header with Gradient */}
-          <div className="relative h-32 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 overflow-hidden">
+          <div
+            className="relative h-32 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 overflow-hidden"
+            style={profile.coverBannerUrl ? {
+              backgroundImage: `url(${profile.coverBannerUrl})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            } : {}}
+          >
+            {profile.coverBannerUrl && (
+              <div className="absolute inset-0 bg-black/30 z-0" />
+            )}
             {/* Ambient orbs */}
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-            <div className="absolute -bottom-5 -left-5 w-24 h-24 bg-cyan-400/10 rounded-full blur-xl" />
+            {!profile.coverBannerUrl && (
+              <>
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+                <div className="absolute -bottom-5 -left-5 w-24 h-24 bg-cyan-400/10 rounded-full blur-xl" />
+              </>
+            )}
 
             {/* B2B Partner Badge */}
             <div className="absolute top-3 right-3 z-10 text-[10px] font-black px-3 py-1.5 bg-white/25 backdrop-blur-md text-white rounded-full uppercase tracking-wide border border-white/40 shadow-lg">

@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "./Navbar";
 import Sidebar from "./component/sidebar/Sidebar";
 import MembershipPlans from "./component/membershipplans/MembershipPlans";
+import Categories from "./component/categories/Categories";
 
 
 const ADMIN_FONTS = `
@@ -110,6 +111,14 @@ const Admin = () => {
                 element={
                   <PageTransition>
                     <MembershipPlans />
+                  </PageTransition>
+                }
+              />
+              <Route
+                path="/categories"
+                element={
+                  <PageTransition>
+                    <Categories />
                   </PageTransition>
                 }
               />

@@ -148,6 +148,8 @@ exports.register = asyncHandler(async (req, res) => {
         phone: profile.phone,
         email: email,
         website: profile.website,
+        logoUrl: profile.logoUrl || null,
+        coverBannerUrl: profile.coverBannerUrl || null,
       },
     };
   }

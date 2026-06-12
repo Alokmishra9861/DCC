@@ -75,34 +75,53 @@ const PartnerCard = ({ partner, onContact, index }) => {
     >
       {/* ── Banner / logo showcase area ── */}
       <div
-        className={`relative h-44 bg-gradient-to-br ${palette.bg} overflow-hidden flex-shrink-0`}
+        className="relative h-44 overflow-hidden flex-shrink-0"
+        style={partner.coverBannerUrl ? {
+          backgroundImage: `url(${partner.coverBannerUrl})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        } : {}}
       >
+        {!partner.coverBannerUrl && (
+          <div className={`absolute inset-0 bg-gradient-to-br ${palette.bg}`} />
+        )}
+
+        {partner.coverBannerUrl && (
+          <div className="absolute inset-0 bg-black/30 z-0" />
+        )}
+
         {/* Geometric mesh texture */}
-        <svg
-          className="absolute inset-0 w-full h-full opacity-10"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <defs>
-            <pattern
-              id={`grid-${partner.id}`}
-              width="28"
-              height="28"
-              patternUnits="userSpaceOnUse"
-            >
-              <path
-                d="M 28 0 L 0 0 0 28"
-                fill="none"
-                stroke="white"
-                strokeWidth="0.5"
-              />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill={`url(#grid-${partner.id})`} />
-        </svg>
+        {!partner.coverBannerUrl && (
+          <svg
+            className="absolute inset-0 w-full h-full opacity-10"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <pattern
+                id={`grid-${partner.id}`}
+                width="28"
+                height="28"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M 28 0 L 0 0 0 28"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="0.5"
+                />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill={`url(#grid-${partner.id})`} />
+          </svg>
+        )}
 
         {/* Decorative orbs */}
-        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10 blur-xl" />
-        <div className="absolute -bottom-6 -left-6 w-28 h-28 rounded-full bg-white/8 blur-lg" />
+        {!partner.coverBannerUrl && (
+          <>
+            <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10 blur-xl" />
+            <div className="absolute -bottom-6 -left-6 w-28 h-28 rounded-full bg-white/8 blur-lg" />
+          </>
+        )}
 
         {/* Verified badge top-right */}
         <div

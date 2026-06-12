@@ -28,7 +28,7 @@ router.get("/enquiries", protect, authorize("B2B"), getEnquiries);
 router.post(
   "/enquire/:partnerId",
   protect,
-  authorize("MEMBER", "EMPLOYER", "ASSOCIATION", "BUSINESS"),
+  authorize("MEMBER", "EMPLOYER", "ASSOCIATION", "BUSINESS", "B2B", "ADMIN"),
   submitEnquiry,
 );
 

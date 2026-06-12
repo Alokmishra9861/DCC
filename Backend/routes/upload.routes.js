@@ -11,7 +11,6 @@ const { asyncHandler } = require("../middlewares/errorhandler");
 // Generic single file upload (profile avatar etc.)
 router.post(
   "/image",
-  protect,
   upload.single("file"),
   asyncHandler(async (req, res) => {
     if (!req.file) throw ApiError.badRequest("No file uploaded");
