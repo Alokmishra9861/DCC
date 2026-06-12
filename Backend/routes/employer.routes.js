@@ -15,6 +15,7 @@ router.use(protect);
 router.use(employerGuard);
 
 router.get("/profile", ctrl.getProfile);
+router.put("/profile", ctrl.updateProfile);
 router.post("/bulk-purchase", ctrl.bulkPurchase);
 router.get("/dashboard", ctrl.getDashboard);
 router.get("/employees", ctrl.getEmployees);

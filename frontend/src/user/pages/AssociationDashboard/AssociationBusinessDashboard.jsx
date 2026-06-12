@@ -767,13 +767,24 @@ const AssociationBusinessDashboard = () => {
                           </td>
                           <td className="px-6 py-4">
                             {b.status !== "REMOVED" && (
-                              <button
-                                onClick={() => handleRemove(b.id)}
-                                className="p-2.5 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50 transition-colors opacity-100 sm:opacity-40 sm:group-hover:opacity-100 shadow-sm"
-                                title="Remove Business"
-                              >
-                                <Icon name="TrashIcon" size={16} />
-                              </button>
+                              <div className="flex gap-2 items-center">
+                                {biz && (biz.id || biz._id) && (
+                                  <button
+                                    onClick={() => window.open(`/business-profile/${biz.id || biz._id}`, "_blank")}
+                                    className="p-2.5 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-colors opacity-100 sm:opacity-40 sm:group-hover:opacity-100 shadow-sm"
+                                    title="View Live Profile"
+                                  >
+                                    <Icon name="EyeIcon" size={16} />
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handleRemove(b.id)}
+                                  className="p-2.5 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50 transition-colors opacity-100 sm:opacity-40 sm:group-hover:opacity-100 shadow-sm"
+                                  title="Remove Business"
+                                >
+                                  <Icon name="TrashIcon" size={16} />
+                                </button>
+                              </div>
                             )}
                           </td>
                         </tr>

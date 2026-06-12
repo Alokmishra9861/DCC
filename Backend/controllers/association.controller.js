@@ -70,6 +70,69 @@ exports.getProfile = asyncHandler(async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// PUT /api/association/profile
+// Update the authenticated association's profile
+// ─────────────────────────────────────────────────────────────────────────────
+exports.updateProfile = asyncHandler(async (req, res) => {
+  const {
+    name,
+    orgType,
+    district,
+    phone,
+    email,
+    website,
+    logoUrl,
+    description,
+    imageUrls,
+    documentUrls,
+    address,
+    addressLine1,
+    addressLine2,
+    landmark,
+    country,
+    coverBannerUrl,
+    socialLinks,
+    workingHours
+  } = req.body;
+
+  if (!name?.trim()) {
+    throw ApiError.badRequest("Association name is required");
+  }
+
+  const assoc = await prisma.association.findUnique({
+    where: { userId: req.user.id },
+  });
+  if (!assoc) throw ApiError.notFound("Association profile not found");
+
+  const updated = await prisma.association.update({
+    where: { id: assoc.id },
+    data: {
+      name: name.trim(),
+      orgType: orgType?.trim() || null,
+      district: district?.trim() || null,
+      phone: phone?.trim() || null,
+      email: email?.trim() || null,
+      website: website?.trim() || null,
+      logoUrl: logoUrl?.trim() || null,
+      description: description?.trim() || null,
+      imageUrls: Array.isArray(imageUrls) ? imageUrls : undefined,
+      documentUrls: Array.isArray(documentUrls) ? documentUrls : undefined,
+      address: address?.trim() || null,
+      addressLine1: addressLine1?.trim() || null,
+      addressLine2: addressLine2?.trim() || null,
+      landmark: landmark?.trim() || null,
+      country: country?.trim() || "Cayman Islands",
+      coverBannerUrl: coverBannerUrl?.trim() || null,
+      socialLinks: typeof socialLinks === "object" ? JSON.stringify(socialLinks) : socialLinks,
+      workingHours: typeof workingHours === "object" ? JSON.stringify(workingHours) : workingHours,
+    },
+  });
+
+  return ApiResponse.success(res, updated, "Association profile updated successfully");
+});
+
+
+// ─────────────────────────────────────────────────────────────────────────────
 // POST /api/association/join-code/generate
 // Generate (or regenerate) the join code for a MEMBER-type association
 // ─────────────────────────────────────────────────────────────────────────────

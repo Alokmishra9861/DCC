@@ -12,9 +12,9 @@ const {
 router.get("/by-category/:categoryId", ctrl.getOffersByCategory);
 router.get("/:businessId", optionalAuth, ctrl.getBusinessOffers);
 
-// Business authenticated routes
-router.post("/", protect, authorize("BUSINESS"), ctrl.createOffer);
-router.put("/:id", protect, authorize("BUSINESS"), ctrl.updateOffer);
-router.delete("/:id", protect, authorize("BUSINESS"), ctrl.deleteOffer);
+// Business / Employer / Association / B2B authenticated routes
+router.post("/", protect, authorize("BUSINESS", "EMPLOYER", "ASSOCIATION", "B2B"), ctrl.createOffer);
+router.put("/:id", protect, authorize("BUSINESS", "EMPLOYER", "ASSOCIATION", "B2B"), ctrl.updateOffer);
+router.delete("/:id", protect, authorize("BUSINESS", "EMPLOYER", "ASSOCIATION", "B2B"), ctrl.deleteOffer);
 
 module.exports = router;

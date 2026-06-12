@@ -205,6 +205,8 @@ export const memberAPI = {
 // ─── Employer ─────────────────────────────────────────────────────────────────
 export const employerAPI = {
   getProfile: () => request("/employer/profile"),
+  updateProfile: (data) =>
+    request("/employer/profile", { method: "PUT", body: JSON.stringify(data) }),
   getDashboard: () => request("/employer/dashboard"),
   bulkPurchase: (data) =>
     request("/employer/bulk-purchase", {
@@ -240,6 +242,8 @@ export const employerAPI = {
 export const associationAPI = {
   // Profile & dashboard
   getProfile: () => request("/association/profile"),
+  updateProfile: (data) =>
+    request("/association/profile", { method: "PUT", body: JSON.stringify(data) }),
   getDashboard: () => request("/association/dashboard"),
 
   // Join code (MEMBER-type associations)
@@ -517,6 +521,19 @@ export const uploadAPI = {
     });
     const json = await response.json();
     if (!response.ok) throw new Error(json.message || "Upload failed");
+    return json.data !== undefined ? json.data : json;
+  },
+  document: async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const token = getToken();
+    const response = await fetch(`${BASE_URL}/upload/document`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      body: formData,
+    });
+    const json = await response.json();
+    if (!response.ok) throw new Error(json.message || "Document upload failed");
     return json.data !== undefined ? json.data : json;
   },
 };

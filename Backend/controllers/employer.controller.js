@@ -702,3 +702,62 @@ exports.getDashboard = asyncHandler(async (req, res) => {
     topCategories,
   });
 });
+
+// ── PUT /api/employer/profile ────────────────────────────────────────────────
+// Update the authenticated employer's profile
+// ─────────────────────────────────────────────────────────────────────────────
+exports.updateProfile = asyncHandler(async (req, res) => {
+  const {
+    companyName,
+    industry,
+    district,
+    phone,
+    logoUrl,
+    imageUrls,
+    documentUrls,
+    address,
+    addressLine1,
+    addressLine2,
+    landmark,
+    country,
+    coverBannerUrl,
+    website,
+    description,
+    socialLinks,
+    workingHours
+  } = req.body;
+
+  if (!companyName?.trim()) {
+    throw ApiError.badRequest("Company name is required");
+  }
+
+  const employer = await prisma.employer.findUnique({
+    where: { userId: req.user.id },
+  });
+  if (!employer) throw ApiError.notFound("Employer not found");
+
+  const updated = await prisma.employer.update({
+    where: { id: employer.id },
+    data: {
+      companyName: companyName.trim(),
+      industry,
+      district,
+      phone,
+      logoUrl,
+      imageUrls: Array.isArray(imageUrls) ? imageUrls : undefined,
+      documentUrls: Array.isArray(documentUrls) ? documentUrls : undefined,
+      address,
+      addressLine1,
+      addressLine2,
+      landmark,
+      country,
+      coverBannerUrl,
+      website,
+      description,
+      socialLinks: typeof socialLinks === "object" ? JSON.stringify(socialLinks) : socialLinks,
+      workingHours: typeof workingHours === "object" ? JSON.stringify(workingHours) : workingHours,
+    },
+  });
+
+  return ApiResponse.success(res, updated, "Employer profile updated");
+});

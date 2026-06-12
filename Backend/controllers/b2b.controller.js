@@ -34,8 +34,25 @@ exports.getProfile = asyncHandler(async (req, res) => {
 // ── PUT /api/b2b/profile ──────────────────────────────────────────────────────
 // Update the authenticated B2B partner's profile
 exports.updateProfile = asyncHandler(async (req, res) => {
-  const { companyName, servicesOffered, phone, email, website, logoUrl, coverBannerUrl } =
-    req.body;
+  const {
+    companyName,
+    servicesOffered,
+    phone,
+    email,
+    website,
+    logoUrl,
+    coverBannerUrl,
+    imageUrls,
+    documentUrls,
+    address,
+    addressLine1,
+    addressLine2,
+    landmark,
+    country,
+    description,
+    socialLinks,
+    workingHours
+  } = req.body;
 
   if (!companyName?.trim())
     throw ApiError.badRequest("Company name is required");
@@ -57,6 +74,16 @@ exports.updateProfile = asyncHandler(async (req, res) => {
       website: website?.trim() || null,
       logoUrl: logoUrl?.trim() || null,
       coverBannerUrl: coverBannerUrl?.trim() || null,
+      imageUrls: Array.isArray(imageUrls) ? imageUrls : undefined,
+      documentUrls: Array.isArray(documentUrls) ? documentUrls : undefined,
+      address: address?.trim() || null,
+      addressLine1: addressLine1?.trim() || null,
+      addressLine2: addressLine2?.trim() || null,
+      landmark: landmark?.trim() || null,
+      country: country?.trim() || "Cayman Islands",
+      description: description?.trim() || null,
+      socialLinks: typeof socialLinks === "object" ? JSON.stringify(socialLinks) : socialLinks,
+      workingHours: typeof workingHours === "object" ? JSON.stringify(workingHours) : workingHours,
     },
   });
 

@@ -31,6 +31,31 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
 });
 
+const documentFilter = (req, file, cb) => {
+  const allowed = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "text/plain"
+  ];
+  if (allowed.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(
+      new Error(
+        "File type not allowed. Use PDF, DOC, or DOCX.",
+      ),
+      false,
+    );
+  }
+};
+
+const uploadDoc = multer({
+  storage,
+  fileFilter: documentFilter,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+});
+
 // Upload buffer to Cloudinary
 const uploadToCloudinary = (buffer, folder, resourceType = "image") => {
   return new Promise((resolve, reject) => {
@@ -45,4 +70,4 @@ const uploadToCloudinary = (buffer, folder, resourceType = "image") => {
   });
 };
 
-module.exports = { upload, uploadToCloudinary };
+module.exports = { upload, uploadDoc, uploadToCloudinary };

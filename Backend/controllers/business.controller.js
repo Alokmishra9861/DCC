@@ -67,8 +67,12 @@ exports.listBusinesses = asyncHandler(async (req, res) => {
 exports.getBusinessProfile = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  let business = await prisma.business.findFirst({
-    where: { id },
+  let profile = null;
+  let type = "";
+
+  // 1. Try Business
+  profile = await prisma.business.findFirst({
+    where: { OR: [{ id }, { userId: id }] },
     include: {
       category: true,
       offers: {
@@ -78,65 +82,125 @@ exports.getBusinessProfile = asyncHandler(async (req, res) => {
     },
   });
 
-  // Fallback to userId lookup if not found directly
-  if (!business) {
-    business = await prisma.business.findFirst({
-      where: { userId: id },
+  if (profile) {
+    type = "BUSINESS";
+  } else {
+    // 2. Try Employer
+    profile = await prisma.employer.findFirst({
+      where: { OR: [{ id }, { userId: id }] },
       include: {
-        category: true,
         offers: {
           where: { isActive: true },
           include: { certificates: { where: { status: "AVAILABLE" } } },
         },
       },
     });
+    if (profile) {
+      type = "EMPLOYER";
+    } else {
+      // 3. Try Association
+      profile = await prisma.association.findFirst({
+        where: { OR: [{ id }, { userId: id }] },
+        include: {
+          offers: {
+            where: { isActive: true },
+            include: { certificates: { where: { status: "AVAILABLE" } } },
+          },
+        },
+      });
+      if (profile) {
+        type = "ASSOCIATION";
+      } else {
+        // 4. Try B2B Partner
+        profile = await prisma.b2BPartner.findFirst({
+          where: { OR: [{ id }, { userId: id }] },
+          include: {
+            offers: {
+              where: { isActive: true },
+              include: { certificates: { where: { status: "AVAILABLE" } } },
+            },
+          },
+        });
+        if (profile) {
+          type = "B2B";
+        }
+      }
+    }
   }
 
-  if (!business) throw ApiError.notFound("Business not found");
+  if (!profile) throw ApiError.notFound("Profile not found");
 
-  // ✨ Business users can't see competitor offers - only members can
-  let offersToShow = business.offers;
-  if (req.user?.role === "BUSINESS") {
-    // Check if this is their own business
-    const isOwner = await prisma.business.findFirst({
-      where: { id: business.id, userId: req.user.id },
-    });
-    // If not owner, hide offers
-    if (!isOwner) {
-      offersToShow = [];
-    }
-  } else if (req.user?.role !== "MEMBER" && req.user?.role !== "ADMIN") {
-    // Non-members and non-business users can't see offers
+  // Format to standard profile fields for frontend consumption
+  const name = profile.name || profile.companyName || "";
+  const email = profile.email || "";
+  const phone = profile.phone || "";
+  const logoUrl = profile.logoUrl || "";
+  const website = profile.website || "";
+  const description = profile.description || profile.servicesOffered || "";
+  const categoryName = profile.category?.name || profile.industry || profile.orgType || profile.servicesOffered || "Organization";
+
+  // Check authorization for viewing offers
+  let offersToShow = profile.offers || [];
+  const isOwner = req.user?.id && profile.userId === req.user.id;
+  const canViewOffers =
+    req.user?.role === "MEMBER" ||
+    req.user?.role === "ADMIN" ||
+    isOwner;
+
+  if (!canViewOffers) {
     offersToShow = [];
   }
 
-  // Ensure there is at least one offer to track views (handles 0-offers placeholder view counting)
-  const offerCount = await prisma.offer.count({ where: { businessId: business.id } });
+  // Views tracking placeholder
+  const foreignKeyField =
+    type === "BUSINESS"
+      ? "businessId"
+      : type === "EMPLOYER"
+      ? "employerId"
+      : type === "ASSOCIATION"
+      ? "associationId"
+      : "b2bPartnerId";
+
+  const offerCount = await prisma.offer.count({
+    where: { [foreignKeyField]: profile.id },
+  });
+
   if (offerCount === 0) {
     try {
       await prisma.offer.create({
         data: {
-          businessId: business.id,
+          [foreignKeyField]: profile.id,
           title: "Profile Views Tracker",
           description: "Hidden system placeholder to track profile views.",
           type: "DISCOUNT",
           isActive: false,
           isSeeded: false,
           views: 0,
-        }
+        },
       });
     } catch (err) {
       console.warn("⚠️ Warning creating placeholder offer:", err.message);
     }
   }
 
-  // Track view
+  // Increment views
   await prisma.offer.updateMany({
-    where: { businessId: business.id },
+    where: { [foreignKeyField]: profile.id },
     data: { views: { increment: 1 } },
   });
 
-  return ApiResponse.success(res, { ...business, offers: offersToShow });
+  return ApiResponse.success(res, {
+    ...profile,
+    offers: offersToShow,
+    profileType: type,
+    name,
+    email,
+    phone,
+    logoUrl,
+    website,
+    description,
+    categoryName,
+  });
 });
 
 // ── Business: get own profile ─────────────────────────
@@ -404,7 +468,8 @@ exports.updateBusiness = asyncHandler(async (req, res) => {
     videoUrl,
     workingHours,
     logoUrl,
-    imageUrls
+    imageUrls,
+    documentUrls
   } = req.body;
 
   const business = await prisma.business.findUnique({
@@ -440,7 +505,8 @@ exports.updateBusiness = asyncHandler(async (req, res) => {
       videoUrl,
       workingHours: typeof workingHours === "object" ? JSON.stringify(workingHours) : workingHours,
       logoUrl,
-      imageUrls: Array.isArray(imageUrls) ? imageUrls : undefined
+      imageUrls: Array.isArray(imageUrls) ? imageUrls : undefined,
+      documentUrls: Array.isArray(documentUrls) ? documentUrls : undefined
     },
   });
 

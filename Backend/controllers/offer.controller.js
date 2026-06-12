@@ -41,6 +41,37 @@ const normalizeOfferType = (type) => {
   return "DISCOUNT";
 };
 
+const getProfileAndField = async (userId, role) => {
+  let profile = null;
+  let field = "";
+  let idField = "id";
+
+  if (role === "BUSINESS") {
+    profile = await prisma.business.findUnique({
+      where: { userId },
+      include: { category: true },
+    });
+    field = "businessId";
+  } else if (role === "EMPLOYER") {
+    profile = await prisma.employer.findUnique({
+      where: { userId },
+    });
+    field = "employerId";
+  } else if (role === "ASSOCIATION") {
+    profile = await prisma.association.findUnique({
+      where: { userId },
+    });
+    field = "associationId";
+  } else if (role === "B2B") {
+    profile = await prisma.b2BPartner.findUnique({
+      where: { userId },
+    });
+    field = "b2bPartnerId";
+  }
+
+  return { profile, field, idField };
+};
+
 // ── Create offer ──────────────────────────────────────
 exports.createOffer = asyncHandler(async (req, res) => {
   const {
@@ -59,49 +90,50 @@ exports.createOffer = asyncHandler(async (req, res) => {
     throw ApiError.badRequest("Title and description are required");
   }
 
-  const business = await prisma.business.findUnique({
-    where: { userId: req.user.id },
-    include: { category: true },
-  });
-  if (!business) throw ApiError.notFound("Business not found");
+  const { profile, field } = await getProfileAndField(req.user.id, req.user.role);
+  if (!profile) throw ApiError.notFound(`${req.user.role} profile not found`);
 
-  // Ensure business has a category selected
-  if (!business.categoryId || !business.category) {
+  // Check approval
+  const isApproved = profile.isApproved || profile.status === "APPROVED";
+  if (!isApproved) {
+    throw ApiError.forbidden(`${req.user.role} must be approved to create offers`);
+  }
+
+  // Ensure category is selected if business
+  if (req.user.role === "BUSINESS" && (!profile.categoryId || !profile.category)) {
     throw ApiError.badRequest(
       "Business must have a category selected before creating offers",
     );
   }
 
-  const isApproved = business.isApproved || business.status === "APPROVED";
-  if (!isApproved) {
-    throw ApiError.forbidden("Business must be approved to create offers");
-  }
+  const offerData = {
+    title,
+    description,
+    imageUrl,
+    type: normalizeOfferType(type),
+    discountValue: parseOptionalNumber(discountValue),
+    minSpend: parseOptionalNumber(minSpend),
+    expiryDate: parseOptionalDate(expiryDate),
+    categoryId: categoryId || profile.categoryId || null,
+  };
+  offerData[field] = profile.id;
 
   const offer = await prisma.offer.create({
-    data: {
-      businessId: business.id,
-      title,
-      description,
-      imageUrl,
-      type: normalizeOfferType(type),
-      discountValue: parseOptionalNumber(discountValue),
-      minSpend: parseOptionalNumber(minSpend),
-      expiryDate: parseOptionalDate(expiryDate),
-      categoryId: categoryId || business.categoryId,
-    },
+    data: offerData,
     include: {
-      business: {
-        include: { category: true },
-      },
+      business: { include: { category: true } },
+      employer: true,
+      association: true,
+      b2bPartner: true,
       category: true,
     },
   });
 
   // Trigger Notifications
   try {
-    // 1. Notify the Business Owner
+    // 1. Notify the Owner
     await createNotification(
-      business.userId,
+      profile.userId,
       "New Offer Created! 📢",
       `Your offer "${title}" is now active in the directory.`,
       "INFO"
@@ -111,11 +143,12 @@ exports.createOffer = asyncHandler(async (req, res) => {
     const admins = await prisma.user.findMany({
       where: { role: "ADMIN" },
     });
+    const ownerName = profile.name || profile.companyName || "Organization";
     for (const admin of admins) {
       await createNotification(
         admin.id,
         "New Offer Created! 📢",
-        `Business "${business.name}" created a new offer: "${title}".`,
+        `Organization "${ownerName}" created a new offer: "${title}".`,
         "SYSTEM"
       );
     }
@@ -140,13 +173,14 @@ exports.updateOffer = asyncHandler(async (req, res) => {
     categoryId,
   } = req.body;
 
-  const business = await prisma.business.findUnique({
-    where: { userId: req.user.id },
-  });
-  if (!business) throw ApiError.notFound("Business not found");
+  const { profile, field } = await getProfileAndField(req.user.id, req.user.role);
+  if (!profile) throw ApiError.notFound(`${req.user.role} profile not found`);
+
+  const whereClause = { id };
+  whereClause[field] = profile.id;
 
   const offer = await prisma.offer.findFirst({
-    where: { id, businessId: business.id },
+    where: whereClause,
   });
   if (!offer) throw ApiError.notFound("Offer not found");
 
@@ -163,9 +197,10 @@ exports.updateOffer = asyncHandler(async (req, res) => {
       categoryId: categoryId !== undefined ? (categoryId || null) : undefined,
     },
     include: {
-      business: {
-        include: { category: true },
-      },
+      business: { include: { category: true } },
+      employer: true,
+      association: true,
+      b2bPartner: true,
       category: true,
     },
   });
@@ -176,11 +211,15 @@ exports.updateOffer = asyncHandler(async (req, res) => {
 // ── Delete offer ──────────────────────────────────────
 exports.deleteOffer = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const business = await prisma.business.findUnique({
-    where: { userId: req.user.id },
-  });
+
+  const { profile, field } = await getProfileAndField(req.user.id, req.user.role);
+  if (!profile) throw ApiError.notFound(`${req.user.role} profile not found`);
+
+  const whereClause = { id };
+  whereClause[field] = profile.id;
+
   const offer = await prisma.offer.findFirst({
-    where: { id, businessId: business.id },
+    where: whereClause,
   });
   if (!offer) throw ApiError.notFound("Offer not found");
 
@@ -193,24 +232,55 @@ exports.deleteOffer = asyncHandler(async (req, res) => {
 exports.getBusinessOffers = asyncHandler(async (req, res) => {
   const { businessId } = req.params;
 
-  const business = await prisma.business.findUnique({
+  let entity = null;
+  let type = "";
+  let queryField = "";
+
+  // 1. Try Business
+  entity = await prisma.business.findUnique({
     where: { id: businessId },
     include: { category: true },
   });
+  if (entity) {
+    type = "BUSINESS";
+    queryField = "businessId";
+  } else {
+    // 2. Try Employer
+    entity = await prisma.employer.findUnique({
+      where: { id: businessId },
+    });
+    if (entity) {
+      type = "EMPLOYER";
+      queryField = "employerId";
+    } else {
+      // 3. Try Association
+      entity = await prisma.association.findUnique({
+        where: { id: businessId },
+      });
+      if (entity) {
+        type = "ASSOCIATION";
+        queryField = "associationId";
+      } else {
+        // 4. Try B2BPartner
+        entity = await prisma.b2BPartner.findUnique({
+          where: { id: businessId },
+        });
+        if (entity) {
+          type = "B2B";
+          queryField = "b2bPartnerId";
+        }
+      }
+    }
+  }
 
-  if (!business) throw ApiError.notFound("Business not found");
+  if (!entity) throw ApiError.notFound("Profile not found");
 
-  // ✨ Check authorization: only MEMBER, ADMIN, or business owner can see offers
-  const isBusinessOwner =
-    req.user?.id &&
-    (await prisma.business.findFirst({
-      where: { id: businessId, userId: req.user.id },
-    }));
-
+  // ✨ Check authorization: only MEMBER, ADMIN, or owner can see offers
+  const isOwner = req.user?.id && entity.userId === req.user.id;
   const canViewOffers =
     req.user?.role === "MEMBER" ||
     req.user?.role === "ADMIN" ||
-    isBusinessOwner;
+    isOwner;
 
   if (!canViewOffers) {
     throw ApiError.forbidden(
@@ -218,36 +288,58 @@ exports.getBusinessOffers = asyncHandler(async (req, res) => {
     );
   }
 
+  const whereClause = {
+    isActive: true,
+  };
+  whereClause[queryField] = businessId;
+
+  // Additional approval checks per entity type
+  if (type === "BUSINESS") {
+    whereClause.business = { isApproved: true, status: "APPROVED" };
+  } else if (type === "EMPLOYER") {
+    whereClause.employer = { isApproved: true, status: "APPROVED" };
+  } else if (type === "ASSOCIATION") {
+    whereClause.association = { isApproved: true, status: "APPROVED" };
+  } else if (type === "B2B") {
+    whereClause.b2bPartner = { isApproved: true };
+  }
+
   const offers = await prisma.offer.findMany({
-    where: {
-      businessId,
-      isActive: true,
-      business: {
-        isApproved: true,
-        status: "APPROVED",
-      },
-    },
+    where: whereClause,
     include: {
-      business: {
-        include: { category: true },
-      },
+      business: { include: { category: true } },
+      employer: true,
+      association: true,
+      b2bPartner: true,
       category: true,
       certificates: { where: { status: "AVAILABLE" } },
     },
     orderBy: { createdAt: "desc" },
   });
 
+  const responseData = {
+    offers,
+    offerCount: offers.length,
+    entity: {
+      id: entity.id,
+      name: entity.name || entity.companyName || "",
+      type,
+      category: entity.category || null,
+    },
+  };
+
+  // Keep business property for backward compatibility if it's a BUSINESS
+  if (type === "BUSINESS") {
+    responseData.business = {
+      id: entity.id,
+      name: entity.name,
+      category: entity.category,
+    };
+  }
+
   return ApiResponse.success(
     res,
-    {
-      business: {
-        id: business.id,
-        name: business.name,
-        category: business.category,
-      },
-      offers,
-      offerCount: offers.length,
-    },
+    responseData,
     "Business offers retrieved successfully",
   );
 });

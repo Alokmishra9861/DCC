@@ -30,12 +30,14 @@ const EditProfileView = ({ businessData, onBack, onSaved }) => {
   const [logoUrl, setLogoUrl] = useState("");
   const [coverBannerUrl, setCoverBannerUrl] = useState("");
   const [galleryImages, setGalleryImages] = useState([]);
+  const [documentUrls, setDocumentUrls] = useState([]);
   const [videoUrl, setVideoUrl] = useState("");
 
   // Upload States
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
 
   // Opening Hours State
   const defaultHours = [
@@ -110,6 +112,7 @@ const EditProfileView = ({ businessData, onBack, onSaved }) => {
     setLogoUrl(p.logoUrl || "");
     setCoverBannerUrl(p.coverBannerUrl || "");
     setGalleryImages(p.imageUrls || []);
+    setDocumentUrls(p.documentUrls || []);
     setVideoUrl(p.videoUrl || "");
 
     if (p.workingHours) {
@@ -169,6 +172,10 @@ const EditProfileView = ({ businessData, onBack, onSaved }) => {
   const handleGalleryAdd = async (e) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+    if (galleryImages.length >= 6) {
+      showToast("error", "Maximum of 6 gallery images allowed.");
+      return;
+    }
     setUploadingGallery(true);
     try {
       const file = files[0];
@@ -185,6 +192,35 @@ const EditProfileView = ({ businessData, onBack, onSaved }) => {
   const handleGalleryRemove = (idx) => {
     setGalleryImages(prev => prev.filter((_, i) => i !== idx));
     showToast("success", "Image removed from gallery.");
+  };
+
+  const handleDocumentAdd = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    if (documentUrls.length >= 5) {
+      showToast("error", "Maximum of 5 documents allowed.");
+      return;
+    }
+    setUploadingDoc(true);
+    try {
+      const file = files[0];
+      if (file.size > 10 * 1024 * 1024) {
+        showToast("error", "Document size must be under 10MB");
+        return;
+      }
+      const res = await uploadAPI.document(file);
+      setDocumentUrls(prev => [...prev, res.url || res.secure_url]);
+      showToast("success", "Document added!");
+    } catch (err) {
+      showToast("error", "Document upload failed: " + err.message);
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
+
+  const handleDocumentRemove = (idx) => {
+    setDocumentUrls(prev => prev.filter((_, i) => i !== idx));
+    showToast("success", "Document removed.");
   };
 
   // Hour Handlers
@@ -237,6 +273,7 @@ const EditProfileView = ({ businessData, onBack, onSaved }) => {
         logoUrl,
         coverBannerUrl,
         imageUrls: galleryImages,
+        documentUrls,
         videoUrl,
         workingHours: JSON.stringify(hours),
         socialLinks: JSON.stringify(socials)
@@ -635,7 +672,7 @@ const EditProfileView = ({ businessData, onBack, onSaved }) => {
             {/* Gallery Images Grid */}
             <div>
               <label className="block text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
-                Gallery Images
+                Gallery Images (Maximum 6)
               </label>
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
                 {galleryImages.map((img, i) => (
@@ -652,23 +689,72 @@ const EditProfileView = ({ businessData, onBack, onSaved }) => {
                   </div>
                 ))}
                 
-                {/* Upload box */}
-                <div className="relative border-2 border-dashed border-slate-200 hover:border-slate-400 bg-slate-50/50 hover:bg-white rounded-2xl h-24 flex flex-col items-center justify-center p-2 cursor-pointer transition-all overflow-hidden group">
-                  {uploadingGallery ? (
-                    <div className="w-6 h-6 border-2 border-slate-300 border-t-slate-900 rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <Icon name="PlusIcon" size={20} className="text-slate-400 mb-1 group-hover:scale-110 transition-transform" />
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-wide">Add Photo</p>
-                    </>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleGalleryAdd}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                  />
-                </div>
+                {galleryImages.length < 6 && (
+                  /* Upload box */
+                  <div className="relative border-2 border-dashed border-slate-200 hover:border-slate-400 bg-slate-50/50 hover:bg-white rounded-2xl h-24 flex flex-col items-center justify-center p-2 cursor-pointer transition-all overflow-hidden group">
+                    {uploadingGallery ? (
+                      <div className="w-6 h-6 border-2 border-slate-300 border-t-slate-900 rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Icon name="PlusIcon" size={20} className="text-slate-400 mb-1 group-hover:scale-110 transition-transform" />
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-wide">Add Photo</p>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleGalleryAdd}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Document Uploads Grid */}
+            <div>
+              <label className="block text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
+                Document Uploads (Maximum 5 PDFs/Docs)
+              </label>
+              <div className="space-y-2">
+                {documentUrls.map((url, i) => {
+                  const filename = url.substring(url.lastIndexOf('/') + 1).split('?')[0] || `document_${i + 1}.pdf`;
+                  const decodedName = decodeURIComponent(filename);
+                  return (
+                    <div key={i} className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200/60 rounded-2xl">
+                      <span className="text-xs font-bold text-slate-700 truncate max-w-xs">{decodedName}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleDocumentRemove(i)}
+                        className="px-2.5 py-1 text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition-colors flex items-center gap-1"
+                        title="Remove document"
+                      >
+                        <Icon name="TrashIcon" size={13} />
+                        <span>Remove</span>
+                      </button>
+                    </div>
+                  );
+                })}
+
+                {documentUrls.length < 5 && (
+                  <div className="relative border-2 border-dashed border-slate-200 hover:border-slate-400 bg-slate-50/50 hover:bg-white rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden group">
+                    {uploadingDoc ? (
+                      <div className="w-8 h-8 border-2 border-slate-300 border-t-slate-900 rounded-full animate-spin mb-2" />
+                    ) : (
+                      <>
+                        <Icon name="ArrowUpTrayIcon" size={24} className="text-slate-400 mb-2 group-hover:-translate-y-0.5 transition-transform" />
+                        <p className="text-xs font-extrabold text-slate-600">Click to upload PDF / Word document</p>
+                        <p className="text-[10px] font-semibold text-slate-400 mt-1">Files must be under 10MB</p>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.txt"
+                      onChange={handleDocumentAdd}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 

@@ -827,13 +827,22 @@ const BusinessDashboardContent = () => {
               </div>
               {businessData?.id && (
                 <div className="flex flex-col items-start md:items-end gap-3">
-                  <button
-                    onClick={() => setIsEditingProfile(true)}
-                    className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-xl font-bold hover:bg-white/20 transition-all shadow-md hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    <Icon name="PencilSquareIcon" size={18} />
-                    Edit Business
-                  </button>
+                  <div className="flex flex-wrap gap-2 justify-start md:justify-end">
+                    <button
+                      onClick={() => window.open(`/business-profile/${businessData.id}`, "_blank")}
+                      className="flex items-center gap-2 px-6 py-3 bg-[#1C4D8D]/80 backdrop-blur-md text-white border border-white/20 rounded-xl font-bold hover:bg-[#1C4D8D] transition-all shadow-md hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <Icon name="EyeIcon" size={18} />
+                      View Live Profile
+                    </button>
+                    <button
+                      onClick={() => setIsEditingProfile(true)}
+                      className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-xl font-bold hover:bg-white/20 transition-all shadow-md hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <Icon name="PencilSquareIcon" size={18} />
+                      Edit Business
+                    </button>
+                  </div>
                   <p className="text-blue-200 text-xs font-black uppercase tracking-widest mt-2">
                     Business ID
                   </p>

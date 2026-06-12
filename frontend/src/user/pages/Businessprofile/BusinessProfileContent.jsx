@@ -302,14 +302,20 @@ const BusinessProfileContent = () => {
   const [purchaseError, setPurchaseError] = useState("");
 
   const user = getUser();
-  const ownerId =
-    user?.profile?._id ||
-    user?.profile?.id ||
-    user?.business?._id ||
-    user?.business?.id;
+  const getOwnerId = () => {
+    if (!user) return null;
+    const role = String(user.role || "").toUpperCase();
+    if (role === "BUSINESS") return user.business?.id || user.business?._id || user.profile?.id || user.profile?._id;
+    if (role === "EMPLOYER") return user.employer?.id || user.employer?._id || user.profile?.id || user.profile?._id;
+    if (role === "ASSOCIATION") return user.association?.id || user.association?._id || user.profile?.id || user.profile?._id;
+    if (role === "B2B") return user.b2bPartner?.id || user.b2bPartner?._id || user.profile?.id || user.profile?._id;
+    return user.profile?.id || user.profile?._id;
+  };
+  const ownerId = getOwnerId();
   const isOwner =
+    user &&
     String(ownerId || "") === String(businessId || "") &&
-    String(user?.role || "").toUpperCase() === "BUSINESS";
+    ["BUSINESS", "EMPLOYER", "ASSOCIATION", "B2B"].includes(String(user?.role || "").toUpperCase());
 
   useEffect(() => {
     fetchBusinessData();
@@ -931,19 +937,57 @@ const BusinessProfileContent = () => {
                 )}
               </div>
 
-              {/* Showcase slide images */}
-              <div className="grid grid-cols-3 gap-3.5 mt-6">
-                {galleryImages.slice(0, 3).map((url, idx) => (
+              {/* Showcase slide images (up to 6) */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3.5 mt-6">
+                {galleryImages.slice(0, 6).map((url, idx) => (
                   <div key={idx} className="aspect-[4/3] rounded-2xl overflow-hidden border border-slate-100 shadow-sm group cursor-zoom-in">
                     <AppImage
                       src={url}
-                      alt={`Business slide ${idx + 1}`}
+                      alt={`Gallery image ${idx + 1}`}
                       className="w-full h-full object-cover group-hover:scale-104 transition-all duration-300"
                     />
                   </div>
                 ))}
               </div>
             </div>
+
+            {/* ── 5.1 Document Uploads section (Limit 5) ── */}
+            {business.documentUrls && business.documentUrls.length > 0 && (
+              <div className="bg-white rounded-3xl border border-slate-100/80 shadow-sm p-6 md:p-8 mt-6">
+                <h2 className="text-sm font-black text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Icon name="DocumentIcon" size={18} className="text-[#1C4D8D]" />
+                  <span>Documents & Certifications</span>
+                </h2>
+                <div className="grid gap-3">
+                  {business.documentUrls.slice(0, 5).map((url, idx) => {
+                    const filename = url.substring(url.lastIndexOf('/') + 1).split('?')[0] || `document_${idx + 1}.pdf`;
+                    const decodeName = decodeURIComponent(filename);
+                    return (
+                      <div key={idx} className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-slate-100/60 transition-colors group">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 bg-blue-50/70 border border-blue-100/30 rounded-xl flex items-center justify-center text-[#1C4D8D]">
+                            <Icon name="ArrowDownTrayIcon" size={18} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-700 truncate max-w-[200px] md:max-w-xs">{decodeName}</p>
+                            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Attachment / Document</p>
+                          </div>
+                        </div>
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-4 py-2 bg-white hover:bg-[#1C4D8D] hover:text-white border border-slate-100 text-[#1C4D8D] text-[11px] font-black uppercase tracking-wider rounded-xl transition-all shadow-sm active:scale-95 shrink-0"
+                        >
+                          View Document
+                        </a>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
 
             {/* ── 6. Mobile Only Business Info container ── */}
             <div className="lg:hidden bg-white rounded-3xl border border-slate-100/80 shadow-sm p-6">

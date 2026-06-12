@@ -195,6 +195,20 @@ model Employer {
   phone           String?
   logoUrl         String?
 
+  // Profile extensions
+  imageUrls       String[]
+  documentUrls    String[]
+  address         String?
+  addressLine1    String?
+  addressLine2    String?
+  landmark        String?
+  country         String?   @default("Cayman Islands")
+  coverBannerUrl  String?
+  website         String?
+  description     String?
+  socialLinks     String?   // JSON string of social media links
+  workingHours    String?   // JSON string of opening hours
+
   // Approval (mirrors Business pattern — admin sets this)
   isApproved      Boolean  @default(false)
   status          String   @default("PENDING") // PENDING | APPROVED | REJECTED
@@ -221,6 +235,7 @@ model Employer {
   members         Member[]
   memberships     Membership[]
   employees       Employee[]   // ← NEW
+  offers          Offer[]      // B2B/Discount offers by employer
 
   isSeeded        Boolean  @default(false)
   createdAt       DateTime @default(now())
@@ -292,6 +307,18 @@ model Association {
   logoUrl         String?
   description     String?
 
+  // Profile extensions
+  imageUrls       String[]
+  documentUrls    String[]
+  address         String?
+  addressLine1    String?
+  addressLine2    String?
+  landmark        String?
+  country         String?   @default("Cayman Islands")
+  coverBannerUrl  String?
+  socialLinks     String?   // JSON string of social links
+  workingHours    String?   // JSON string of opening hours
+
   isApproved      Boolean  @default(false)
   status          String   @default("PENDING") // PENDING | APPROVED | REJECTED
   rejectionReason String?
@@ -309,6 +336,7 @@ model Association {
   memberships          Membership[]
   associationMembers   AssociationMember[]    // ← NEW: MEMBER type
   associationBusinesses AssociationBusiness[] // ← NEW: BUSINESS type
+  offers                Offer[]               // Offers by association
 
   isSeeded        Boolean  @default(false)
   createdAt       DateTime @default(now())
@@ -412,6 +440,7 @@ model Business {
   logoUrl       String?
   imageUrls     String[]
   videoUrl      String?
+  documentUrls  String[]    // PDFs/Docs uploads (limit 5)
 
   // New fields for premium Edit Profile form
   cuisineType   String?
@@ -456,7 +485,7 @@ model Business {
 model B2BPartner {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   userId        String   @unique @db.ObjectId
-  user          User     @relation(fields: [userId], references: [id])
+  user            User     @relation(fields: [userId], references: [id])
 
   companyName   String
   servicesOffered String?
@@ -465,11 +494,25 @@ model B2BPartner {
   logoUrl       String?
   website       String?
   coverBannerUrl String?
+
+  // Profile extensions
+  imageUrls       String[]
+  documentUrls    String[]
+  address         String?
+  addressLine1    String?
+  addressLine2    String?
+  landmark        String?
+  country         String?   @default("Cayman Islands")
+  description     String?
+  socialLinks     String?   // JSON string of social links
+  workingHours    String?   // JSON string of working hours
+
   isApproved    Boolean  @default(false)
 
   referrals     Referral[]
   commissions   Commission[]
   payouts       Payout[]
+  offers        Offer[]      // B2B exclusive offers
 
   isSeeded      Boolean  @default(false)
   createdAt     DateTime @default(now())
@@ -541,8 +584,17 @@ model MembershipPlan {
 
 model Offer {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  businessId    String    @db.ObjectId
-  business      Business  @relation(fields: [businessId], references: [id])
+  businessId    String?   @db.ObjectId
+  business      Business? @relation(fields: [businessId], references: [id])
+
+  employerId    String?   @db.ObjectId
+  employer      Employer? @relation(fields: [employerId], references: [id])
+
+  associationId String?   @db.ObjectId
+  association   Association? @relation(fields: [associationId], references: [id])
+
+  b2bPartnerId  String?   @db.ObjectId
+  b2bPartner    B2BPartner? @relation(fields: [b2bPartnerId], references: [id])
 
   type          OfferType
   title         String

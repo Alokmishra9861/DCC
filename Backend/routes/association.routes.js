@@ -19,6 +19,7 @@ router.use(authorize("ASSOCIATION"));
 
 // Profile
 router.get("/profile", ctrl.getProfile);
+router.put("/profile", ctrl.updateProfile);
 
 // Dashboard
 router.get("/dashboard", ctrl.getDashboard);
