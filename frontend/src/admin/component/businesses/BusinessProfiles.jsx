@@ -52,6 +52,8 @@ const BusinessProfiles = () => {
     cuisineType: "",
     coverBannerUrl: "",
     logoUrl: "",
+    contactPerson: "",
+    videoUrl: "",
     facebook: "",
     instagram: "",
     twitter: "",
@@ -190,6 +192,8 @@ const BusinessProfiles = () => {
       cuisineType: business.cuisineType || "",
       coverBannerUrl: business.coverBannerUrl || "",
       logoUrl: business.logoUrl || "",
+      contactPerson: business.contactPerson || "",
+      videoUrl: business.videoUrl || "",
       facebook: social.facebook || "",
       instagram: social.instagram || "",
       twitter: social.twitter || "",
@@ -639,6 +643,44 @@ const BusinessProfiles = () => {
                     </div>
                   </div>
 
+                  {/* Activity & Performance stats */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-[#1C4D8D]/5 border border-[#1C4D8D]/10 rounded-[1.5rem] p-5">
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center">
+                      <span className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">
+                        Total Transactions
+                      </span>
+                      <span className="text-xl font-bold text-[#1C4D8D]">
+                        {reviewingBusiness.totalTransactions ?? 0}
+                      </span>
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center">
+                      <span className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">
+                        Customer Spending
+                      </span>
+                      <span className="text-xl font-bold text-emerald-600">
+                        ${reviewingBusiness.totalCustomerSpending?.toFixed(2) ?? "0.00"}
+                      </span>
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center">
+                      <span className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">
+                        Savings Generated
+                      </span>
+                      <span className="text-xl font-bold text-indigo-600">
+                        ${reviewingBusiness.totalMemberSavings?.toFixed(2) ?? "0.00"}
+                      </span>
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center">
+                      <span className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">
+                        Last Activity
+                      </span>
+                      <span className="text-xs font-bold text-slate-600 block mt-1.5">
+                        {reviewingBusiness.lastActivityDate 
+                          ? new Date(reviewingBusiness.lastActivityDate).toLocaleDateString()
+                          : "No activity yet"}
+                      </span>
+                    </div>
+                  </div>
+
                   {/* Profile Description */}
                   <div>
                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
@@ -745,10 +787,23 @@ const BusinessProfiles = () => {
                       </h4>
                       <ul className="space-y-2.5">
                         <li className="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                          <span className="text-slate-400">👤</span> Contact: {reviewingBusiness.contactPerson || "Not provided"}
+                        </li>
+                        <li className="flex items-center gap-2 text-xs font-semibold text-slate-600">
                           <span className="text-slate-400">📞</span> {reviewingBusiness.phone || "No phone listed"}
                         </li>
                         <li className="flex items-center gap-2 text-xs font-semibold text-slate-600">
                           <span className="text-slate-400">✉️</span> {reviewingBusiness.email || "No email listed"}
+                        </li>
+                        <li className="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                          <span className="text-slate-400">🎥</span>{" "}
+                          {reviewingBusiness.videoUrl ? (
+                            <a href={reviewingBusiness.videoUrl} target="_blank" rel="noreferrer" className="text-[#1C4D8D] hover:underline truncate max-w-full">
+                              {reviewingBusiness.videoUrl}
+                            </a>
+                          ) : (
+                            "No video URL listed"
+                          )}
                         </li>
                         <li className="flex items-center gap-2 text-xs font-semibold text-slate-600">
                           <span className="text-slate-400">🌐</span>{" "}
@@ -1051,6 +1106,31 @@ const BusinessProfiles = () => {
                       type="text"
                       value={editForm.cuisineType}
                       onChange={(e) => setEditForm((p) => ({ ...p, cuisineType: e.target.value }))}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#1C4D8D]/20 focus:border-[#1C4D8D] outline-none text-sm font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                      Contact Person
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.contactPerson}
+                      onChange={(e) => setEditForm((p) => ({ ...p, contactPerson: e.target.value }))}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#1C4D8D]/20 focus:border-[#1C4D8D] outline-none text-sm font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                      Video URL
+                    </label>
+                    <input
+                      type="url"
+                      value={editForm.videoUrl}
+                      onChange={(e) => setEditForm((p) => ({ ...p, videoUrl: e.target.value }))}
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#1C4D8D]/20 focus:border-[#1C4D8D] outline-none text-sm font-medium"
                     />
                   </div>

@@ -19,6 +19,8 @@ const Businesses = () => {
     address: "",
     district: "",
     website: "",
+    contactPerson: "",
+    videoUrl: "",
     status: "PENDING",
   });
 
@@ -90,6 +92,8 @@ const Businesses = () => {
       address: business.address || "",
       district: business.district || "",
       website: business.website || "",
+      contactPerson: business.contactPerson || "",
+      videoUrl: business.videoUrl || "",
       status: business.status || "PENDING",
     });
     setShowEditModal(true);
@@ -529,6 +533,35 @@ const Businesses = () => {
                       value={editForm.district}
                       onChange={(e) =>
                         setEditForm((p) => ({ ...p, district: e.target.value }))
+                      }
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#1C4D8D]/20 focus:border-[#1C4D8D] focus:bg-white outline-none transition-all text-sm font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                      Contact Person
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.contactPerson}
+                      onChange={(e) =>
+                        setEditForm((p) => ({ ...p, contactPerson: e.target.value }))
+                      }
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#1C4D8D]/20 focus:border-[#1C4D8D] focus:bg-white outline-none transition-all text-sm font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                      Video URL
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.videoUrl}
+                      onChange={(e) =>
+                        setEditForm((p) => ({ ...p, videoUrl: e.target.value }))
                       }
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#1C4D8D]/20 focus:border-[#1C4D8D] focus:bg-white outline-none transition-all text-sm font-medium"
                     />

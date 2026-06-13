@@ -189,6 +189,34 @@ exports.getBusinessProfile = asyncHandler(async (req, res) => {
     data: { views: { increment: 1 } },
   });
 
+  let totalTransactions = 0;
+  let totalCustomerSpending = 0;
+  let totalMemberSavings = 0;
+  let lastActivityDate = profile.updatedAt;
+
+  if (type === "BUSINESS") {
+    const completedTxns = await prisma.transaction.findMany({
+      where: {
+        businessId: profile.id,
+        status: "COMPLETED",
+      },
+      select: {
+        saleAmount: true,
+        savingsAmount: true,
+        transactionDate: true,
+      },
+    });
+
+    totalTransactions = completedTxns.length;
+    totalCustomerSpending = completedTxns.reduce((sum, t) => sum + t.saleAmount, 0);
+    totalMemberSavings = completedTxns.reduce((sum, t) => sum + t.savingsAmount, 0);
+
+    if (completedTxns.length > 0) {
+      const dates = completedTxns.map((t) => new Date(t.transactionDate).getTime());
+      lastActivityDate = new Date(Math.max(...dates));
+    }
+  }
+
   return ApiResponse.success(res, {
     ...profile,
     offers: offersToShow,
@@ -200,6 +228,12 @@ exports.getBusinessProfile = asyncHandler(async (req, res) => {
     website,
     description,
     categoryName,
+    ...(type === "BUSINESS" && {
+      totalTransactions,
+      totalCustomerSpending,
+      totalMemberSavings,
+      lastActivityDate,
+    }),
   });
 });
 
@@ -434,6 +468,28 @@ exports.getBusinessProfileById = asyncHandler(async (req, res) => {
     .map((m) => monthMap.get(m.key))
     .filter(Boolean);
 
+  const completedTxns = await prisma.transaction.findMany({
+    where: {
+      businessId: business.id,
+      status: "COMPLETED",
+    },
+    select: {
+      saleAmount: true,
+      savingsAmount: true,
+      transactionDate: true,
+    },
+  });
+
+  const totalTransactions = completedTxns.length;
+  const totalCustomerSpending = completedTxns.reduce((sum, t) => sum + t.saleAmount, 0);
+  const totalMemberSavings = completedTxns.reduce((sum, t) => sum + t.savingsAmount, 0);
+
+  let lastActivityDate = business.updatedAt;
+  if (completedTxns.length > 0) {
+    const dates = completedTxns.map((t) => new Date(t.transactionDate).getTime());
+    lastActivityDate = new Date(Math.max(...dates));
+  }
+
   return ApiResponse.success(
     res,
     {
@@ -444,6 +500,10 @@ exports.getBusinessProfileById = asyncHandler(async (req, res) => {
       certificateRedemptions,
       engagementRate,
       performanceOverview,
+      totalTransactions,
+      totalCustomerSpending,
+      totalMemberSavings,
+      lastActivityDate,
     },
     "Business profile retrieved",
   );
@@ -452,6 +512,7 @@ exports.getBusinessProfileById = asyncHandler(async (req, res) => {
 exports.updateBusiness = asyncHandler(async (req, res) => {
   const {
     name,
+    contactPerson,
     categoryId,
     description,
     phone,
@@ -489,6 +550,7 @@ exports.updateBusiness = asyncHandler(async (req, res) => {
     where: { id: business.id },
     data: {
       name,
+      contactPerson,
       categoryId: (categoryId && categoryId.trim()) ? categoryId : undefined,
       description,
       phone,

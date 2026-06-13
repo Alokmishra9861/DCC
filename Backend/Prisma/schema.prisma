@@ -429,6 +429,7 @@ model Business {
   user          User     @relation(fields: [userId], references: [id])
 
   name          String
+  contactPerson String?
   categoryId    String?  @db.ObjectId
   category      Category? @relation(fields: [categoryId], references: [id])
   description   String?

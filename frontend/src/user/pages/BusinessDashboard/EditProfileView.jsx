@@ -19,6 +19,7 @@ const EditProfileView = ({ businessData, onBack, onSaved }) => {
   const [website, setWebsite] = useState("");
   const [district, setDistrict] = useState("");
   const [description, setDescription] = useState("");
+  const [contactPerson, setContactPerson] = useState("");
 
   // Location States
   const [addressLine1, setAddressLine1] = useState("");
@@ -103,6 +104,7 @@ const EditProfileView = ({ businessData, onBack, onSaved }) => {
     setWebsite(p.website || "");
     setDistrict(p.district || "George Town");
     setDescription(p.description || "");
+    setContactPerson(p.contactPerson || "");
 
     setAddressLine1(p.addressLine1 || p.address || "");
     setAddressLine2(p.addressLine2 || "");
@@ -259,6 +261,7 @@ const EditProfileView = ({ businessData, onBack, onSaved }) => {
     try {
       const payload = {
         name,
+        contactPerson,
         categoryId,
         cuisineType,
         phone,
@@ -379,6 +382,24 @@ const EditProfileView = ({ businessData, onBack, onSaved }) => {
                   disabled
                   className="w-full px-4 py-3.5 bg-slate-50/50 border border-slate-200/60 rounded-2xl text-sm font-bold text-slate-400 font-mono tracking-wider cursor-not-allowed select-all"
                 />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
+                  Contact Person Name
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
+                    <Icon name="UserIcon" size={18} />
+                  </span>
+                  <input
+                    type="text"
+                    value={contactPerson}
+                    onChange={(e) => setContactPerson(e.target.value)}
+                    placeholder="e.g. John Doe"
+                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1C4D8D]/10 focus:border-[#1C4D8D] focus:bg-white transition-all"
+                  />
+                </div>
               </div>
 
               <div>

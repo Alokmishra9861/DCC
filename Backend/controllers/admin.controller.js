@@ -681,6 +681,7 @@ exports.updateBusiness = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const {
     name,
+    contactPerson,
     categoryId,
     categoryName,
     categorySlug,
@@ -732,6 +733,7 @@ exports.updateBusiness = asyncHandler(async (req, res) => {
     where: { id },
     data: {
       ...(name !== undefined && { name }),
+      ...(contactPerson !== undefined && { contactPerson }),
       ...(resolvedCategoryId && { categoryId: resolvedCategoryId }),
       ...(description !== undefined && { description }),
       ...(phone !== undefined && { phone }),
