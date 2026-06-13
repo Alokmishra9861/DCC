@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import Icon from "../../components/ui/AppIcon";
 import AppImage from "../../components/ui/AppImage";
 import { employerAPI, getUser, businessAPI } from "../../../services/api";
+
+const STOREFRONT_FALLBACK = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231C4D8D' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/%3E%3Cpolyline points='9 22 9 12 15 12 15 22'/%3E%3C/svg%3E";
 import {
   BarChart,
   Bar,
@@ -326,6 +328,7 @@ const CategoriesPage = () => {
                       <AppImage
                         src={business.logoUrl}
                         alt={business.name}
+                        fallbackSrc={STOREFRONT_FALLBACK}
                         className="w-full h-full object-contain rounded-xl"
                       />
                     ) : (

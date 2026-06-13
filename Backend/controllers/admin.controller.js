@@ -625,11 +625,12 @@ const slugifyCategory = (value) => {
 
 exports.getAdminBusinesses = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
-  const { status, search } = req.query;
+  const { status, search, categoryId } = req.query;
 
   const where = {
     ...(status && { status }),
     ...(search && { name: { contains: search, mode: "insensitive" } }),
+    ...(categoryId && { categoryId }),
   };
 
   const [businessesRaw, total] = await Promise.all([
@@ -643,10 +644,14 @@ exports.getAdminBusinesses = asyncHandler(async (req, res) => {
         userId: true,
         name: true,
         category: { select: { id: true, name: true, slug: true } },
+        categoryId: true,
+        description: true,
         district: true,
         status: true,
         createdAt: true,
         logoUrl: true,
+        coverBannerUrl: true,
+        imageUrls: true,
       },
     }),
     prisma.business.count({ where }),
@@ -686,6 +691,18 @@ exports.updateBusiness = asyncHandler(async (req, res) => {
     district,
     website,
     status,
+    cuisineType,
+    addressLine1,
+    addressLine2,
+    landmark,
+    country,
+    coverBannerUrl,
+    socialLinks,
+    videoUrl,
+    workingHours,
+    logoUrl,
+    imageUrls,
+    documentUrls,
   } = req.body;
 
   const business = await prisma.business.findUnique({ where: { id } });
@@ -723,6 +740,18 @@ exports.updateBusiness = asyncHandler(async (req, res) => {
       ...(district !== undefined && { district }),
       ...(website !== undefined && { website }),
       ...(status !== undefined && { status }),
+      ...(cuisineType !== undefined && { cuisineType }),
+      ...(addressLine1 !== undefined && { addressLine1 }),
+      ...(addressLine2 !== undefined && { addressLine2 }),
+      ...(landmark !== undefined && { landmark }),
+      ...(country !== undefined && { country }),
+      ...(coverBannerUrl !== undefined && { coverBannerUrl }),
+      ...(socialLinks !== undefined && { socialLinks: typeof socialLinks === "object" ? JSON.stringify(socialLinks) : socialLinks }),
+      ...(videoUrl !== undefined && { videoUrl }),
+      ...(workingHours !== undefined && { workingHours: typeof workingHours === "object" ? JSON.stringify(workingHours) : workingHours }),
+      ...(logoUrl !== undefined && { logoUrl }),
+      ...(imageUrls !== undefined && { imageUrls }),
+      ...(documentUrls !== undefined && { documentUrls }),
     },
   });
 

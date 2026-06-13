@@ -126,7 +126,7 @@ const AssociationTypeGuard = ({ requiredType, children }) => {
 const UserLayout = () => (
   <>
     <Header />
-    <main className="flex-1 pt-20">
+    <main className="flex-1 pt-20 md:pt-24 lg:pt-28">
       <Routes>
         {/* ── Public ──────────────────────────────────────────────────────── */}
         <Route path="/" element={<HomePage />} />
@@ -187,7 +187,7 @@ const UserLayout = () => (
         <Route
           path="/business-profile/:id"
           element={
-            <ProtectedRoute roles={["MEMBER", "BUSINESS"]} requireMembership>
+            <ProtectedRoute roles={["MEMBER", "BUSINESS", "ADMIN"]} requireMembership>
               <BusinessProfileContent />
             </ProtectedRoute>
           }

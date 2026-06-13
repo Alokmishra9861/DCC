@@ -137,40 +137,120 @@ exports.getEnquiries = asyncHandler(async (req, res) => {
 });
 
 // ── GET /api/b2b/directory  (PUBLIC) ─────────────────────────────────────────
-// Public directory listing — all approved B2B partners
+// Public directory listing — B2B partners, employers, and associations
 exports.getDirectory = asyncHandler(async (req, res) => {
-  const { search, limit = 20, page = 1 } = req.query;
+  const { type = "partners", search, limit = 20, page = 1 } = req.query;
   const skip = (Number(page) - 1) * Number(limit);
 
-  const where = {
-    isApproved: true,
-    ...(search && {
-      OR: [
-        { companyName: { contains: search, mode: "insensitive" } },
-        { servicesOffered: { contains: search, mode: "insensitive" } },
-      ],
-    }),
-  };
+  let partners = [];
+  let total = 0;
 
-  const [partners, total] = await Promise.all([
-    prisma.b2BPartner.findMany({
-      where,
-      skip,
-      take: Number(limit),
-      select: {
-        id: true,
-        companyName: true,
-        servicesOffered: true,
-        phone: true,
-        email: true,
-        logoUrl: true,
-        website: true,
-        coverBannerUrl: true,
-      },
-      orderBy: { companyName: "asc" },
-    }),
-    prisma.b2BPartner.count({ where }),
-  ]);
+  if (type === "employers") {
+    const where = {
+      status: "APPROVED",
+      ...(search && {
+        OR: [
+          { companyName: { contains: search, mode: "insensitive" } },
+          { industry: { contains: search, mode: "insensitive" } },
+          { description: { contains: search, mode: "insensitive" } },
+        ],
+      }),
+    };
+
+    const [rawEmployers, count] = await Promise.all([
+      prisma.employer.findMany({
+        where,
+        skip,
+        take: Number(limit),
+        orderBy: { companyName: "asc" },
+      }),
+      prisma.employer.count({ where }),
+    ]);
+
+    total = count;
+    partners = rawEmployers.map((emp) => ({
+      id: emp.id,
+      companyName: emp.companyName,
+      servicesOffered: emp.industry || "Employer",
+      phone: emp.phone,
+      email: emp.email,
+      logoUrl: emp.logoUrl,
+      website: emp.website,
+      coverBannerUrl: emp.coverBannerUrl,
+      description: emp.description,
+      type: "employer",
+    }));
+  } else if (type === "associations") {
+    const where = {
+      status: "APPROVED",
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { orgType: { contains: search, mode: "insensitive" } },
+          { description: { contains: search, mode: "insensitive" } },
+        ],
+      }),
+    };
+
+    const [rawAssociations, count] = await Promise.all([
+      prisma.association.findMany({
+        where,
+        skip,
+        take: Number(limit),
+        orderBy: { name: "asc" },
+      }),
+      prisma.association.count({ where }),
+    ]);
+
+    total = count;
+    partners = rawAssociations.map((assoc) => ({
+      id: assoc.id,
+      companyName: assoc.name,
+      servicesOffered: assoc.orgType || "Association",
+      phone: assoc.phone,
+      email: assoc.email,
+      logoUrl: assoc.logoUrl,
+      website: assoc.website,
+      coverBannerUrl: assoc.coverBannerUrl,
+      description: assoc.description,
+      type: "association",
+    }));
+  } else {
+    // Default: B2B Partners
+    const where = {
+      isApproved: true,
+      ...(search && {
+        OR: [
+          { companyName: { contains: search, mode: "insensitive" } },
+          { servicesOffered: { contains: search, mode: "insensitive" } },
+        ],
+      }),
+    };
+
+    const [rawPartners, count] = await Promise.all([
+      prisma.b2BPartner.findMany({
+        where,
+        skip,
+        take: Number(limit),
+        orderBy: { companyName: "asc" },
+      }),
+      prisma.b2BPartner.count({ where }),
+    ]);
+
+    total = count;
+    partners = rawPartners.map((p) => ({
+      id: p.id,
+      companyName: p.companyName,
+      servicesOffered: p.servicesOffered,
+      phone: p.phone,
+      email: p.email,
+      logoUrl: p.logoUrl,
+      website: p.website,
+      coverBannerUrl: p.coverBannerUrl,
+      description: p.description,
+      type: "partner",
+    }));
+  }
 
   return ApiResponse.success(res, {
     partners,
@@ -184,19 +264,40 @@ exports.getDirectory = asyncHandler(async (req, res) => {
 });
 
 // ── POST /api/b2b/enquire/:partnerId  (AUTH — MEMBER/EMPLOYER/ASSOCIATION) ────
-// Submit an enquiry to a B2B partner from the directory
+// Submit an enquiry to a B2B partner, employer, or association from the directory
 exports.submitEnquiry = asyncHandler(async (req, res) => {
   const { partnerId } = req.params;
   const { name, email, phone, subject, message } = req.body;
 
   if (!message?.trim()) throw ApiError.badRequest("Message is required");
 
-  const partner = await prisma.b2BPartner.findUnique({
+  let entity = await prisma.b2BPartner.findUnique({
     where: { id: partnerId },
   });
-  if (!partner) throw ApiError.notFound("B2B partner not found");
-  if (!partner.isApproved)
-    throw ApiError.badRequest("This B2B partner is not yet active");
+  let typeLabel = "b2b";
+
+  if (!entity) {
+    entity = await prisma.employer.findUnique({
+      where: { id: partnerId },
+    });
+    typeLabel = "employer";
+  }
+
+  if (!entity) {
+    entity = await prisma.association.findUnique({
+      where: { id: partnerId },
+    });
+    typeLabel = "association";
+  }
+
+  if (!entity) {
+    throw ApiError.notFound("B2B partner, employer, or association not found");
+  }
+
+  const isApproved = entity.isApproved || entity.status === "APPROVED";
+  if (!isApproved) {
+    throw ApiError.badRequest("This profile is not yet active");
+  }
 
   // Store enquiry in ContactInquiry — subject encodes the partnerId for lookup
   const inquiry = await prisma.contactInquiry.create({
@@ -204,7 +305,7 @@ exports.submitEnquiry = asyncHandler(async (req, res) => {
       name: name || req.user?.name || "DCC Member",
       email: email || req.user?.email || "",
       phone: phone || null,
-      subject: `b2b:${partnerId}:${subject || "General Enquiry"}`,
+      subject: `${typeLabel}:${partnerId}:${subject || "General Enquiry"}`,
       message: message.trim(),
       type: "b2b",
       status: "pending",

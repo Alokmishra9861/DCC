@@ -14,6 +14,7 @@ import Navbar from "./Navbar";
 import Sidebar from "./component/sidebar/Sidebar";
 import MembershipPlans from "./component/membershipplans/MembershipPlans";
 import Categories from "./component/categories/Categories";
+import BusinessProfiles from "./component/businesses/BusinessProfiles";
 
 
 const ADMIN_FONTS = `
@@ -55,6 +56,14 @@ const Admin = () => {
                 element={
                   <PageTransition>
                     <Businesses />
+                  </PageTransition>
+                }
+              />
+              <Route
+                path="/business-profiles"
+                element={
+                  <PageTransition>
+                    <BusinessProfiles />
                   </PageTransition>
                 }
               />

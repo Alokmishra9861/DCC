@@ -50,6 +50,12 @@ const B2BEnquiryModal = ({ partner, onClose }) => {
 
   const displayServices = parseServices();
 
+  const getTypeLabel = () => {
+    if (partner.type === "employer") return "Employer";
+    if (partner.type === "association") return "Association";
+    return "B2B Partner";
+  };
+
   const field = (key) => (e) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
   const initial = (partner.companyName || "B")[0].toUpperCase();
@@ -137,7 +143,7 @@ const B2BEnquiryModal = ({ partner, onClose }) => {
             </div>
             <div>
               <span className="text-[10px] font-black uppercase tracking-widest text-blue-200 block mb-0.5">
-                B2B Partner
+                {getTypeLabel()}
               </span>
               <h2 className="text-xl font-black text-white leading-tight">
                 {partner.companyName}
@@ -193,8 +199,9 @@ const B2BEnquiryModal = ({ partner, onClose }) => {
                 <strong className="text-slate-700">
                   {partner.companyName}
                 </strong>
-                . They'll receive it in their partner dashboard and respond to
-                your email.
+                . {partner.type === "partner" || !partner.type
+                  ? "They'll receive it in their partner dashboard and respond to your email."
+                  : `They'll receive your enquiry as an email and respond directly to you.`}
               </p>
 
               {error && (

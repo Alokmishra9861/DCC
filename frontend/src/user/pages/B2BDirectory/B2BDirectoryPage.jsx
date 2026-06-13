@@ -343,6 +343,7 @@ const PartnerCard = ({ partner, onContact, index }) => {
 const B2BDirectoryPage = () => {
   const user = getUser();
 
+  const [directoryType, setDirectoryType] = useState("partners");
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -361,12 +362,12 @@ const B2BDirectoryPage = () => {
     setMounted(true);
   }, []);
 
-  const load = useCallback(async (pg = 1, q = "", append = false) => {
+  const load = useCallback(async (pg = 1, q = "", type = "partners", append = false) => {
     if (pg === 1) setLoading(true);
     else setLoadingMore(true);
     setError("");
     try {
-      const params = { limit: PAGE_SIZE, page: pg };
+      const params = { limit: PAGE_SIZE, page: pg, type };
       if (q && q.trim()) params.search = q.trim();
       const res = await b2bAPI.getDirectory(params);
       const list = res?.partners ?? (Array.isArray(res) ? res : []);
@@ -385,15 +386,56 @@ const B2BDirectoryPage = () => {
   }, []);
 
   useEffect(() => {
-    load(1, search, false);
-  }, [search, load]);
+    load(1, search, directoryType, false);
+  }, [search, directoryType, load]);
 
   useEffect(() => {
     const t = setTimeout(() => setSearch(searchInput), 400);
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  const handleLoadMore = () => load(page + 1, search, true);
+  const handleLoadMore = () => load(page + 1, search, directoryType, true);
+
+  const handleTabChange = (type) => {
+    setDirectoryType(type);
+    setSearchInput("");
+    setSearch("");
+  };
+
+  const getSubtitle = () => {
+    if (user?.role === "EMPLOYER") {
+      return "Discover vetted service providers exclusively for your business growth.";
+    }
+    if (user?.role === "ASSOCIATION") {
+      return "Connect your network with trusted B2B specialists across the Cayman Islands.";
+    }
+    if (user?.role === "B2B") {
+      return "Connect with other business partners, employers, and associations in the DCC network.";
+    }
+    return "Access premium, vetted service providers and strategic business partners exclusively for DCC members.";
+  };
+
+  const getNoResultsText = () => {
+    const label =
+      directoryType === "partners"
+        ? "partners"
+        : directoryType === "employers"
+          ? "employers"
+          : "associations";
+    return search ? `No ${label} found` : `No ${label} yet`;
+  };
+
+  const getEmptyStateDescription = () => {
+    const label =
+      directoryType === "partners"
+        ? "B2B partners"
+        : directoryType === "employers"
+          ? "Employers"
+          : "Associations";
+    return search
+      ? `No results for "${search}". Try different keywords.`
+      : `${label} are being reviewed and approved. Check back soon.`;
+  };
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
@@ -458,11 +500,7 @@ const B2BDirectoryPage = () => {
 
                 {/* Subtitle */}
                 <p className="text-slate-600 text-sm md:text-base leading-relaxed max-w-lg font-medium">
-                  {user?.role === "EMPLOYER"
-                    ? "Discover vetted service providers exclusively for your business growth."
-                    : user?.role === "ASSOCIATION"
-                      ? "Connect your network with trusted B2B specialists across the Cayman Islands."
-                      : "Access premium, vetted service providers and strategic business partners exclusively for DCC members."}
+                  {getSubtitle()}
                 </p>
               </div>
 
@@ -483,7 +521,7 @@ const B2BDirectoryPage = () => {
                       {total}
                     </div>
                     <div className="text-[10px] text-slate-500 uppercase tracking-[0.12em] mt-1 font-semibold">
-                      Verified Partner{total !== 1 ? "s" : ""}
+                      Verified {directoryType === "partners" ? "Partner" : directoryType === "employers" ? "Employer" : "Association"}{total !== 1 ? "s" : ""}
                     </div>
                   </div>
                   <div className="px-6 py-4 rounded-2xl border border-emerald-200 bg-emerald-50 shadow-md hover:shadow-xl hover:bg-emerald-100 transition-all duration-300 group">
@@ -525,7 +563,7 @@ const B2BDirectoryPage = () => {
                 </svg>
                 <input
                   type="text"
-                  placeholder="Search by company name or service…"
+                  placeholder={`Search by name or description…`}
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   className="w-full pl-14 pr-12 py-4 rounded-2xl text-sm text-slate-800 placeholder-slate-400
@@ -577,6 +615,33 @@ const B2BDirectoryPage = () => {
             CONTENT AREA
         ══════════════════════════════════════════════════════════════════ */}
         <div className="max-w-7xl mx-auto px-5 pb-16 pt-10">
+          {/* Tabs Selector */}
+          <div className="flex justify-center mb-10">
+            <div className="inline-flex p-1.5 bg-slate-100/80 rounded-2xl border border-slate-200/50 backdrop-blur-sm shadow-inner">
+              {[
+                { id: "partners", label: "Business Partners", icon: "🤝" },
+                { id: "employers", label: "Employers", icon: "💼" },
+                { id: "associations", label: "Associations", icon: "🏛️" },
+              ].map((tab) => {
+                const active = directoryType === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+                      active
+                        ? "bg-[#0f2952] text-white shadow-md shadow-[#0f2952]/20"
+                        : "text-slate-500 hover:text-slate-800"
+                    }`}
+                  >
+                    <span>{tab.icon}</span>
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Error */}
           {error && (
             <div
@@ -631,12 +696,10 @@ const B2BDirectoryPage = () => {
                 className="font-black text-slate-800 text-xl mb-2"
                 style={{ fontFamily: "'Georgia', serif" }}
               >
-                {search ? "No partners found" : "No B2B partners yet"}
+                {getNoResultsText()}
               </p>
               <p className="text-sm text-slate-400 max-w-xs mx-auto leading-relaxed">
-                {search
-                  ? `No results for "${search}". Try different keywords.`
-                  : "B2B partners are being reviewed and approved. Check back soon."}
+                {getEmptyStateDescription()}
               </p>
               {search && (
                 <button
@@ -653,10 +716,16 @@ const B2BDirectoryPage = () => {
               {/* Section label */}
               <div className="flex items-center justify-between mb-6">
                 <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
-                  {search ? `Results for "${search}"` : "All verified partners"}
+                  {search
+                    ? `Results for "${search}"`
+                    : directoryType === "partners"
+                      ? "All verified partners"
+                      : directoryType === "employers"
+                        ? "All verified employers"
+                        : "All verified associations"}
                 </p>
                 <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
-                  {total} partner{total !== 1 ? "s" : ""}
+                  {total} {directoryType === "partners" ? `partner${total !== 1 ? "s" : ""}` : directoryType === "employers" ? `employer${total !== 1 ? "s" : ""}` : `association${total !== 1 ? "s" : ""}`}
                 </span>
               </div>
 
@@ -689,7 +758,7 @@ const B2BDirectoryPage = () => {
                       </>
                     ) : (
                       <>
-                        Load more partners
+                        Load more {directoryType === "partners" ? "partners" : directoryType === "employers" ? "employers" : "associations"}
                         <svg
                           className="w-4 h-4 group-hover:translate-y-0.5 transition-transform"
                           fill="none"
@@ -713,7 +782,7 @@ const B2BDirectoryPage = () => {
                 <div className="flex items-center gap-4 mt-12">
                   <div className="flex-1 h-px bg-slate-100" />
                   <p className="text-xs text-slate-300 font-semibold uppercase tracking-wider whitespace-nowrap">
-                    All {total} partner{total !== 1 ? "s" : ""} shown
+                    All {total} {directoryType === "partners" ? `partner${total !== 1 ? "s" : ""}` : directoryType === "employers" ? `employer${total !== 1 ? "s" : ""}` : `association${total !== 1 ? "s" : ""}`} shown
                   </p>
                   <div className="flex-1 h-px bg-slate-100" />
                 </div>

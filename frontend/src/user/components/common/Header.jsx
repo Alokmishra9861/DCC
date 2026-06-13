@@ -187,10 +187,10 @@ const Header = () => {
         <div className="flex items-center justify-between h-20 md:h-24 lg:h-28">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 -ml-4 h-full">
-            <AppImage
+            <img
               src="/DCC-logo.png"
               alt="Discount Club Cayman Logo"
-              className="h-full w-auto max-h-none object-fit scale-[2.4] lg:scale-[2.1] ml-15 mt-5 filter brightness-110"
+              className="h-full w-auto max-h-none object-contain scale-[2.4] lg:scale-[2.1] ml-15 mt-5 filter brightness-110"
             />
           </Link>
 

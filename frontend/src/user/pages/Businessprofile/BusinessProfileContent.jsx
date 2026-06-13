@@ -12,6 +12,8 @@ import {
 } from "../../../services/api";
 import { redirectToStripeCheckout } from "../../../services/stripeService";
 
+const STOREFRONT_FALLBACK = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231C4D8D' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/%3E%3Cpolyline points='9 22 9 12 15 12 15 22'/%3E%3C/svg%3E";
+
 // ─── Custom Responsive SVG Vector Map (Cayman Islands Vibe) ───────────────────
 const PremiumMockMap = ({ address }) => {
   return (
@@ -674,6 +676,7 @@ const BusinessProfileContent = () => {
                   <AppImage
                     src={coverImage}
                     alt="Banner cover background"
+                    fallbackSrc="https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -689,6 +692,7 @@ const BusinessProfileContent = () => {
                     <AppImage
                       src={business.logoUrl}
                       alt={business.name}
+                      fallbackSrc={STOREFRONT_FALLBACK}
                       className="w-full h-full object-contain p-1"
                     />
                   ) : (
@@ -779,6 +783,7 @@ const BusinessProfileContent = () => {
                           <AppImage
                             src={discount.imageUrl}
                             alt={discount.title}
+                            fallbackSrc={STOREFRONT_FALLBACK}
                             className="w-full h-full object-cover group-hover:scale-103 transition-all duration-300"
                           />
                         ) : (
@@ -944,6 +949,7 @@ const BusinessProfileContent = () => {
                     <AppImage
                       src={url}
                       alt={`Gallery image ${idx + 1}`}
+                      fallbackSrc="https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800"
                       className="w-full h-full object-cover group-hover:scale-104 transition-all duration-300"
                     />
                   </div>
